@@ -1,0 +1,47 @@
+
+TODOs for diplomska
+
+
+# TODO taxes, prihodki, comission na buy in sell order, starting money, portfolio
+
+# TODO premisli kako boš implemenitral to kupovanje in prodajnje delnic -> done? manjka še fees pa taxes (Interactive broker Fees: Maximum $0.005 per share ) zaenkrat bo 2%
+
+- http://slotrade.blogspot.com/p/davki.html za davke
+
+# TODO dobi 20 podjetji ki so v DOW JONES indexu usaj 20 let
+
+# TODO realiziraj portfolio
+
+
+- graf trgovanja in dobička check
+
+
+
+COVID-19 kriza je od 20 February 2020 and ended on 7 April.
+
+
+- povečaj velikost slik da je lepše razvidno use
+
+
+Podjetja iz dow jones:
+
+1 The Home Depot, Inc. !   HD
+2 Intel Corporation !  INTC
+3 International Business Machines Corporation !   IBM
+4 American Express !  AXP
+5 The Boeing Company!   BA
+6 Caterpillar Inc. !  CAT
+7 The Coca-Cola Company !  KO
+8 Johnson & Johnson !  JNJ
+9 JPMorgan Chase & Co. !  JPM
+10  McDonald's Corporation !  MCD
+11 Merck & Co., Inc. !   MRK
+12 Microsoft Corporation  !  MSFT
+13 3M Company !  MMM
+14 The Procter & Gamble Company !  PG
+15 Walmart Inc !  WMT
+16 The Walt Disney Company !  DIS
+17
+18
+19
+20
