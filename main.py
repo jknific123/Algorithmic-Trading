@@ -33,9 +33,14 @@ def sma_crossover(sPeriod, lPeriod, df, company):
     df['Sell'] = np.nan
     df['Cash'] = 0
     df['Shares'] = 0
+    df['Profit'] = 0
     df['Total'] = 0
 
     df = df[lPeriod:]
+
+    # za racunanje davka na dobiček
+    buyPrice = 0
+    sellPrice = 0
 
     # check -> zato da nimamo dveh zapovrstnih buy/sell signalov: 2 = buy, 1 = sell
     check = 0
@@ -62,7 +67,8 @@ def sma_crossover(sPeriod, lPeriod, df, company):
                 # money = portfolio['AAPL'][] # TODO -> buy shares, get change, count in fees, get profit itd
 
                 # kupi kolikor je možno delnic glede na cash -> drugi del je cena delnice + fee na nakup delnice
-                stDelnic = math.floor(df['Cash'].iloc[x] / (df['Adj Close'].iloc[x] + util.percentageFee(1, df['Adj Close'].iloc[x])))
+                stDelnic = math.floor(df['Cash'].iloc[x] / (df['Adj Close'].iloc[x] + util.percentageFee(util.feePercentage, df['Adj Close'].iloc[x])))
+                buyPrice = stDelnic * df['Adj Close'].iloc[x]  # stDelnic * njihova cena -> dejanski denar potreben za nakup
 
                 df['Cash'].iloc[x] = np.nan_to_num(df['Cash'].iloc[x]) - (
                         stDelnic * df['Adj Close'].iloc[x])  # posodbi cash
@@ -76,18 +82,27 @@ def sma_crossover(sPeriod, lPeriod, df, company):
             if check != 1 and check != 0:
                 df['Sell'].iloc[x] = df['Adj Close'].iloc[x]
 
-                # prodaj vse delnic
-                prodano = (df['Shares'].iloc[x] * df['Adj Close'].iloc[x])  # delnice v denar TODO -> include fees
+                # TODO dodaj še davek na dobiček 27,5%
+
+                # prodaj vse delnic izracunaj profit in placaj davek
+                prodano = (df['Shares'].iloc[x] * df['Adj Close'].iloc[x])  # delnice v denar
                 prodanoFees = util.fees(prodano)  # ostanek denarja po fees
+                sellPrice = prodanoFees
+                df['Profit'].iloc[x] = util.profit(buyPrice, sellPrice)
+
+                # ce je dobicek pozitiven zaracunamo davek na dobicek in ga odstejemo od prodanoFees da dobimo ostanek
+                if (df['Profit'].iloc[x] > 0):
+                    prodanoFees = prodanoFees - util.taxes(df['Profit'].iloc[x])
+
                 df['Cash'].iloc[x] = np.nan_to_num(df['Cash'].iloc[x]) + prodanoFees  # posodbi cash
                 df['Shares'].iloc[x] = 0
 
                 check = 1
 
-    print(df)
+    # print(df)
     # plotShares(df, company)
-    SMA_trading_graph(sPeriod, lPeriod, df, company)
-    profit_graph(df, 0, company)
+    # SMA_trading_graph(sPeriod, lPeriod, df, company)
+    # profit_graph(df, 0, company)
 
 
     # with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
@@ -130,7 +145,7 @@ def profit_graph(df, mode, company):
         ax1 = fig.add_subplot(111, ylabel='Vrednost sredstev v $')
         df['Total'].plot(ax=ax1, label="Vrednost sredstev", color='black', alpha=0.5)
     elif (mode == 1):
-        fig.suptitle(f'Končna vrednost portfolia: {company}')
+        fig.suptitle(f'Končna vrednost portfolia: {company} $')
         ax1 = fig.add_subplot(111, ylabel='Vrednost portfolia v $')
         df['Total'].plot(ax=ax1, label="Vrednost portfolia", color='black', alpha=0.5)
 
@@ -172,8 +187,7 @@ new = aapl[['Adj Close']].copy()
 portfolio = pd.DataFrame(index=np.arange(30), columns=["numShares", "currCash", "curHoldings"])
 
 # Dow Jones Index podjetja not 20 let 1999 - 2020
-tickers = ['HD', 'INTC']
-# , 'AAPL', 'IBM', 'AXP', 'BA', 'CAT', 'KO', 'JNJ', 'JPM', 'MCD', 'MRK', 'MSFT', 'MMM', 'PG', 'WMT', 'DIS']
+tickers = ['HD', 'INTC', 'IBM', 'AXP', 'BA', 'CAT', 'KO', 'JNJ', 'JPM', 'MCD', 'MRK', 'MSFT', 'MMM', 'PG', 'WMT', 'DIS']
 
 # print(portfolio)
 
@@ -195,8 +209,14 @@ for i in range(len(tickers)):
 print(allFunds)
 profit_graph(allFunds, 1, round(allFunds['Total'].iloc[-1], 4))
 
+startFunds = len(tickers) * util.getMoney()
+endFunds = allFunds['Total'].iloc[-1]
+
+print("Zacetna sredstva: ", startFunds, "$")
 print("Skupna sredstva portfolia: ", round(allFunds['Total'].iloc[-1], 4), "$")
 print("Profit: ", round(allFunds['Total'].iloc[-1] - (len(tickers) * util.getMoney()), 4), "$")
+print("Kumulativni donos v procentih: ", round((endFunds - startFunds) / startFunds, 4) * 100, "%")
+
 
 print("Delnice, ki jih še imamo v portfoliu:")
 for key, value in allShares.items():

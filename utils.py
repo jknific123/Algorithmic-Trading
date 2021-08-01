@@ -21,6 +21,9 @@ def get(tickers, startdate, enddate):
 # 2 -> 1%
 feePercentage = 1
 
+# vrednost davka na dobiček
+taxRate = 27.5
+
 
 def percentageFee(percent, whole):
     return (percent * whole) / 100.0
@@ -34,13 +37,17 @@ def fees(money):
     return money - feeMoney
 
 
-# return money after tax
-def taxes(profit, percentage):
-    None
+# return amount of money to be paid for taxes
+def taxes(money):
+
+    taxMoney = percentageFee(taxRate, money)
+
+    return taxMoney
 
 
-def profit():
-    None
+# returns profit
+def profit(buyPrice, sellPrice):
+    return sellPrice - buyPrice
 
 
 def getMoney():

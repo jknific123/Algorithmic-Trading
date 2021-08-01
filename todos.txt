@@ -7,6 +7,12 @@ TODOs for diplomska
 # TODO premisli kako boš implemenitral to kupovanje in prodajnje delnic -> done? manjka še fees pa taxes (Interactive broker Fees: Maximum $0.005 per share ) zaenkrat bo 2%
 
 - http://slotrade.blogspot.com/p/davki.html za davke
+- https://www.fu.gov.si/davki_in_druge_dajatve/podrocja/dohodnina/dohodnina_dohodek_iz_kapitala/#c1135
+davki so 27,5 %
+
+Long tradi - aktualen zakon je Zdoh-2. Davek je progresiven od 27,5% do 10%, pri čemer se zmanjša na vsakih 5 let držanja pozicije. Za traderje je progresija nerelevantna, davek je torej 27,5%.
+Short tradi - sodi med izvedene finančne instrumente, ki so pokriti z ZDDOIFI. Davek je 40% za trade zaključene v enem letu, od enega leta naprej pa je progresija od 27,5% do 10%.
+Dividende - Zdoh-2. Davek je 27,5%, pri čemer se v ZDA plača 15% in v Sloveniji potem samo še 12,5%.
 
 # TODO dobi 20 podjetji ki so v DOW JONES indexu usaj 20 let
 
