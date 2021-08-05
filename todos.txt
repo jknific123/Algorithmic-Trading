@@ -2,9 +2,9 @@
 TODOs for diplomska
 
 
-# TODO taxes, prihodki, comission na buy in sell order, starting money, portfolio
+# TODO taxes, prihodki, comission na buy in sell order, starting money, portfolio -> done razn portfolio
 
-# TODO premisli kako boš implemenitral to kupovanje in prodajnje delnic -> done? manjka še fees pa taxes (Interactive broker Fees: Maximum $0.005 per share ) zaenkrat bo 2%
+# TODO premisli kako boš implemenitral to kupovanje in prodajnje delnic -> done? manjka še fees pa taxes (Interactive broker Fees: Maximum $0.005 per share ) zaenkrat bo 2% -> done
 
 - http://slotrade.blogspot.com/p/davki.html za davke
 - https://www.fu.gov.si/davki_in_druge_dajatve/podrocja/dohodnina/dohodnina_dohodek_iz_kapitala/#c1135
@@ -28,6 +28,17 @@ COVID-19 kriza je od 20 February 2020 and ended on 7 April.
 
 - povečaj velikost slik da je lepše razvidno use
 
+Treba bo najbrš od leta 2005 naprej -> November 21 2005 SBC kupi AT&T Corp. za $16 billion
+https://www.nbcnews.com/id/wbna6887107
+https://en.wikipedia.org/wiki/AT%26T_Corporation
+https://about.att.com/innovation/ip/brands/history
+
+- GM ticker nima podatkov pred 2010 ker je bankrotiralo staro podjetje takrat
+And that's been the case for investors of the old General Motors, which filed for Chapter 11 reorganization on June 8, 2009.
+https://eu.usatoday.com/story/money/columnist/krantz/2013/04/30/gm-general-motors-liquidation/2097515/
+
+startDate: 21.11.2005
+endDate: 21.11.2020
 
 Podjetja iz dow jones:
 
@@ -51,3 +62,79 @@ Podjetja iz dow jones:
 18
 19
 20
+
+
+Cel Dow Jones
+
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+
+
+
+
+
+
+
+
+
+
+
+
+Alcoa Inc.
+Exxon Corporation
+McDonald's Corporation
+AlliedSignal Incorporated
+General Electric Company
+Merck & Co., Inc.
+American Express Company
+General Motors Corporation
+Microsoft Corporation
+AT&T Corporation
+Hewlett-Packard Company
+Minnesota Mining & Manufacturing Company
+The Boeing Company
+The Home Depot, Inc.
+Philip Morris Companies Inc.
+Caterpillar Inc.
+Intel Corporation
+The Procter & Gamble Company
+Citigroup Inc.
+(formerly Travelers Inc.)
+International Business Machines Corporation	SBC Communications Inc.
+The Coca-Cola Company
+International Paper Company
+United Technologies Corporation
+E.I. du Pont de Nemours & Company
+Johnson & Johnson
+Wal-Mart Stores, Inc.
+Eastman Kodak Company
+J.P. Morgan & Company
+The Walt Disney Company

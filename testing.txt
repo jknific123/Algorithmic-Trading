@@ -1,0 +1,92 @@
+['AAPL', 1999 dalje
+'AIG', 1999 dalje
+'AMGN', 1999 dalje
+'AXP', 1999 dalje
+'BA', 1999 dalje
+'BAC', 1999 dalje
+'C', 1999 dalje
+'CAT', 1999 dalje
+'CRM', 2004 dalje
+'CSCO', 1999 dalje
+'CVX', 1999 dalje
+'DD', 1999 dalje
+'DIS', 1999 dalje
+'DOW', 2019 dalje
+'GE', 1999 dalje
+'GM', 2010 dalje ...
+'GS', 1999 dalje
+'HD', 1999 dalje
+'HON', 1999 dalje
+'HPQ', 1999 dalje
+'HWM', 2016 dalje -> prej Alcoa corp (ticker: AA) gotta do smthing
+'IBM', 1999 dalje
+'INTC', 1999 dalje
+'JNJ', 1999 dalje
+'JPM', 1999 dalje
+'KO',  1999 dalje
+'MCD', 1999 dalje
+'MDLZ', 2001 dalje
+'MMM', 1999 dalje
+'MO', 1999 dalje
+'MRK', 1999 dalje
+'MSFT', 1999 dalje
+'NKE', 1999 dalje
+'PFE', 1999 dalje
+'PG', 1999 dalje
+'RTX', 1999 dalje
+'T', 1999 dalje
+'TRV', 1999 dalje
+'UNH', 1999 dalje
+'V', 2008 dalje
+'VZ', 1999 dalje
+'WBA', 1999 dalje
+'WMT', 1999 dalje
+'XOM'] 1999 dalje
+
+
+
+
+
+GE
+JPM
+HPQ
+JNJ
+WBA
+AMGN
+UNH
+AIG
+DOW
+MCD
+TRV
+MRK
+DD
+CRM
+RTX
+BA
+GS
+BAC
+WMT
+MSFT
+VZ
+NKE
+MO
+PFE
+V
+CAT
+MDLZ
+KO
+C
+T
+PG
+XOM
+CSCO
+MMM
+AXP
+HD
+HON
+INTC
+DIS
+CVX
+AAPL
+HWM
+IBM
