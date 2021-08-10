@@ -1,4 +1,8 @@
 # !/usr/bin/env python
+import pandas as pd
+import yfinance as yf
+import datetime as datetime
+import matplotlib.pyplot as plt
 
 try:
     # For Python 3.0 and later
@@ -63,12 +67,22 @@ for x in companies:
 
     # removed from index
     if x["addedSecurity"] == '':
+
+        if x["removedSecurity"] == "Howmet Aerospace Inc":
+            x["removedSecurity"] = "Alcoa Corporation"
+            x["symbol"] = "AA"
+
         slovarImen[x["dateAdded"]]["removed"].append(x["removedSecurity"])
         slovarTickers[x["dateAdded"]]["removed"].append(x["symbol"])
 
 
     # added to index
     elif x["addedSecurity"] != '':
+
+        if x["addedSecurity"] == "Howmet Aerospace Inc":
+            x["addedSecurity"] = "Alcoa Corporation"
+            x["symbol"] = "AA"
+
         slovarImen[x["dateAdded"]]["added"].append(x["addedSecurity"])
         slovarTickers[x["dateAdded"]]["added"].append(x["symbol"])
 
@@ -258,6 +272,9 @@ tickers = {"2018-6-26" if k == 'June 26, 2018' else k:v for k,v in tickers.items
 tickers = {"2019-4-2" if k == 'April 2, 2019' else k:v for k,v in tickers.items()}
 tickers = {"2020-8-31" if k == 'August 31, 2020' else k:v for k,v in tickers.items()}
 
+# tickers = {"1999-11-1" if k == 'November 1, 1999' else k:v for k,v in tickers.items()}
+
+
 del tickers["2017-9-1"] # zbrišem ker ima podjetje DD v removed in added tko da ni pomembno
 
 
@@ -298,10 +315,17 @@ for x in names:
 
 endTickers = tickers
 
-"""""
 for season in endTickers:
 
     print("Sezona: ", season)
     print(endTickers[season])
+    print(len(endTickers[season]["all"]))
     print()
+"""""
+
+for x in obrnjenSlovarImen:
+    print(obrnjenSlovarImen[x])
+    print(len(obrnjenSlovarImen[x]["all"]))
+    print()
+
 """""

@@ -31,3 +31,71 @@
 
 
 November 21, 2005 - moj
+
+
+
+
+Spodaj moje stanje 2000
+
+['3M Co', !
+'AT&T Inc', AT&T Corporation in SBC Communications Inc. sta notri
+'Altria Group Inc', !
+'American Express Co', !
+'Boeing Co', !
+'Caterpillar Inc', !
+'Citigroup Inc', !
+'Coca-Cola Co', !
+'Dupont De Nemours Inc', !
+'EK', ! imenovan Eastman Kodak Company -> nimam podatkov do 2012
+'Exxon Mobil Corp', !
+'General Electric Co', !
+'General Motors Co', !
+'HP Inc', ! imenovan Hewlett-Packard
+'Home Depot Inc', !
+'Honeywell International Inc', !
+'Howmet Aerospace Inc', imenovan Alcoa -> Alcoa Corporation (AA)
+'Intel Corp', !
+'International Business Machines Corp', !
+'International Paper Co', !
+'JPMorgan Chase & Co', !
+'Johnson & Johnson', !
+"Mcdonald's Corp", !
+'Merck & Co Inc', !
+'Microsoft Corp', !
+'Procter & Gamble Co', !
+'Raytheon Technologies Corp', ! prej je bil imenovan United Technologies Corporation
+'Walmart Inc', !
+'Walt Disney Co'] !
+
+
+
+3M Company †(formerly Minnesota Mining & Manufacturing Company)
+Eastman Kodak Company
+Johnson & Johnson
+Alcoa Inc.
+Exxon Mobil Corporation † (formerly Exxon Corporation)
+JPMorgan Chase & Co. †(formerly J.P. Morgan & Co.)
+Altria Group, Incorporated †(formerly Philip Morris Companies Inc.)
+General Electric Company
+McDonald's Corporation
+American Express Company
+General Motors Corporation
+Merck & Co., Inc.
+AT&T Corporation
+Hewlett-Packard Company
+Microsoft Corporation
+The Boeing Company
+The Home Depot, Inc.
+The Procter & Gamble Company
+Caterpillar Inc.
+Honeywell International †(formerly AlliedSignal Incorporated)
+SBC Communications Inc.
+Citigroup Inc.
+Intel Corporation
+United Technologies Corporation
+The Coca-Cola Company
+International Business Machines Corporation
+Wal-Mart Stores, Inc.
+E.I. du Pont de Nemours & Company
+International Paper Company
+The Walt Disney Company
