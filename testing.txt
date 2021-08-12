@@ -18,7 +18,7 @@
 'HD', 1999 dalje
 'HON', 1999 dalje
 'HPQ', 1999 dalje
-'HWM', 2016 dalje -> prej Alcoa corp (ticker: AA) gotta do smthing
+'HWM', 2016 dalje -> prej Alcoa corp (ticker: AA) gotta do smthing podatki so 1999 dalje
 'IBM', 1999 dalje
 'INTC', 1999 dalje
 'JNJ', 1999 dalje

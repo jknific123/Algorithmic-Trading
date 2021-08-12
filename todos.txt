@@ -1,6 +1,9 @@
 
 TODOs for diplomska
 
+fundamental data api rewiev
+
+https://hackernoon.com/top-4-stock-market-apis-of-2021-8oq336w
 
 # TODO taxes, prihodki, comission na buy in sell order, starting money, portfolio -> done razn portfolio
 

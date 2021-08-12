@@ -8,35 +8,121 @@ import matplotlib.pyplot as plt
 import utils as util
 import dow_jones_companies as dow
 import yfinance as yf
+import requests
+
+api_key = "950c6e208107d01d9616681a4cf99685"
+years = 30
+
+# vrne naslednji delovni datum ce trenutni datum ni delovni dan, uazme date time in vrne datum v string formatu
+def to_week_day(date):
+    if date.isoweekday() in set((6, 7)):
+        date += datetime.timedelta(days=-date.isoweekday() + 8)
+    return date.strftime("%Y-%m-%d")
+
+def coolPe(key_metrics):
+
+    for x in key_metrics:
+        if x["peRatio"] == None:
+            key_metrics.remove(x)
+    return key_metrics
+
+def vrni_pe(start_date, end_date, key_metrics):
+
+    pe_vrednosti = {}
+    for x in key_metrics:
+
+        if datetime.datetime.strptime(x["date"], "%Y-%m-%d") >= datetime.datetime.strptime(start_date, "%Y-%m-%d")  and datetime.datetime.strptime(x["date"], "%Y-%m-%d")  <= datetime.datetime.strptime(end_date, "%Y-%m-%d"):
+
+            # to weekday
+            week_date = to_week_day(datetime.datetime.strptime(x["date"], "%Y-%m-%d"))
+            pe_vrednosti[week_date] = x["peRatio"]
+
+    return pe_vrednosti
 
 
+def vrni_lanski_PE(start_date, end_date, key_metrics):
 
-# portfolio = {'AAPL': {'funds': 0, 'shares': 0, 'invested': 0}}
-# print(portfolio)
-# print(portfolio.keys())
-# print(portfolio.values())
-# print(portfolio['AAPL'])
-# print(portfolio['AAPL']['funds'])
-# -----rez-------------
-# {'AAPL': {'funds': 0}}
-# dict_keys(['AAPL'])
-# dict_values([{'funds': 0}])
-# {'funds': 0}
-# 0
+    lanski_pe = {}
+
+    check = 0
+    prejsnji = 0
+    for trenutni in key_metrics:
+
+        datetime.datetime.strptime(trenutni["date"], "%Y-%m-%d")
+
+        if datetime.datetime.strptime(trenutni["date"], "%Y-%m-%d") >= datetime.datetime.strptime(start_date, "%Y-%m-%d"):  # najdem prvega ki je večji od start date in uzamem prejsnjega
+            week_date = to_week_day(datetime.datetime.strptime(prejsnji["date"], "%Y-%m-%d"))
+            lanski_pe[week_date] = prejsnji["peRatio"]
+            break
+        prejsnji = trenutni
+
+    return lanski_pe
+
+#     lanski_pe = {}
 #
+#     check = 0
+#     for index in range(len(key_metrics)):
+#
+#         trenutni = key_metrics[index]
+#         if trenutni["date"] > start_date and check == 0: # najdem prvega ki je večji od start date in uzamem prejsnjega
+#             prejsnji_index = index - 1
+#             prejsnji = key_metrics[prejsnji_index]
+#             week_date = to_week_day(datetime.datetime.strptime(prejsnji["date"], "%Y-%m-%d"))
+#             lanski_pe[week_date] = key_metrics[prejsnji_index]["peRatio"]
+#             check = 1
+#
+#     return lanski_pe
 
-def bollingerBands(sma_period,bands_multiplayer, df, ticker, starting_index, status, odZacetkaAliNe):
-    # naredimo nove stolpce za EMA-e, MACD in signal line
-
-    df[f'SMA-{sma_period}'] = df['Adj Close'].rolling(window=sma_period, min_periods=1, center=False).mean()
-    df["STD"] = df['Adj Close'].rolling(window=sma_period, min_periods=1, center=False).std()
-    df['Upper band'] = df[f'SMA-{sma_period}'] + (df["STD"] * bands_multiplayer)
-    df['Lower band'] = df[f'SMA-{sma_period}'] - (df["STD"] * bands_multiplayer)
+def printajPEje(res):
+    for x in res:
+        print(f"datum: {x}, pe ratio: {res[x]}"),
 
 
-    # v nadaljevanju uporabljamo samo podatke od takrat, ko je dolgi EMA že na voljo
-    if starting_index == 0:
-        df = df[sma_period:]
+def pe_ratio_strategy(start_date, end_date, df, ticker, starting_index, status, odZacetkaAliNe):
+
+    # pridobim podatke o p/e ratiu za to obdobje
+    company = ticker
+    if company == "AA":
+        company = "HWM"
+    print("PE STRAT COMPANY: ", company)
+    key_metrics = requests.get(f"https://financialmodelingprep.com/api/v3/key-metrics/{company}?limit={years}&apikey={api_key}")
+    key_metrics = key_metrics.json()
+    key_metrics = coolPe(key_metrics)
+    key_metrics = list(reversed(key_metrics))
+
+    return_slovar_pe = vrni_pe(start_date, end_date, key_metrics)
+    print("Return_slovar_pe: ", return_slovar_pe)
+    printajPEje(return_slovar_pe)
+
+    prvi_datum = 0
+    if len(return_slovar_pe) != 0:
+        print("Return slovar pe ni prazen")
+        prvi_datum = list(return_slovar_pe.keys())[0]
+
+    print(prvi_datum)
+    lanski_pe = 0
+    slovar_pe = {}
+    # if start_date < prvi_datum:
+    if company != "DOW": # DOW nima lanskih ker je 2019 sele na novo ustanovljen
+        lanski_pe = vrni_lanski_PE(start_date, end_date, key_metrics)
+        print("LANSKI: ", lanski_pe)
+        slovar_pe = lanski_pe
+
+
+    for x in return_slovar_pe:
+        slovar_pe[x] = return_slovar_pe[x]
+    print()
+    printajPEje(slovar_pe)
+
+    print()
+    slovar_keys = list(slovar_pe.keys())
+    print(slovar_keys)
+    print("TO weekday slovar keys")
+
+
+
+    #if starting_index == 0:
+    #    df = df[sma_period:]
 
     # za racunanje davka na dobiček
     sellPrice = 0
@@ -48,17 +134,10 @@ def bollingerBands(sma_period,bands_multiplayer, df, ticker, starting_index, sta
     check = status
     for x in range(starting_index, len(df)):
 
-        """
-        print(df.index[x])
-
-        if df.index[x] == datetime.datetime.strptime("2008-1-17", "%Y-%m-%d"): # datetime.datetime(2008-1-17)
-            print("HURAAYYY")
-        """
-
         # filing shares, cash, total
         if (x - 1) >= 0:  # preverimo ce smo znotraj tabele
             df['Shares'].iloc[x] = np.nan_to_num(df['Shares'].iloc[x - 1])  # prenesemo prejsnje st delnic naprej
-            if x != starting_index: # za izjeme ko dodamo nov ticker in ne smemo zbrisat starting cash
+            if x != starting_index:  # za izjeme ko dodamo nov ticker in ne smemo zbrisat starting cash
                 df['Cash'].iloc[x] = np.nan_to_num(df['Cash'].iloc[x - 1])  # prenesemo prejsnji Cash naprej
             elif x == starting_index and odZacetkaAliNe is False: # takrat ko je isto podjetje kot prej
                 df['Cash'].iloc[x] = np.nan_to_num(df['Cash'].iloc[x - 1])  # prenesemo prejsnji Cash naprej
@@ -75,11 +154,36 @@ def bollingerBands(sma_period,bands_multiplayer, df, ticker, starting_index, sta
             df['Total'].iloc[x] = (df['Cash'].iloc[x] + (df['Shares'].iloc[x] * df['Adj Close'].iloc[x]))
             df['Ticker'].iloc[x] = ticker
 
-        # cena < Lower band-> buy signal
-        if df["Adj Close"].iloc[x] < df[f'Lower band'].iloc[x]:
+        # print(df.index[x])
+        #         if df.index[x] == datetime.datetime.strptime("2008-1-17", "%Y-%m-%d"): # datetime.datetime(2008-1-17)
+        #             datum = df.index[x].strftime("%Y-%m-%d")
+        #             print("Convertan datum brez cajta: ", datum)
+
+
+
+        # if trenutni_datum in slovar_keys and slovar_pe[trenutni_datum] < 16
+
+        trenutni_datum = df.index[x].strftime("%Y-%m-%d")
+        # print(trenutni_datum)
+        # print(type(trenutni_datum))
+        prvi_datum_v_slovar_pe = list(slovar_pe.keys())[0]
+
+        if trenutni_datum in slovar_keys:
+            print("JE V SLOVAR KEYS")
+            df["P/E ratio"].iloc[x] = slovar_pe[trenutni_datum]
+
+        if x == 0:
+            print("JE NA PRVEM MESTU")
+            df["P/E ratio"].iloc[x] = slovar_pe[prvi_datum_v_slovar_pe]
+
+        # pe ratio < 16 -> buy signal
+        if (trenutni_datum in slovar_keys and slovar_pe[trenutni_datum] < 16 and slovar_pe[trenutni_datum] > 0) or (x == 0 and slovar_pe[prvi_datum_v_slovar_pe] < 16 and slovar_pe[trenutni_datum] > 0):
+            print("SEM V BUY")
 
             can_buy = math.floor(df['Cash'].iloc[x] / (df['Adj Close'].iloc[x] + util.percentageFee(util.feePercentage, df['Adj Close'].iloc[x]))) # to je biu poopravek, dalo je buy signal tudi ce ni bilo denarja za kupit delnico
             if check != 2 and can_buy > 0: # zadnji signal ni bil buy in imamo dovolj denarja za nakup
+
+                print("SEM V BUY IN BOM KUPIL", trenutni_datum)
 
                 # kupi kolikor je možno delnic glede na cash -> drugi del je cena delnice + fee na nakup delnice
                 stDelnic = math.floor(df['Cash'].iloc[x] / (df['Adj Close'].iloc[x] + util.percentageFee(util.feePercentage, df['Adj Close'].iloc[x])))
@@ -94,13 +198,20 @@ def bollingerBands(sma_period,bands_multiplayer, df, ticker, starting_index, sta
                         stDelnic * df['Adj Close'].iloc[x])  # posodbi cash TODO tudi tuki dodaj fees
                 df['Shares'].iloc[x] = df['Shares'].iloc[x] + stDelnic
 
+                if x == 0 and slovar_pe[prvi_datum_v_slovar_pe] < 16:
+                    df["P/E ratio"].iloc[x] = slovar_pe[prvi_datum_v_slovar_pe]
+
+                elif trenutni_datum in slovar_keys and slovar_pe[trenutni_datum] < 16:
+                    df["P/E ratio"].iloc[x] = slovar_pe[trenutni_datum]
+
                 check = 2
 
-        # cena > Upper band -> sell signal
-        elif df["Adj Close"].iloc[x] > df[f'Upper band'].iloc[x]:
+        # pe ratio > 16 -> sell signal
+        elif (trenutni_datum in slovar_keys and slovar_pe[trenutni_datum] > 16) or (x == 0 and slovar_pe[prvi_datum_v_slovar_pe] > 16):
+            print("SEM V SELL")
 
             if check != 1 and check != 0:
-
+                print("SEM V SELL IN BOM PORODAL", trenutni_datum)
                 # TODO dodaj še davek na dobiček 27,5% -> done
 
                 # prodaj vse delnic izracunaj profit in placaj davek
@@ -122,6 +233,12 @@ def bollingerBands(sma_period,bands_multiplayer, df, ticker, starting_index, sta
                 # updejtamo total
                 df['Total'].iloc[x] = df['Cash'].iloc[x]
 
+                if x == 0 and slovar_pe[prvi_datum_v_slovar_pe] > 16:
+                    df["P/E ratio"].iloc[x] = slovar_pe[prvi_datum_v_slovar_pe]
+
+                elif trenutni_datum in slovar_keys and slovar_pe[trenutni_datum] > 16:
+                    df["P/E ratio"].iloc[x] = slovar_pe[trenutni_datum]
+
                 check = 1
 
     # print(df)
@@ -137,7 +254,7 @@ def bollingerBands(sma_period,bands_multiplayer, df, ticker, starting_index, sta
     return df
 
 
-def bollinger_trading_graph(sma_period, bands_multiplayer, df, company):
+def pe_trading_graph(df, company):
     # prikaz grafa gibanja cene in kupovanja ter prodajanja delnice
 
     fig = plt.figure(figsize=(8, 6), dpi=200)
@@ -146,11 +263,7 @@ def bollinger_trading_graph(sma_period, bands_multiplayer, df, company):
 
     # cena
     df['Adj Close'].plot(ax=ax1, color='black', label="Cena", alpha=0.5)
-    df[f'SMA-{sma_period}'].plot(ax=ax1 ,color='orange', linestyle="--")
-
-    # kratki in dolgi SMA
-    df['Upper band'].plot(ax=ax1, label="Zgornji pas", color="blue", linestyle="--")
-    df['Lower band'].plot(ax=ax1, label="Spodnji pas", color="purple", linestyle="--")
+    # df[f'SMA-{sma_period}'].plot(ax=ax1 ,color='orange', linestyle="--")
 
     # buy/sell signali
     ax1.plot(df['Buy-Signal'], '^', markersize=6, color='green', label='Buy signal', lw=2)
@@ -195,13 +308,10 @@ def plotShares(df, company):
     with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
         print(df['Shares'])
 
-def zacetniDf(data, sma_period):
+def zacetniDf(data):
 
     # kreiramo nova stolpca za buy/sell signale
-    data[f'SMA-{sma_period}'] = np.nan
-    data["STD"] = np.nan
-    data['Upper band'] = np.nan
-    data['Lower band'] = np.nan
+    data["P/E ratio"] = np.nan
     data['Buy'] = np.nan
     data['Sell'] = np.nan
     data['Cash'] = 0
@@ -215,7 +325,7 @@ def zacetniDf(data, sma_period):
     return data
 
 
-def backtest(start, end, sma_period, bands_multiplayer, dowTickers):
+def backtest(start, end, dowTickers):
 
     obdobja = []
     for x in dowTickers:
@@ -263,8 +373,8 @@ def backtest(start, end, sma_period, bands_multiplayer, dowTickers):
 
                     data = yf.download(x, start=zacetnoObdobje, end=plus_one_start_date, progress=False)
                     data = data[['Adj Close']].copy()
-                    data = zacetniDf(data, sma_period)  # dodamo stolpce
-                    return_df = bollingerBands(sma_period, bands_multiplayer, data, x, 0, 0, True)
+                    data = zacetniDf(data)  # dodamo stolpce
+                    return_df = pe_ratio_strategy(zacetnoObdobje, koncnoObdobje, data, x, 0, 0, True)
                     portfolio[x] = return_df
 
                 else:
@@ -274,7 +384,7 @@ def backtest(start, end, sma_period, bands_multiplayer, dowTickers):
                         index = pd.date_range(zacetnoObdobje, "2009-6-8", freq='D')
                         columns = ["Adj Close"]
                         prazen = pd.DataFrame(index=index, columns=columns)
-                        prazen = zacetniDf(prazen, sma_period)
+                        prazen = zacetniDf(prazen)
                         prazen["Cash"] = prazen["Cash"].add(util.getMoney())
                         prazen["Total"] = prazen["Cash"]
                         portfolio[x] = prazen
@@ -282,8 +392,8 @@ def backtest(start, end, sma_period, bands_multiplayer, dowTickers):
                     elif x != "GM":
                         data = yf.download(x, start=zacetnoObdobje, end=koncnoObdobje, progress=False)
                         data = data[['Adj Close']].copy()
-                        data = zacetniDf(data, sma_period)  # dodamo stolpce
-                        return_df = bollingerBands(sma_period, bands_multiplayer, data, x, 0, 0, True)
+                        data = zacetniDf(data)  # dodamo stolpce
+                        return_df = pe_ratio_strategy(zacetnoObdobje, koncnoObdobje, data, x, 0, 0, True)
                         portfolio[x] = return_df
 
 
@@ -310,12 +420,11 @@ def backtest(start, end, sma_period, bands_multiplayer, dowTickers):
                     # naslednje_obdobje = '2008, 2, 19'
                     real_start_date = datetime.datetime.strptime(zacetnoObdobje, "%Y-%m-%d")
                     plus_one_start_date = real_start_date + datetime.timedelta(days=1)  # adding one day
-                    modified_date = plus_one_start_date - datetime.timedelta(
-                        days=(sma_period * 2))  # odstevamo long period da dobimo dovolj podatkov
-                    new_df = yf.download(nov_ticker, start=modified_date, end=koncnoObdobje, progress=False)
+                    # modified_date = plus_one_start_date - datetime.timedelta( days=(sma_period * 2))  # odstevamo long period da dobimo dovolj podatkov
+                    new_df = yf.download(nov_ticker, start=plus_one_start_date, end=koncnoObdobje, progress=False) # old:  start=modified_date
 
                     new_df = new_df[['Adj Close']].copy()
-                    new_df = zacetniDf(new_df, sma_period)
+                    new_df = zacetniDf(new_df)
                     ex_df = portfolio[odstranjenTicker]
                     ex_data = ex_df.tail(1)
 
@@ -349,7 +458,7 @@ def backtest(start, end, sma_period, bands_multiplayer, dowTickers):
                     starting_index = len(odvec) - 1
 
                     # startamo trading algo
-                    new_returns = bollingerBands(sma_period, bands_multiplayer, new_df, nov_ticker, starting_index, 0,
+                    new_returns = pe_ratio_strategy(zacetnoObdobje, koncnoObdobje, new_df, nov_ticker, starting_index, 0,
                                                 True)  # zadnji argument True ker je razlicen ticker in zacnemo od zacetka trejdat, isti -> False ker samo nadaljujemo trejdanje
 
                     added_returns = new_returns[plus_one_start_date:]
@@ -391,8 +500,8 @@ def backtest(start, end, sma_period, bands_multiplayer, dowTickers):
 
                     concat_data = pd.concat([totals, new_data])
 
-                    concat_totals = bollingerBands(sma_period, bands_multiplayer, concat_data, f"new{ostaliTicker}", starting_index,
-                                                  zadnji_signal, False)
+                    concat_totals = pe_ratio_strategy(zacetnoObdobje, koncnoObdobje, concat_data, ostaliTicker, starting_index,
+                                                  zadnji_signal, False) # old: f"new{ostaliTicker}"
                     portfolio[ostaliTicker] = concat_totals
 
 
@@ -438,27 +547,28 @@ def backtest(start, end, sma_period, bands_multiplayer, dowTickers):
 # Bollinger bands strategy
 # datetmie = leto, mesec, dan
 
-sma_period = 20
-bands_multiplayer = 2
 
 # testing date time
 start = "2005-11-21"
 #end = "2012-10-25"
-end = "2008-4-1"
-# end = "2020-10-1"
+#end = "2008-4-1"
+end = "2020-10-1"
+#end = "2020-11-21"
 # end = "2008-2-19"
 
-#end = "2011-11-21"
+# end = "2011-11-21"
 
 dowTickers = dow.endTickers # podatki o sezona sprememb dow jones indexa
-# backtest(start, end, sma_period, bands_multiplayer, dowTickers)
+# backtest(start, end, dowTickers)
 
+
+"""
 test_ticker = "HD"
 test_data = yf.download(test_ticker, start=start, end=end, progress=False)
 test_data = test_data[['Adj Close']].copy()
-test_data = zacetniDf(test_data, sma_period)  # dodamo stolpce
-return_df = bollingerBands(sma_period, bands_multiplayer, test_data, test_ticker, 0, 0, True)
+test_data = zacetniDf(test_data)  # dodamo stolpce
+return_df = pe_ratio_strategy(start, end, test_data, test_ticker, 0, 0, True)
 
-bollinger_trading_graph(sma_period, bands_multiplayer, return_df, test_ticker)
+pe_trading_graph(return_df, test_ticker)
 """
-"""
+
