@@ -19,6 +19,52 @@ def to_week_day(date):
         date += datetime.timedelta(days=-date.isoweekday() + 8)
     return date.strftime("%Y-%m-%d")
 
+def coolPb(key_metrics):
+
+    for x in key_metrics:
+        if x["pbRatio"] == None:
+            key_metrics.remove(x)
+    return key_metrics
+
+def vrni_pb(start_date, end_date, key_metrics):
+
+    pb_vrednosti = {}
+    for x in key_metrics:
+
+        if datetime.datetime.strptime(x["date"], "%Y-%m-%d") >= datetime.datetime.strptime(start_date, "%Y-%m-%d")  and datetime.datetime.strptime(x["date"], "%Y-%m-%d")  <= datetime.datetime.strptime(end_date, "%Y-%m-%d"):
+
+            # to weekday
+            week_date = to_week_day(datetime.datetime.strptime(x["date"], "%Y-%m-%d"))
+            pb_vrednosti[week_date] = x["pbRatio"]
+
+    return pb_vrednosti
+
+
+def vrni_lanski_PB(start_date, end_date, key_metrics):
+
+    lanski_pb = {}
+
+    check = 0
+    prejsnji = 0
+    for trenutni in key_metrics:
+
+        datetime.datetime.strptime(trenutni["date"], "%Y-%m-%d")
+
+        if datetime.datetime.strptime(trenutni["date"], "%Y-%m-%d") >= datetime.datetime.strptime(start_date, "%Y-%m-%d"):  # najdem prvega ki je večji od start date in uzamem prejsnjega
+            week_date = to_week_day(datetime.datetime.strptime(prejsnji["date"], "%Y-%m-%d"))
+            lanski_pb[week_date] = prejsnji["pbRatio"]
+            break
+        prejsnji = trenutni
+
+    return lanski_pb
+
+
+def printajPBje(res):
+    for x in res:
+        print(f"datum: {x}, pb ratio: {res[x]}")
+
+#### P/E HELPERS
+
 def coolPe(key_metrics):
 
     for x in key_metrics:
@@ -58,27 +104,58 @@ def vrni_lanski_PE(start_date, end_date, key_metrics):
 
     return lanski_pe
 
-#     lanski_pe = {}
-#
-#     check = 0
-#     for index in range(len(key_metrics)):
-#
-#         trenutni = key_metrics[index]
-#         if trenutni["date"] > start_date and check == 0: # najdem prvega ki je večji od start date in uzamem prejsnjega
-#             prejsnji_index = index - 1
-#             prejsnji = key_metrics[prejsnji_index]
-#             week_date = to_week_day(datetime.datetime.strptime(prejsnji["date"], "%Y-%m-%d"))
-#             lanski_pe[week_date] = key_metrics[prejsnji_index]["peRatio"]
-#             check = 1
-#
-#     return lanski_pe
 
 def printajPEje(res):
     for x in res:
-        print(f"datum: {x}, pe ratio: {res[x]}"),
+        print(f"datum: {x}, pe ratio: {res[x]}")
+
+#### ROE HELPERS
+
+def coolROE(key_metrics):
+
+    for x in key_metrics:
+        if x["roe"] == None:
+            key_metrics.remove(x)
+    return key_metrics
+
+def vrni_ROE(start_date, end_date, key_metrics):
+
+    roe_vrednosti = {}
+    for x in key_metrics:
+
+        if datetime.datetime.strptime(x["date"], "%Y-%m-%d") >= datetime.datetime.strptime(start_date, "%Y-%m-%d")  and datetime.datetime.strptime(x["date"], "%Y-%m-%d")  <= datetime.datetime.strptime(end_date, "%Y-%m-%d"):
+
+            # to weekday
+            week_date = to_week_day(datetime.datetime.strptime(x["date"], "%Y-%m-%d"))
+            roe_vrednosti[week_date] = x["roe"]
+
+    return roe_vrednosti
 
 
-def pe_ratio_strategy(start_date, end_date, pe_mejana_vrednost, df, ticker, starting_index, status, odZacetkaAliNe):
+def vrni_lanski_ROE(start_date, end_date, key_metrics):
+
+    lanski_roe = {}
+
+    check = 0
+    prejsnji = 0
+    for trenutni in key_metrics:
+
+        datetime.datetime.strptime(trenutni["date"], "%Y-%m-%d")
+
+        if datetime.datetime.strptime(trenutni["date"], "%Y-%m-%d") >= datetime.datetime.strptime(start_date, "%Y-%m-%d"):  # najdem prvega ki je večji od start date in uzamem prejsnjega
+            week_date = to_week_day(datetime.datetime.strptime(prejsnji["date"], "%Y-%m-%d"))
+            lanski_roe[week_date] = prejsnji["roe"]
+            break
+        prejsnji = trenutni
+
+    return lanski_roe
+
+
+def printajROEje(res):
+    for x in res:
+        print(f"datum: {x}, roe ratio: {res[x]}")
+
+def mixed_fundamentals_strategy(start_date, end_date, df, ticker, starting_index, status, odZacetkaAliNe):
 
     # pridobim podatke o p/e ratiu za to obdobje
     company = ticker
@@ -87,35 +164,35 @@ def pe_ratio_strategy(start_date, end_date, pe_mejana_vrednost, df, ticker, star
     print("PE STRAT COMPANY: ", company)
     key_metrics = requests.get(f"https://financialmodelingprep.com/api/v3/key-metrics/{company}?limit={years}&apikey={api_key}")
     key_metrics = key_metrics.json()
-    key_metrics = coolPe(key_metrics)
+    key_metrics = coolPb(key_metrics)
     key_metrics = list(reversed(key_metrics))
 
-    return_slovar_pe = vrni_pe(start_date, end_date, key_metrics)
-    print("Return_slovar_pe: ", return_slovar_pe)
-    printajPEje(return_slovar_pe)
+    return_slovar_pb = vrni_pb(start_date, end_date, key_metrics)
+    print("Return_slovar_pe: ", return_slovar_pb)
+    printajPBje(return_slovar_pb)
 
     prvi_datum = 0
-    if len(return_slovar_pe) != 0:
+    if len(return_slovar_pb) != 0:
         print("Return slovar pe ni prazen")
-        prvi_datum = list(return_slovar_pe.keys())[0]
+        prvi_datum = list(return_slovar_pb.keys())[0]
 
     print(prvi_datum)
     lanski_pe = 0
-    slovar_pe = {}
+    slovar_pb = {}
     # if start_date < prvi_datum:
     if company != "DOW": # DOW nima lanskih ker je 2019 sele na novo ustanovljen
-        lanski_pe = vrni_lanski_PE(start_date, end_date, key_metrics)
-        print("LANSKI: ", lanski_pe)
-        slovar_pe = lanski_pe
+        lanski_pb = vrni_lanski_PB(start_date, end_date, key_metrics)
+        print("LANSKI: ", lanski_pb)
+        slovar_pb = lanski_pb
 
 
-    for x in return_slovar_pe:
-        slovar_pe[x] = return_slovar_pe[x]
+    for x in return_slovar_pb:
+        slovar_pb[x] = return_slovar_pb[x]
     print()
-    printajPEje(slovar_pe)
+    printajPBje(slovar_pb)
 
     print()
-    slovar_keys = list(slovar_pe.keys())
+    slovar_keys = list(slovar_pb.keys())
     print(slovar_keys)
     print("TO weekday slovar keys")
 
@@ -166,18 +243,18 @@ def pe_ratio_strategy(start_date, end_date, pe_mejana_vrednost, df, ticker, star
         trenutni_datum = df.index[x].strftime("%Y-%m-%d")
         # print(trenutni_datum)
         # print(type(trenutni_datum))
-        prvi_datum_v_slovar_pe = list(slovar_pe.keys())[0]
+        prvi_datum_v_slovar_pb = list(slovar_pb.keys())[0]
 
         if trenutni_datum in slovar_keys:
             print("JE V SLOVAR KEYS")
-            df["P/E ratio"].iloc[x] = slovar_pe[trenutni_datum]
+            df["P/B ratio"].iloc[x] = slovar_pb[trenutni_datum]
 
         if x == 0:
             print("JE NA PRVEM MESTU")
-            df["P/E ratio"].iloc[x] = slovar_pe[prvi_datum_v_slovar_pe]
+            df["P/B ratio"].iloc[x] = slovar_pb[prvi_datum_v_slovar_pb]
 
-        # pe ratio < 16 -> buy signal
-        if (trenutni_datum in slovar_keys and slovar_pe[trenutni_datum] < pe_mejana_vrednost and slovar_pe[trenutni_datum] > 0) or (x == 0 and slovar_pe[prvi_datum_v_slovar_pe] < pe_mejana_vrednost and slovar_pe[prvi_datum_v_slovar_pe] > 0):
+        # pe ratio < 16 -> BUY signal
+        if (trenutni_datum in slovar_keys and slovar_pb[trenutni_datum] < 1 and slovar_pb[trenutni_datum] > 0) or (x == 0 and slovar_pb[prvi_datum_v_slovar_pb] < 1 and slovar_pb[prvi_datum_v_slovar_pb] > 0):
             print("SEM V BUY")
 
             can_buy = math.floor(df['Cash'].iloc[x] / (df['Adj Close'].iloc[x] + util.percentageFee(util.feePercentage, df['Adj Close'].iloc[x]))) # to je biu poopravek, dalo je buy signal tudi ce ni bilo denarja za kupit delnico
@@ -198,16 +275,16 @@ def pe_ratio_strategy(start_date, end_date, pe_mejana_vrednost, df, ticker, star
                         stDelnic * df['Adj Close'].iloc[x])  # posodbi cash TODO tudi tuki dodaj fees
                 df['Shares'].iloc[x] = df['Shares'].iloc[x] + stDelnic
 
-                if x == 0 and slovar_pe[prvi_datum_v_slovar_pe] < pe_mejana_vrednost:
-                    df["P/E ratio"].iloc[x] = slovar_pe[prvi_datum_v_slovar_pe]
+                if x == 0 and slovar_pb[prvi_datum_v_slovar_pb] < 16:
+                    df["P/B ratio"].iloc[x] = slovar_pb[prvi_datum_v_slovar_pb]
 
-                elif trenutni_datum in slovar_keys and slovar_pe[trenutni_datum] < pe_mejana_vrednost:
-                    df["P/E ratio"].iloc[x] = slovar_pe[trenutni_datum]
+                elif trenutni_datum in slovar_keys and slovar_pb[trenutni_datum] < 16:
+                    df["P/B ratio"].iloc[x] = slovar_pb[trenutni_datum]
 
                 check = 2
 
         # pe ratio > 16 -> sell signal
-        elif (trenutni_datum in slovar_keys and slovar_pe[trenutni_datum] > pe_mejana_vrednost) or (x == 0 and slovar_pe[prvi_datum_v_slovar_pe] > pe_mejana_vrednost):
+        elif (trenutni_datum in slovar_keys and slovar_pb[trenutni_datum] > 1) or (x == 0 and slovar_pb[prvi_datum_v_slovar_pb] > 1):
             print("SEM V SELL")
 
             if check != 1 and check != 0:
@@ -233,11 +310,11 @@ def pe_ratio_strategy(start_date, end_date, pe_mejana_vrednost, df, ticker, star
                 # updejtamo total
                 df['Total'].iloc[x] = df['Cash'].iloc[x]
 
-                if x == 0 and slovar_pe[prvi_datum_v_slovar_pe] > pe_mejana_vrednost:
-                    df["P/E ratio"].iloc[x] = slovar_pe[prvi_datum_v_slovar_pe]
+                if x == 0 and slovar_pb[prvi_datum_v_slovar_pb] > 16:
+                    df["P/B ratio"].iloc[x] = slovar_pb[prvi_datum_v_slovar_pb]
 
-                elif trenutni_datum in slovar_keys and slovar_pe[trenutni_datum] > pe_mejana_vrednost:
-                    df["P/E ratio"].iloc[x] = slovar_pe[trenutni_datum]
+                elif trenutni_datum in slovar_keys and slovar_pb[trenutni_datum] > 16:
+                    df["P/B ratio"].iloc[x] = slovar_pb[trenutni_datum]
 
                 check = 1
 
@@ -311,7 +388,7 @@ def plotShares(df, company):
 def zacetniDf(data):
 
     # kreiramo nova stolpca za buy/sell signale
-    data["P/E ratio"] = np.nan
+    data["P/B ratio"] = np.nan
     data['Buy'] = np.nan
     data['Sell'] = np.nan
     data['Cash'] = 0
@@ -325,9 +402,7 @@ def zacetniDf(data):
     return data
 
 
-
-
-def backtest(start, end,pe_mejana_vrednost, dowTickers):
+def backtest(start, end, dowTickers):
 
     obdobja = []
     for x in dowTickers:
@@ -376,7 +451,7 @@ def backtest(start, end,pe_mejana_vrednost, dowTickers):
                     data = yf.download(x, start=zacetnoObdobje, end=plus_one_start_date, progress=False)
                     data = data[['Adj Close']].copy()
                     data = zacetniDf(data)  # dodamo stolpce
-                    return_df = pe_ratio_strategy(zacetnoObdobje, koncnoObdobje, pe_mejana_vrednost, data, x, 0, 0, True)
+                    return_df = pb_ratio_strategy(zacetnoObdobje, koncnoObdobje, data, x, 0, 0, True)
                     portfolio[x] = return_df
 
                 else:
@@ -395,7 +470,7 @@ def backtest(start, end,pe_mejana_vrednost, dowTickers):
                         data = yf.download(x, start=zacetnoObdobje, end=koncnoObdobje, progress=False)
                         data = data[['Adj Close']].copy()
                         data = zacetniDf(data)  # dodamo stolpce
-                        return_df = pe_ratio_strategy(zacetnoObdobje, koncnoObdobje, pe_mejana_vrednost, data, x, 0, 0, True)
+                        return_df = pb_ratio_strategy(zacetnoObdobje, koncnoObdobje, data, x, 0, 0, True)
                         portfolio[x] = return_df
 
 
@@ -460,7 +535,7 @@ def backtest(start, end,pe_mejana_vrednost, dowTickers):
                     starting_index = len(odvec) - 1
 
                     # startamo trading algo
-                    new_returns = pe_ratio_strategy(zacetnoObdobje, koncnoObdobje, pe_mejana_vrednost, new_df, nov_ticker, starting_index, 0,
+                    new_returns = pb_ratio_strategy(zacetnoObdobje, koncnoObdobje, new_df, nov_ticker, starting_index, 0,
                                                 True)  # zadnji argument True ker je razlicen ticker in zacnemo od zacetka trejdat, isti -> False ker samo nadaljujemo trejdanje
 
                     added_returns = new_returns[plus_one_start_date:]
@@ -502,7 +577,7 @@ def backtest(start, end,pe_mejana_vrednost, dowTickers):
 
                     concat_data = pd.concat([totals, new_data])
 
-                    concat_totals = pe_ratio_strategy(zacetnoObdobje, koncnoObdobje, pe_mejana_vrednost, concat_data, ostaliTicker, starting_index,
+                    concat_totals = pb_ratio_strategy(zacetnoObdobje, koncnoObdobje, concat_data, ostaliTicker, starting_index,
                                                   zadnji_signal, False) # old: f"new{ostaliTicker}"
                     portfolio[ostaliTicker] = concat_totals
 
@@ -534,7 +609,6 @@ def backtest(start, end,pe_mejana_vrednost, dowTickers):
     startFunds = len(portfolio) * util.getMoney()
     endFunds = allFunds['Total'].iloc[-1]
 
-    print("P/E mejna vrednost: ", pe_mejana_vrednost)
     print("Zacetna sredstva: ", startFunds, "$")
     print("Skupna sredstva portfolia: ", round(allFunds['Total'].iloc[-1], 4), "$")
     # print("Profit: ", round(allFunds['Total'].iloc[-1] - (len(portfolio) * util.getMoney()), 4), "$")
@@ -560,19 +634,19 @@ end = "2020-10-1"
 # end = "2008-2-19"
 
 # end = "2011-11-21"
-pe_mejana_vrednost = 15
 
 dowTickers = dow.endTickers # podatki o sezona sprememb dow jones indexa
-backtest(start, end, pe_mejana_vrednost, dowTickers)
+# backtest(start, end, dowTickers)
 
 
-"""
 test_ticker = "HD"
 test_data = yf.download(test_ticker, start=start, end=end, progress=False)
 test_data = test_data[['Adj Close']].copy()
 test_data = zacetniDf(test_data)  # dodamo stolpce
-return_df = pe_ratio_strategy(start, end, pe_mejana_vrednost, test_data, test_ticker, 0, 0, True)
+return_df = pe_ratio_strategy(start, end, test_data, test_ticker, 0, 0, True)
 
 pe_trading_graph(return_df, test_ticker)
 """
+"""
+
 
