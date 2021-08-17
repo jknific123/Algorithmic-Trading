@@ -64,13 +64,13 @@ def printajPBje(res):
         print(f"datum: {x}, pb ratio: {res[x]}"),
 
 
-def pb_ratio_strategy(start_date, end_date, df, ticker, starting_index, status, odZacetkaAliNe):
+def pb_ratio_strategy(start_date, end_date, pb_mejna_vrednost, df, ticker, starting_index, status, odZacetkaAliNe):
 
     # pridobim podatke o p/e ratiu za to obdobje
     company = ticker
     if company == "AA":
         company = "HWM"
-    print("PE STRAT COMPANY: ", company)
+    print("PB STRAT COMPANY: ", company)
     key_metrics = requests.get(f"https://financialmodelingprep.com/api/v3/key-metrics/{company}?limit={years}&apikey={api_key}")
     key_metrics = key_metrics.json()
     key_metrics = coolPb(key_metrics)
@@ -147,7 +147,6 @@ def pb_ratio_strategy(start_date, end_date, df, ticker, starting_index, status, 
 
 
 
-        # if trenutni_datum in slovar_keys and slovar_pe[trenutni_datum] < 16
 
         trenutni_datum = df.index[x].strftime("%Y-%m-%d")
         # print(trenutni_datum)
@@ -184,10 +183,10 @@ def pb_ratio_strategy(start_date, end_date, df, ticker, starting_index, status, 
                         stDelnic * df['Adj Close'].iloc[x])  # posodbi cash TODO tudi tuki dodaj fees
                 df['Shares'].iloc[x] = df['Shares'].iloc[x] + stDelnic
 
-                if x == 0 and slovar_pb[prvi_datum_v_slovar_pb] < 16:
+                if x == 0 and slovar_pb[prvi_datum_v_slovar_pb] < 1:
                     df["P/B ratio"].iloc[x] = slovar_pb[prvi_datum_v_slovar_pb]
 
-                elif trenutni_datum in slovar_keys and slovar_pb[trenutni_datum] < 16:
+                elif trenutni_datum in slovar_keys and slovar_pb[trenutni_datum] < 1:
                     df["P/B ratio"].iloc[x] = slovar_pb[trenutni_datum]
 
                 check = 2
@@ -219,10 +218,10 @@ def pb_ratio_strategy(start_date, end_date, df, ticker, starting_index, status, 
                 # updejtamo total
                 df['Total'].iloc[x] = df['Cash'].iloc[x]
 
-                if x == 0 and slovar_pb[prvi_datum_v_slovar_pb] > 16:
+                if x == 0 and slovar_pb[prvi_datum_v_slovar_pb] > 1:
                     df["P/B ratio"].iloc[x] = slovar_pb[prvi_datum_v_slovar_pb]
 
-                elif trenutni_datum in slovar_keys and slovar_pb[trenutni_datum] > 16:
+                elif trenutni_datum in slovar_keys and slovar_pb[trenutni_datum] > 1:
                     df["P/B ratio"].iloc[x] = slovar_pb[trenutni_datum]
 
                 check = 1
@@ -311,7 +310,7 @@ def zacetniDf(data):
     return data
 
 
-def backtest(start, end, dowTickers):
+def backtest(start, end, pb_mejna_vrednost, dowTickers):
 
     obdobja = []
     for x in dowTickers:
@@ -344,7 +343,7 @@ def backtest(start, end, dowTickers):
         print(i, zacetnoObdobje, "+", koncnoObdobje)
 
         # zacetek
-        if zacetnoObdobje == begining:
+        if zacetnoObdobje == start:
             starting_companies = dowTickers[zacetnoObdobje]["all"]
             # starting_companies.remove("GM") # odstranimo časnovno linijo GM ker nimamo podatkov
             izloceniTickerji.append("GM") # dodamo GM pod izlocene
@@ -360,7 +359,7 @@ def backtest(start, end, dowTickers):
                     data = yf.download(x, start=zacetnoObdobje, end=plus_one_start_date, progress=False)
                     data = data[['Adj Close']].copy()
                     data = zacetniDf(data)  # dodamo stolpce
-                    return_df = pb_ratio_strategy(zacetnoObdobje, koncnoObdobje, data, x, 0, 0, True)
+                    return_df = pb_ratio_strategy(zacetnoObdobje, koncnoObdobje, pb_mejna_vrednost, data, x, 0, 0, True)
                     portfolio[x] = return_df
 
                 else:
@@ -379,7 +378,7 @@ def backtest(start, end, dowTickers):
                         data = yf.download(x, start=zacetnoObdobje, end=koncnoObdobje, progress=False)
                         data = data[['Adj Close']].copy()
                         data = zacetniDf(data)  # dodamo stolpce
-                        return_df = pb_ratio_strategy(zacetnoObdobje, koncnoObdobje, data, x, 0, 0, True)
+                        return_df = pb_ratio_strategy(zacetnoObdobje, koncnoObdobje, pb_mejna_vrednost, data, x, 0, 0, True)
                         portfolio[x] = return_df
 
 
@@ -390,7 +389,7 @@ def backtest(start, end, dowTickers):
 
 
         # ce nismo na zacetku gremo cez removed in added in naredimo menjave ter trejdamo za naslednje obdobje
-        elif zacetnoObdobje != begining:
+        elif zacetnoObdobje != start:
 
             dodani = []
             # gremo najprej cez removed in opravimo zamenjave
@@ -444,7 +443,7 @@ def backtest(start, end, dowTickers):
                     starting_index = len(odvec) - 1
 
                     # startamo trading algo
-                    new_returns = pb_ratio_strategy(zacetnoObdobje, koncnoObdobje, new_df, nov_ticker, starting_index, 0,
+                    new_returns = pb_ratio_strategy(zacetnoObdobje, koncnoObdobje, pb_mejna_vrednost, new_df, nov_ticker, starting_index, 0,
                                                 True)  # zadnji argument True ker je razlicen ticker in zacnemo od zacetka trejdat, isti -> False ker samo nadaljujemo trejdanje
 
                     added_returns = new_returns[plus_one_start_date:]
@@ -486,7 +485,7 @@ def backtest(start, end, dowTickers):
 
                     concat_data = pd.concat([totals, new_data])
 
-                    concat_totals = pb_ratio_strategy(zacetnoObdobje, koncnoObdobje, concat_data, ostaliTicker, starting_index,
+                    concat_totals = pb_ratio_strategy(zacetnoObdobje, koncnoObdobje, pb_mejna_vrednost, concat_data, ostaliTicker, starting_index,
                                                   zadnji_signal, False) # old: f"new{ostaliTicker}"
                     portfolio[ostaliTicker] = concat_totals
 
@@ -538,14 +537,16 @@ def backtest(start, end, dowTickers):
 start = "2005-11-21"
 #end = "2012-10-25"
 #end = "2008-4-1"
-end = "2020-10-1"
+# end = "2020-10-1"
 #end = "2020-11-21"
 # end = "2008-2-19"
 
-# end = "2011-11-21"
+end = "2011-11-21"
+
+pb_mejna_vrednost = 1
 
 dowTickers = dow.endTickers # podatki o sezona sprememb dow jones indexa
-backtest(start, end, dowTickers)
+backtest(start, end, pb_mejna_vrednost, dowTickers)
 
 
 """

@@ -451,8 +451,9 @@ end = "2008-4-1"
 #end = "2011-11-21"
 
 dowTickers = dow.endTickers # podatki o sezona sprememb dow jones indexa
-# backtest(start, end, sma_period, bands_multiplayer, dowTickers)
+backtest(start, end, sma_period, bands_multiplayer, dowTickers)
 
+"""
 test_ticker = "HD"
 test_data = yf.download(test_ticker, start=start, end=end, progress=False)
 test_data = test_data[['Adj Close']].copy()
@@ -460,5 +461,4 @@ test_data = zacetniDf(test_data, sma_period)  # dodamo stolpce
 return_df = bollingerBands(sma_period, bands_multiplayer, test_data, test_ticker, 0, 0, True)
 
 bollinger_trading_graph(sma_period, bands_multiplayer, return_df, test_ticker)
-"""
 """

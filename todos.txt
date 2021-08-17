@@ -9,6 +9,12 @@ https://hackernoon.com/top-4-stock-market-apis-of-2021-8oq336w
 
 # TODO premisli kako boš implemenitral to kupovanje in prodajnje delnic -> done? manjka še fees pa taxes (Interactive broker Fees: Maximum $0.005 per share ) zaenkrat bo 2% -> done
 
+- https://www.fu.gov.si/zivljenjski_dogodki_prebivalci/odsvojil_sem_vrednostne_papirje_druge_deleze_ali_investicijske_kupone/
+
+usakih 5 let se zmanjša davek
+
+27,5% -> 20% -> 15% -> 10% -> 0% po 20 letih ne plačaš nič
+
 - http://slotrade.blogspot.com/p/davki.html za davke
 - https://www.fu.gov.si/davki_in_druge_dajatve/podrocja/dohodnina/dohodnina_dohodek_iz_kapitala/#c1135
 davki so 27,5 %

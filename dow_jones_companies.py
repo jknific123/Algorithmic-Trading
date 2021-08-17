@@ -68,9 +68,11 @@ for x in companies:
     # removed from index
     if x["addedSecurity"] == '':
 
+        """
         if x["removedSecurity"] == "Howmet Aerospace Inc":
             x["removedSecurity"] = "Alcoa Corporation"
             x["symbol"] = "AA"
+        """
 
         slovarImen[x["dateAdded"]]["removed"].append(x["removedSecurity"])
         slovarTickers[x["dateAdded"]]["removed"].append(x["symbol"])
@@ -79,9 +81,11 @@ for x in companies:
     # added to index
     elif x["addedSecurity"] != '':
 
+        """
         if x["addedSecurity"] == "Howmet Aerospace Inc":
             x["addedSecurity"] = "Alcoa Corporation"
             x["symbol"] = "AA"
+        """
 
         slovarImen[x["dateAdded"]]["added"].append(x["addedSecurity"])
         slovarTickers[x["dateAdded"]]["added"].append(x["symbol"])
@@ -313,15 +317,44 @@ for x in names:
     print()
 """""
 
+def allTickersEver():
+
+    allTickers = []
+    for season in endTickers:
+        print("Sezona: ", season)
+        print(endTickers[season])
+        print(len(endTickers[season]["all"]))
+        allTickers = allTickers + endTickers[season]["all"]
+        print()
+
+    allTickers = sorted(allTickers)
+    allTickersEver = list(sorted(list(set(allTickers))))
+    print("Vsi tickerji skozi obdobja: ", allTickersEver)
+    print(len(allTickersEver))
+    print()
+
+    return allTickersEver
+
+
 endTickers = tickers
+allTickers = []
 
 for season in endTickers:
 
     print("Sezona: ", season)
     print(endTickers[season])
     print(len(endTickers[season]["all"]))
+    allTickers = allTickers + endTickers[season]["all"]
     print()
+
+allTickersEver()
 """""
+allTickers = sorted(allTickers)
+allTickersEver = set(allTickers)
+print(sorted(allTickersEver))
+print(len(allTickersEver))
+print()
+print(sorted(allTickers))
 
 for x in obrnjenSlovarImen:
     print(obrnjenSlovarImen[x])
