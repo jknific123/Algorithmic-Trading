@@ -8,10 +8,10 @@ import utils as util
 import yfinance as yf
 import requests
 
-testni_all = ['AIG', 'AXP', 'BA', 'C', 'CAT', 'DD', 'DIS', 'GE', 'GM', 'HD', 'HON', 'HPQ', 'HWM', 'IBM', 'INTC', 'JNJ', 'JPM',
+testni_all = ['AIG', 'AXP', 'BA', 'C', 'CAT', 'DD', 'DIS', 'GE', 'HD', 'HON', 'HPQ', 'HWM', 'IBM', 'INTC', 'JNJ', 'JPM', #'GM',
               'KO', 'MCD', 'MMM', 'MO', 'MRK', 'MSFT', 'PFE', 'PG', 'RTX', 'T', 'VZ', 'WMT', 'XOM']
 
-vsi_tickerji = ['AAPL', 'AIG', 'AMGN', 'AXP', 'BA', 'BAC', 'C', 'CAT', 'CRM', 'CSCO', 'CVX', 'DD', 'DIS', 'DOW', 'GE', 'GM',
+vsi_tickerji = ['AAPL', 'AIG', 'AMGN', 'AXP', 'BA', 'BAC', 'C', 'CAT', 'CRM', 'CSCO', 'CVX', 'DD', 'DIS', 'DOW', 'GE', #'GM',
                 'GS', 'HD', 'HON', 'HPQ', 'HWM', 'IBM', 'INTC', 'JNJ', 'JPM', 'KO', 'MCD', 'MDLZ', 'MMM', 'MO', 'MRK', 'MSFT',
                 'NKE', 'PFE', 'PG', 'RTX', 'T', 'TRV', 'UNH', 'V', 'VZ', 'WBA', 'WMT', 'XOM']
 
@@ -236,14 +236,16 @@ def DCF(company, start_date, end_date, fundamental_data_all):
 
 
 # starost podjetja ipo-date
-def company_profile(company):
+def company_profile(company, fundamental_data_all):
 
-    company_profile = requests.get(f'https://financialmodelingprep.com/api/v3/profile/{company}?limit={years}&apikey={api_key}')
-    company_profile = company_profile.json()
+    #company_profile = requests.get(f'https://financialmodelingprep.com/api/v3/profile/{company}?limit={years}&apikey={api_key}')
+    #company_profile = company_profile.json()
     # company_profile = list(reversed(company_profile))
-    company_profile_ipoDate = company_profile[0]["ipoDate"]
+    company_profile_values = {}
+    company_profile_values["ipoDate"] = fundamental_data_all[company]["company_profile"][0]["ipoDate"]
+    company_profile_values["sector"] = fundamental_data_all[company]["company_profile"][0]["sector"]
 
-    return company_profile_ipoDate
+    return company_profile_values
 
 # market cap, stock price
 def enterprise_value(company, start_date, end_date, fundamental_data_all):
@@ -321,11 +323,34 @@ def zmanjsajObsegPodatkov(data):
     return_data = []
     for x in data:
 
-        if datetime.datetime.strptime(x["date"], "%Y-%m-%d") >= datetime.datetime.strptime("1999-10-10", "%Y-%m-%d"):
+        if datetime.datetime.strptime(x["date"], "%Y-%m-%d") >= datetime.datetime.strptime("1997-10-10", "%Y-%m-%d"):
             return_data.append(x)
 
     return return_data
 
+# samo za pe in pb
+def doPEinPBAPIcalls(company):
+
+    slovar_podjetja = {}
+
+    financial_ratios = requests.get(f'https://financialmodelingprep.com/api/v3/financial-ratios/{company}?limit={years}&apikey={api_key}')
+    company_profile = requests.get(f'https://financialmodelingprep.com/api/v3/profile/{company}?limit={years}&apikey={api_key}')
+
+    # financials
+    financial_ratios = financial_ratios.json()
+    ratios = financial_ratios["ratios"]
+    ratios = zmanjsajObsegPodatkov(ratios)  # skrajsaj
+    ratios = list(reversed(ratios))
+    ratios = obdelaj_podatke(ratios)
+    slovar_podjetja["financial_ratios"] = ratios
+
+    # company profile
+    company_profile = company_profile.json()
+    slovar_podjetja["company_profile"] = company_profile
+
+    return slovar_podjetja
+
+# vrne slovar kjer so vsi podatki za neko podjetje
 def doAllAPIcalls(company):
 
     slovar_podjetja = {}
@@ -388,6 +413,35 @@ def pridobiZapisIstegaLeta(x, vir):
         if datetime.datetime.strptime(y, "%Y-%m-%d").year == leto: # zapisa istega leta
             return y
 
+# pridobi samo financial data in company age in sector
+def getDataCompanySamoPEinPB(company, start_date, end_date, fundamentals):
+
+    financial_data = financial_ratios(company, start_date, end_date, fundamentals)
+    company_age_sector = company_profile(company, fundamentals)
+
+    printData(financial_data)
+    print()
+    print(company_age_sector)
+    print()
+
+    for x in financial_data:
+        print("X je: ", x)
+        age = abs((datetime.datetime.strptime(x, "%Y-%m-%d") - datetime.datetime.strptime(company_age_sector["ipoDate"], "%Y-%m-%d")).days)
+        #print("COMPANY AGE", int(age / 364))
+        financial_data[x]["company_age"] = int(age / 364)
+        financial_data[x]["sector"] = company_age_sector["sector"]
+
+    return_data = {}
+    # pretvorimo se v datume, ki predstavljajo delovne dni
+    for datum in financial_data:
+
+        delovni_date = to_week_day(datetime.datetime.strptime(datum, "%Y-%m-%d"))
+        return_data[delovni_date] = {}
+        return_data[delovni_date] = financial_data[datum]
+
+    return return_data
+
+
 def getDataCompany(company, start_date, end_date, fundamentals):
 
     data = balance_sheet(company, start_date, end_date, fundamentals)
@@ -399,7 +453,7 @@ def getDataCompany(company, start_date, end_date, fundamentals):
 
     dfc_data = DCF(company, start_date, end_date, fundamentals)
 
-    company_age = company_profile(company)
+    company_age_sector = company_profile(company, fundamentals)
 
     enterprise_data = enterprise_value(company, start_date, end_date, fundamentals)
 
@@ -411,7 +465,7 @@ def getDataCompany(company, start_date, end_date, fundamentals):
     print()
     printData(dfc_data)
     print()
-    print(company_age)
+    print(company_age_sector)
     print()
     printData(enterprise_data)
     print()
@@ -425,9 +479,10 @@ def getDataCompany(company, start_date, end_date, fundamentals):
         data[x].update(dfc_data[pridobiZapisIstegaLeta(x, dfc_data)])
         data[x].update(enterprise_data[pridobiZapisIstegaLeta(x, enterprise_data)])
         data[x].update(income_data[pridobiZapisIstegaLeta(x, income_data)])
-        age = abs((datetime.datetime.strptime(x, "%Y-%m-%d") - datetime.datetime.strptime(company_age, "%Y-%m-%d")).days)
+        age = abs((datetime.datetime.strptime(x, "%Y-%m-%d") - datetime.datetime.strptime(company_age_sector["ipoDate"], "%Y-%m-%d")).days)
         #print("COMPANY AGE", int(age / 364))
         data[x]["company_age"] = int(age / 364)
+        data[x]["sector"] = company_age_sector["sector"]
 
     #print()
     #print("Before:")
@@ -451,6 +506,18 @@ def printData(data):
         print(x)
         print(data[x])
         print()
+
+def getDataAllEverPEinPB(allCompanies):
+
+    data = {}
+    count = 0
+    for x in allCompanies:
+
+        data[x] = doPEinPBAPIcalls(x)
+        count += 1
+        print(f"DOWNLOADED data for {x}. {count}/{len(allCompanies)}")
+
+    return data
 
 def getDataAllEver(allCompanies):
 
@@ -483,22 +550,37 @@ def getAllFundamentals(seznam_tickerjev):
 #start = "2005-11-21"
 #end = "2008-2-19"
 #end = "2020-11-21"
+#end = "2020-11-21"
 # printAll(testni_all,start,end)
-
-
 #start = "2019-4-2"
 #end = "2020-10-1"
+
+""""
+begin_time = datetime.datetime.now()
+fundamental_data = getDataAllEverPEinPB(vsi_tickerji)
+#company_data = getDataCompanySamoPEinPB("DIS", start, end, fundamental_data)
+for x in fundamental_data:
+    print("Podjetje je: ", x)
+    company_data = getDataCompanySamoPEinPB(x, start, end, fundamental_data)
+    printData(company_data)
+
+print(datetime.datetime.now() - begin_time)
+"""
+
 #company = "DOW"
 
 #company_data = getDataCompany("MSFT", start, end)
 #begin_time = datetime.datetime.now()
-# fundamental_data = getDataAllEver(vsi_tickerji)
+#fundamental_data = getDataAllEver(["DIS"])
 #print(datetime.datetime.now() - begin_time)
-# company_data = getDataCompany("DOW", start, end, fundamental_data)
+#company_data = getDataCompany("DIS", start, end, fundamental_data)
+#printData(company_data)
+
 """
+fundamental_data = getDataAllEver(testni_all)
 
 for x in fundamental_data:
-    print("X je: ", x)
+    print("Podjetje je: ", x)
     company_data = getDataCompany(x, start, end, fundamental_data)
     printData(company_data)
 """
