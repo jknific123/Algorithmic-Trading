@@ -7,6 +7,7 @@ import utils as util
 # import dow_jones_companies as dow
 import yfinance as yf
 import requests
+from dateutil.relativedelta import relativedelta
 
 testni_all = ['AIG', 'AXP', 'BA', 'C', 'CAT', 'DD', 'DIS', 'GE', 'HD', 'HON', 'HPQ', 'HWM', 'IBM', 'INTC', 'JNJ', 'JPM', #'GM',
               'KO', 'MCD', 'MMM', 'MO', 'MRK', 'MSFT', 'PFE', 'PG', 'RTX', 'T', 'VZ', 'WMT', 'XOM']
@@ -66,7 +67,7 @@ def get_financials(financial_ratios_vrednosti, x):
     if x["profitabilityIndicatorRatios"]["netProfitMargin"] is not None:
 
         if x["profitabilityIndicatorRatios"]["netProfitMargin"] == "":
-            financial_ratios_vrednosti[x["date"]]["netProfitMargin"] = 0
+            financial_ratios_vrednosti[x["date"]]["profitMargin"] = 0
         else:
             financial_ratios_vrednosti[x["date"]]["profitMargin"] = float(x["profitabilityIndicatorRatios"]["netProfitMargin"])
 
@@ -425,7 +426,7 @@ def getDataCompanySamoPEinPB(company, start_date, end_date, fundamentals):
     print()
 
     for x in financial_data:
-        print("X je: ", x)
+        print("samo pepb X je: ", x)
         age = abs((datetime.datetime.strptime(x, "%Y-%m-%d") - datetime.datetime.strptime(company_age_sector["ipoDate"], "%Y-%m-%d")).days)
         #print("COMPANY AGE", int(age / 364))
         financial_data[x]["company_age"] = int(age / 364)
@@ -442,7 +443,7 @@ def getDataCompanySamoPEinPB(company, start_date, end_date, fundamentals):
     return return_data
 
 
-def getDataCompany(company, start_date, end_date, fundamentals):
+def getDataCompany(company, start_date, end_date, fundamentals, prilagodiDatum):
 
     data = balance_sheet(company, start_date, end_date, fundamentals)
 
@@ -459,6 +460,7 @@ def getDataCompany(company, start_date, end_date, fundamentals):
 
     income_data = income_statement(company, start_date, end_date, fundamentals)
 
+    """
     printData(data)
     print()
     printData(financial_data)
@@ -470,11 +472,11 @@ def getDataCompany(company, start_date, end_date, fundamentals):
     printData(enterprise_data)
     print()
     printData(income_data)
-    """
+    
     """
 
     for x in data:
-        print("X je: ", x)
+        #print(f"updejtanje {company} X je: ", x)
         data[x].update(financial_data[pridobiZapisIstegaLeta(x, financial_data)])
         data[x].update(dfc_data[pridobiZapisIstegaLeta(x, dfc_data)])
         data[x].update(enterprise_data[pridobiZapisIstegaLeta(x, enterprise_data)])
@@ -489,16 +491,17 @@ def getDataCompany(company, start_date, end_date, fundamentals):
     #printData(data)
     #print()
     return_data = {}
-    # pretvorimo se v datume, ki predstavljajo delovne dni
-    for datum in data:
 
-        delovni_date = to_week_day(datetime.datetime.strptime(datum, "%Y-%m-%d"))
-        return_data[delovni_date] = {}
-        return_data[delovni_date] = data[datum]
+    # pretvorimo se v datume, ki predstavljajo delovne dni, za normalen klic, za izracn avg pa ne
+    if prilagodiDatum == True:
+        for datum in data:
 
-    return return_data
-
-
+            delovni_date = to_week_day(datetime.datetime.strptime(datum, "%Y-%m-%d"))
+            return_data[delovni_date] = {}
+            return_data[delovni_date] = data[datum]
+        return return_data
+    else:
+        return data
 
 def printData(data):
 
@@ -547,8 +550,73 @@ def getAllFundamentals(seznam_tickerjev):
 
     return fundamental_data
 
+def avgAllFundamentalsObdobja(zacento_obdobje, koncno_obdobje, fundamentals, company_list):
+
+    # ROE, goodwill, revenue avg za usa podjejta
+    index_avg = {}
+    #print("V avg fundamentals")
+
+    od = datetime.datetime.strptime(zacento_obdobje, "%Y-%m-%d").year
+    do = datetime.datetime.strptime(koncno_obdobje, "%Y-%m-%d").year
+
+    #print(f"prej OD: {od} , DO: {do}")
+
+    #if od == do:  # ce je slucajno isto leto
+     #   do += 1
+    #print(f"pol OD: {od} , DO: {do}")
+
+    # naredimo slovar za vsako leto
+    for x in range(od - 1, do + 1):
+        #print(datetime.datetime.strptime(str(x), "%Y").year)
+        index_avg[str(x)] = {}
+        index_avg[str(x)]["avgROE"] = 0
+        index_avg[str(x)]["avgProfitMargin"] = 0
+        index_avg[str(x)]["avgGoodwill"] = 0
+        index_avg[str(x)]["avgRevenue"] = 0
+        #print(index_avg[str(x)])
+
+    for company in company_list:
+
+        if company != "GM":
+            #print(f"ZACENJAM AVG ZA {company}")
+            if zacento_obdobje == "2005-11-21":
+                zacento_obdobje = "2004-11-21"
+            company_data = getDataCompany(company, zacento_obdobje, koncno_obdobje, fundamentals, False)
+            printData(company_data)
+
+            for datum in company_data:
+
+                leto = datetime.datetime.strptime(datum, "%Y-%m-%d").year
+                #print("LETO je: ", leto)
+                if leto >= od:
+                    #print(f"LETO notri je {leto} company je {company} ")
+                    index_avg[str(leto)]["avgROE"] += company_data[datum]["ROE"]
+                    index_avg[str(leto)]["avgProfitMargin"] += company_data[datum]["profitMargin"]
+                    index_avg[str(leto)]["avgGoodwill"] += company_data[datum]["goodwill"]
+                    index_avg[str(leto)]["avgRevenue"] += company_data[datum]["revenue"]
+
+    # delimo z 30 da dobimo povprecje
+    for x in index_avg:
+
+        index_avg[x]["avgROE"] /= 30
+        index_avg[x]["avgProfitMargin"] /= 30
+        index_avg[x]["avgGoodwill"] /= 30
+        index_avg[x]["avgRevenue"] /= 30
+
+    return index_avg
+
+
+
 #start = "2005-11-21"
 #end = "2008-2-19"
+
+
+#fundamental_data = getAllFundamentals(testni_all)
+#avg_data = avgAllFundamentalsObdobja(start, end, fundamental_data)
+#printData(avg_data)
+
+
+
 #end = "2020-11-21"
 #end = "2020-11-21"
 # printAll(testni_all,start,end)
