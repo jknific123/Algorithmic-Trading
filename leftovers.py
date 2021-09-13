@@ -1,4 +1,361 @@
 
+# iz bollinger bands
+
+"""
+# gremo cez cel portfolio in sestejemo Totals ter potem plotamo graf
+
+    allFunds = pd.DataFrame
+    allShares = {}
+    count = 0
+    print("Pred totals: ", portfolio.keys())
+    for ticker in portfolio:
+
+        #print(ticker)
+        tickerTotals = portfolio[ticker]
+        allShares[ticker] = tickerTotals['Shares'].iat[-1]
+
+        if (count == 0):
+            allFunds = tickerTotals[['Total']].copy()
+        else:
+            allFunds['Total'] = allFunds['Total'] + tickerTotals['Total']
+
+        count += 1
+
+    print(allFunds)
+    profit_graph(allFunds, 1, "Portfolio", round(allFunds['Total'].iat[-1], 4))
+
+    # se izpis podatkov portfolia
+    startFunds = len(portfolio) * util.getMoney()
+    endFunds = allFunds['Total'].iat[-1]
+
+    print("Zacetna sredstva: ", startFunds, "$")
+    print("Skupna sredstva portfolia: ", round(allFunds['Total'].iat[-1], 4), "$")
+    # print("Profit: ", round(allFunds['Total'].iat[-1] - (len(portfolio) * util.getMoney()), 4), "$")
+    print("Profit: ", round(endFunds - startFunds, 4), "$")
+    print("Kumulativni donos v procentih: ", round((endFunds - startFunds) / startFunds, 4) * 100, "%")
+
+
+    print("Delnice, ki jih še imamo v portfoliu:")
+    for key, value in allShares.items():
+        print(key, " : ", value)
+
+"""
+
+
+
+"""
+    # gremo cez cel portfolio in sestejemo Totals ter potem plotamo graf
+
+    allFunds = pd.DataFrame
+    allShares = {}
+    count = 0
+    print("Pred totals: ", portfolio.keys())
+    for ticker in portfolio:
+
+        #print(ticker)
+        tickerTotals = portfolio[ticker]
+        allShares[ticker] = tickerTotals['Shares'].iloc[-1]
+
+        #nan = tickerTotals["Total"].loc["2008-2-19"]
+        #print(nan)
+
+        if (count == 0):
+            allFunds = tickerTotals[['Total']].copy()
+        else:
+            allFunds['Total'] = allFunds['Total'] + tickerTotals['Total']
+
+        count += 1
+
+    print(allFunds)
+    profit_graph(allFunds, 1, "Portfolio", round(allFunds['Total'].iloc[-1], 4))
+
+    # se izpis podatkov portfolia
+    startFunds = len(portfolio) * util.getMoney()
+    endFunds = allFunds['Total'].iloc[-1]
+
+    print("Zacetna sredstva: ", startFunds, "$")
+    print("Skupna sredstva portfolia: ", round(allFunds['Total'].iloc[-1], 4), "$")
+    # print("Profit: ", round(allFunds['Total'].iloc[-1] - (len(portfolio) * util.getMoney()), 4), "$")
+    print("Profit: ", round(endFunds - startFunds, 4), "$")
+    print("Kumulativni donos v procentih: ", round((endFunds - startFunds) / startFunds, 4) * 100, "%")
+
+
+    print("Delnice, ki jih še imamo v portfoliu:")
+    for key, value in allShares.items():
+        print(key, " : ", value)
+
+    print("Izloceni")
+    print(sezIzlocenih)
+    print(izloceniTickerji)
+"""
+
+
+
+
+
+
+# pazi ko zlimaš skupi je se podvoji vrstica z istim datumom, končna prej, začetna zdej
+
+# print(index)
+
+# glede na end date obdobja gledam v slovar sprememb kje breajkat
+# slovar spremmemb je dowTickers -> spremembe indexa skozi leta
+
+# ce je obdobje po zadnji spremembi indexa prekratko sepravi manj kot long_period dni potem je problem -> dal sem long_period * 2
+
+# slovar tekocega indexa key -> ticker, value dataframe, ko se remova in pol adda concatat dataframe skupaj
+# na mesto removed podjetja se doda ticker added podjetja, na value mesto pa se concata dataframe prejšnjega podjetja
+# isto se prepiše ticker v datafrejmu
+
+
+
+# staro zaganjanje
+"""
+
+# Dow Jones Index podjetja not 20 let 1999 - 2020
+tickers = ['HD', 'INTC'] #, 'IBM', 'AXP', 'BA', 'CAT', 'KO', 'JNJ', 'JPM', 'MCD', 'MRK', 'MSFT', 'MMM', 'PG', 'WMT', 'DIS']
+
+
+# tuki potem for za usa podjetja iz dow jones indexa
+
+allFunds = pd.DataFrame
+allShares = {}
+
+for i in range(len(tickers)):
+    # pridobimo podatke preko apija
+    data = web.DataReader(tickers[i], 'yahoo', start='2000, 1, 1', end='2020, 1, 1')
+    data = data[['Adj Close']].copy()
+    totals = sma_crossover(short_period, long_period, data, tickers[i])
+
+    allShares[tickers[i]] = totals['Shares'].iloc[-1]
+    if (i == 0):
+        allFunds = totals[['Total']].copy()
+    else:
+        allFunds['Total'] = allFunds['Total'] + totals['Total']
+
+print(allFunds)
+profit_graph(allFunds, 1, round(allFunds['Total'].iloc[-1], 4))
+
+startFunds = len(tickers) * util.getMoney()
+endFunds = allFunds['Total'].iloc[-1]
+
+print("Zacetna sredstva: ", startFunds, "$")
+print("Skupna sredstva portfolia: ", round(allFunds['Total'].iloc[-1], 4), "$")
+print("Profit: ", round(allFunds['Total'].iloc[-1] - (len(tickers) * util.getMoney()), 4), "$")
+print("Kumulativni donos v procentih: ", round((endFunds - startFunds) / startFunds, 4) * 100, "%")
+
+
+print("Delnice, ki jih še imamo v portfoliu:")
+for key, value in allShares.items():
+    print(key, " : ", value)
+
+"""
+
+"""""
+
+for x in starting:
+
+    data = web.DataReader(x, 'yahoo', start='2005, 11, 21', end='2008, 2, 19')
+    data = data[['Adj Close']].copy()
+    data = zacetniDf(data) # dodamo stolpce
+    return_df = sma_crossover(short_period, long_period, data, x, 0, 0, True)
+    index[x] = return_df
+
+# print(index)
+
+print("ZAMENJAJ")
+# zamenjamo glede na obdobje indexa
+for x in index:
+
+    if x in odstrani['removed']:
+
+        #with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
+            # print()
+            # print(index[x].tail(1))
+            # print()
+        # print(index[x].tail(1)["Shares"])
+        # print(index[x].tail(1)["Cash"])
+        # print(x, "->", dodaj["added"][odstrani["removed"].index(x)])
+        nov_ticker = dodaj["added"][odstrani["removed"].index(x)]
+        naslednje_obdobje = '2008, 2, 19'
+        real_start_date = datetime.datetime.strptime(naslednje_obdobje, "%Y, %m, %d")
+        plus_one_start_date = real_start_date + datetime.timedelta(days=1)  #  adding one day
+        modified_date = plus_one_start_date - datetime.timedelta(days=(long_period * 2))  # odstevamo long period da dobimo dovolj podatkov
+        new_df = web.DataReader(nov_ticker, 'yahoo', start=modified_date, end=end)
+        new_df = new_df[['Adj Close']].copy()
+        new_df = zacetniDf(new_df)
+        ex_df = index[x]
+        ex_data = ex_df.tail(1)
+
+        # print("Shares", ex_data["Shares"][0])
+        # print("Cash", ex_data["Cash"][0])
+
+
+        if ex_df["Shares"][-1] == 0:  # super samo prepisemo kes
+            new_df["Cash"].loc[plus_one_start_date] = ex_df["Cash"][-1]
+
+        elif ex_df["Shares"][-1] > 0: # moramo prodat delnice in jih investirat v podjetje ki ga dodajamo
+
+            prodano = (ex_df['Shares'].iloc[-1] * ex_df['Adj Close'].iloc[-1])  # delnice v denar
+            prodanoFees = util.fees(prodano)  # ostanek denarja po fees
+            sellPrice = prodanoFees
+            ex_df['Sell'].iloc[-1] = prodanoFees  # zapisemo sell price
+            ex_df['Profit'].iloc[-1] = util.profit(ex_df['Buy'].iloc[-1], sellPrice)
+
+            ex_df['Buy'].iloc[-1] = 0  # zapisemo 0 da oznacimo da je zadnji signal bil sell
+
+            # ce je dobicek pozitiven zaracunamo davek na dobicek in ga odstejemo od prodanoFees da dobimo ostanek
+            if (ex_df['Profit'].iloc[-1] > 0):
+                prodanoFees = prodanoFees - util.taxes(ex_df['Profit'].iloc[-1])
+
+            # print("Cash before: ", ex_df['Cash'].iloc[-1])
+            # print("UpdateCash: ", np.nan_to_num(ex_df['Cash'].iloc[-1]) + prodanoFees)
+            ex_df['Cash'].iloc[-1] = np.nan_to_num(ex_df['Cash'].iloc[-1]) + prodanoFees  # posodbi cash
+            # print("RealUpdated Cash ", ex_df['Cash'].iloc[-1])
+            ex_df['Shares'].iloc[-1] = 0
+            ex_df['Total'].iloc[-1] = ex_df["Cash"].iloc[-1]
+
+            # prejsni df je posodobljen in delnice so prodane, samo prepisemo Cash v new_df
+            # print("Notri", ex_df.iloc[-1])
+            new_df["Cash"].loc[plus_one_start_date] = ex_df["Cash"][-1]
+            new_df["Total"].loc[plus_one_start_date] = ex_df["Cash"][-1]
+
+        odvec = new_df[:plus_one_start_date]
+        starting_index = len(odvec) - 1
+        # concat_new = pd.concat([ex_df, new_df])
+        # starting_index = len(ex_df)
+        # concat_new["Ticker"].iloc[starting_index] = dodaj["added"][odstrani["removed"].index(x)] # zapisemo nov ticker
+        # concat_new["Total"].iloc[starting_index] = concat_new["Cash"].iloc[starting_index]
+
+        # startamo trading algo
+        new_returns = sma_crossover(short_period, long_period, new_df, nov_ticker, starting_index, 0, True) # zadnji argument True ker je razlicen ticker in zacnemo od zacetka trejdat, isti -> False ker samo nadaljujemo trejdanje
+
+        added_returns = new_returns[plus_one_start_date:]
+        concat_returns = pd.concat([ex_df, added_returns])
+        profit_graph(concat_returns, 1, round(concat_returns['Total'].iloc[-1], 4))
+        new_index = {nov_ticker if k == x else k: v for k, v in index.items()}
+        new_index[nov_ticker] = concat_returns
+        isOk = new_index[nov_ticker]
+        index = new_index
+        print(index)
+
+    # end if x is in removed
+    elif x not in odstrani['removed']:
+
+        naslednje_obdobje = '2008, 2, 19'
+        real_start_date = datetime.datetime.strptime(naslednje_obdobje, "%Y, %m, %d")
+        plus_one_start_date = real_start_date + datetime.timedelta(days=1)  #  adding one day
+        # modified_date = plus_one_start_date - datetime.timedelta(days=(long_period * 2))  # odstevamo long period da dobimo dovolj podatkov
+
+        totals = index[x]
+        zadnji_signal = 0
+
+        if totals['Shares'].iloc[-1] == 0:
+            zadnji_signal = 1  # nimamo delnic kar pomeni da smo jih prodali in jih moramo zdej kupit
+        elif totals['Shares'].iloc[-1] != 0:
+            zadnji_signal = 2  # imamo delnice tako da jih lahko samo prodamo zdej
+
+        new_data = web.DataReader(x, 'yahoo', start=plus_one_start_date, end=end)
+        new_data = new_data[['Adj Close']].copy()
+        starting_index = len(totals)
+
+        concat_data = pd.concat([totals, new_data])
+
+        concat_totals = sma_crossover(short_period, long_period, concat_data, f"new{x}", starting_index, zadnji_signal, False)
+        index[x] = concat_totals
+        profit_graph(concat_totals, 1, round(concat_totals['Total'].iloc[-1], 4))
+
+
+
+
+# tuki naprej je ce je isto podjetje in samo nadaljujes trejdanje
+
+
+# v enem delu
+data1 = web.DataReader("HD", 'yahoo', start='2000, 1, 1', end='2020, 1, 1')
+data1 = data1[['Adj Close']].copy()
+# v nadaljevanju uporabljamo samo podatke od takrat, ko je dolgi sma že na voljo, prav tako kreiramo nova stolpca
+# za buy/sell signale
+data1['Buy'] = np.nan
+data1['Sell'] = np.nan
+data1['Cash'] = 0
+data1['Shares'] = 0
+data1['Profit'] = 0
+data1['Total'] = 0
+data1['Ticker'] = ""
+totals1 = sma_crossover(short_period, long_period, data1, "HD")
+#profit_graph(totals1, 1, round(totals1['Total'].iloc[-1], 4))
+
+
+# loceno
+data = web.DataReader("HD", 'yahoo', start='2000, 1, 1', end='2010, 1, 1')
+data = data[['Adj Close']].copy()
+
+# v nadaljevanju uporabljamo samo podatke od takrat, ko je dolgi sma že na voljo, prav tako kreiramo nova stolpca
+# za buy/sell signale
+data[f'SMA-{short_period}'] = np.nan
+data[f'SMA-{long_period}'] = np.nan
+data['Buy'] = np.nan
+data['Sell'] = np.nan
+data['Cash'] = 0
+data['Shares'] = 0
+data['Profit'] = 0
+data['Total'] = 0
+data['Ticker'] = ""
+
+zadnji_signal = 0
+totals = sma_crossover(short_period, long_period, data, "HD", 0, zadnji_signal, False)
+profit_graph(totals, 1, round(totals['Total'].iloc[-1], 4))
+
+
+if totals['Shares'].iloc[-1] == 0:
+    zadnji_signal = 1 # nimamo delnic kar pomeni da smo jih prodali in jih moramo zdej kupit
+elif totals['Shares'].iloc[-1] != 0:
+    zadnji_signal = 2 # imamo delnice tako da jih lahko samo prodamo zdej
+
+
+
+new_data = web.DataReader("HD", 'yahoo', start='2010, 1, 1', end='2020, 1, 1')
+new_data = new_data[['Adj Close']].copy()
+starting_index = len(totals)
+
+concat_data = pd.concat([totals, new_data])
+
+
+concat_totals = sma_crossover(short_period, long_period, concat_data, "newHD", starting_index, zadnji_signal, False)
+profit_graph(concat_totals, 1, round(concat_totals['Total'].iloc[-1], 4))
+"""""
+
+
+
+
+"""
+
+def dividendPayouthGrowth(company_dividend):
+
+    dolzina = len(company_dividend)
+    print(dolzina)
+
+    keys = list(company_dividend.keys())
+    for i in range(len(company_dividend)):
+
+        payoutGrowth = 0
+        if i == 0:
+            company_dividend[keys[i]]["dividendPayoutGrowth"] = company_dividend[keys[i]]["dividendPerShare"]
+        else:
+            if company_dividend[keys[i]]["dividendPerShare"] != 0 and company_dividend[keys[i - 1]]["dividendPerShare"] != 0:
+                payoutGrowth = company_dividend[keys[i]]["dividendPerShare"] / company_dividend[keys[i - 1]]["dividendPerShare"]
+                company_dividend[keys[i]]["dividendPayoutGrowth"] = (payoutGrowth - 1)
+            else:
+                company_dividend[keys[i]]["dividendPayoutGrowth"] = 0
+
+    return company_dividend
+
+
+
+"""
+
+
 """""
 zacetnaSezona = endTickers['1999-11-1']
 

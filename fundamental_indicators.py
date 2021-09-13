@@ -12,7 +12,7 @@ from dateutil.relativedelta import relativedelta
 testni_all = ['AIG', 'AXP', 'BA', 'C', 'CAT', 'DD', 'DIS', 'GE', 'HD', 'HON', 'HPQ', 'HWM', 'IBM', 'INTC', 'JNJ', 'JPM', #'GM',
               'KO', 'MCD', 'MMM', 'MO', 'MRK', 'MSFT', 'PFE', 'PG', 'RTX', 'T', 'VZ', 'WMT', 'XOM']
 
-vsi_tickerji = ['AAPL', 'AIG', 'AMGN', 'AXP', 'BA', 'BAC', 'C', 'CAT', 'CRM', 'CSCO', 'CVX', 'DD', 'DIS', 'DOW', 'GE', #'GM',
+vsi_tickerji = ['AAPL', 'AIG', 'AMGN', 'AXP', 'BA', 'BAC', 'C', 'CAT', 'CRM', 'CSCO', 'CVX', 'DD', 'DOW', 'DIS',  'GE', #'GM',
                 'GS', 'HD', 'HON', 'HPQ', 'HWM', 'IBM', 'INTC', 'JNJ', 'JPM', 'KO', 'MCD', 'MDLZ', 'MMM', 'MO', 'MRK', 'MSFT',
                 'NKE', 'PFE', 'PG', 'RTX', 'T', 'TRV', 'UNH', 'V', 'VZ', 'WBA', 'WMT', 'XOM']
 
@@ -153,6 +153,46 @@ def financial_ratios(company, start_date, end_date, fundamental_data_all):
 
     return financial_ratios_vrednosti
 
+# samo za dividend payouth growth
+def fGrowth(company, start_date, end_date, fundamental_data_all):
+
+
+    growth_ratios_vrednosti = {}
+
+    financial_growth = fundamental_data_all[company]["financial_growth"]
+
+    lanski_datum = ""
+    if company != "DOW":
+        lanski_datum = pridobiLanskiDatum(start_date, end_date, financial_growth)
+
+    for i in range(len(financial_growth)):
+
+        #print(x)
+        #print()
+
+        # za lanski datum
+        if lanski_datum != "" and datetime.datetime.strptime(financial_growth[i]["date"], "%Y-%m-%d") == datetime.datetime.strptime(lanski_datum, "%Y-%m-%d"):
+
+            if financial_growth[i]["fiveYDividendperShareGrowthPerShare"] is not None:
+                growth_ratios_vrednosti[financial_growth[i]["date"]] = {}
+
+                if financial_growth[i]["fiveYDividendperShareGrowthPerShare"] == "":
+                    growth_ratios_vrednosti[financial_growth[i]["date"]]["dividendPayoutGrowth"] = 0
+                else:
+                    growth_ratios_vrednosti[financial_growth[i]["date"]]["dividendPayoutGrowth"] = float(financial_growth[i]["fiveYDividendperShareGrowthPerShare"])
+
+        ## za obdobje med start in end date
+        if datetime.datetime.strptime(financial_growth[i]["date"], "%Y-%m-%d") >= datetime.datetime.strptime(start_date, "%Y-%m-%d")  and datetime.datetime.strptime(financial_growth[i]["date"], "%Y-%m-%d")  <= datetime.datetime.strptime(end_date, "%Y-%m-%d"):
+
+            if financial_growth[i]["fiveYDividendperShareGrowthPerShare"] is not None:
+                growth_ratios_vrednosti[financial_growth[i]["date"]] = {}
+
+                if financial_growth[i]["fiveYDividendperShareGrowthPerShare"] == "":
+                    growth_ratios_vrednosti[financial_growth[i]["date"]]["dividendPayoutGrowth"] = 0
+                else:
+                    growth_ratios_vrednosti[financial_growth[i]["date"]]["dividendPayoutGrowth"] = float(financial_growth[i]["fiveYDividendperShareGrowthPerShare"])
+
+    return growth_ratios_vrednosti
 
 
 # goodwill
@@ -329,6 +369,45 @@ def zmanjsajObsegPodatkov(data):
 
     return return_data
 
+# samo za dividende
+def doDividendeAPIcalls(company):
+
+    slovar_podjetja = {}
+
+    financial_ratios = requests.get(f'https://financialmodelingprep.com/api/v3/financial-ratios/{company}?apikey={api_key}')
+    company_profile = requests.get(f'https://financialmodelingprep.com/api/v3/profile/{company}?apikey={api_key}')
+    discounted_cash_flow = requests.get(f'https://financialmodelingprep.com/api/v3/historical-discounted-cash-flow-statement/{company}?apikey={api_key}')
+    financial_growth = requests.get(f"https://financialmodelingprep.com/api/v3/financial-growth/{company}?apikey={api_key}")
+
+
+    # financials
+    financial_ratios = financial_ratios.json()
+    ratios = financial_ratios["ratios"]
+    ratios = zmanjsajObsegPodatkov(ratios)  # skrajsaj
+    ratios = list(reversed(ratios))
+    ratios = obdelaj_podatke(ratios)
+    slovar_podjetja["financial_ratios"] = ratios
+
+    # company profile
+    company_profile = company_profile.json()
+    slovar_podjetja["company_profile"] = company_profile
+
+    # discounted cash flow
+    discounted_cash_flow = discounted_cash_flow.json()
+    discounted_cash_flow = zmanjsajObsegPodatkov(discounted_cash_flow)  # skrajsaj
+    discounted_cash_flow = list(reversed(discounted_cash_flow))
+    discounted_cash_flow = obdelaj_podatke(discounted_cash_flow)
+    slovar_podjetja["discounted_cash_flow"] = discounted_cash_flow
+
+    # financial growth
+    financial_growth = financial_growth.json()
+    financial_growth = zmanjsajObsegPodatkov(financial_growth)  # skrajsaj
+    financial_growth = list(reversed(financial_growth))
+    financial_growth = obdelaj_podatke(financial_growth)
+    slovar_podjetja["financial_growth"] = financial_growth
+
+    return slovar_podjetja
+
 # samo za pe in pb
 def doPEinPBAPIcalls(company):
 
@@ -414,6 +493,124 @@ def pridobiZapisIstegaLeta(x, vir):
         if datetime.datetime.strptime(y, "%Y-%m-%d").year == leto: # zapisa istega leta
             return y
 
+    return -111
+
+def getBeforeData(company, start_date, end_date, fundamentals):
+
+    financial_data = financial_ratios(company, start_date, end_date, fundamentals)
+    company_age_sector = company_profile(company, fundamentals)
+    dfc_data = DCF(company, start_date, end_date, fundamentals)
+
+    #print(dfc_data)
+    #print("Podejteje: ", company)
+    for x in financial_data:
+        #print("samo before dividende X je: ", x)
+        age = abs((datetime.datetime.strptime(x, "%Y-%m-%d") - datetime.datetime.strptime(company_age_sector["ipoDate"], "%Y-%m-%d")).days)
+        #print("COMPANY AGE", int(age / 364))
+        financial_data[x]["company_age"] = int(age / 364)
+        financial_data[x]["sector"] = company_age_sector["sector"]
+        financial_data[x].update(dfc_data[pridobiZapisIstegaLeta(x, dfc_data)])
+        financial_data[x]["dividendPerShare"] = financial_data[x]["dividendYield"] * financial_data[x]["price"]
+
+    print(f"start: {start_date}, end: {end_date}")
+    print(list(financial_data.keys()))
+    if datetime.datetime.strptime(list(financial_data.keys())[-1], "%Y-%m-%d").year == datetime.datetime.strptime(end_date, "%Y-%m-%d").year:
+        del financial_data[list(financial_data.keys())[-1]]
+
+    return financial_data
+
+# podatki samo o dividendah
+def getDataCompanySamoDividende(company, start_date, end_date, fundamentals):
+
+    #print("Zacetek za podjetje: ", company)
+    #print("Zacetni datum original: ", start_date)
+    start_years_ago = datetime.datetime.strptime(start_date, "%Y-%m-%d") - relativedelta(years=5) # start_date spremenimo tako da mu odstejemo 5 let
+    #print("Zacetni datum - 4 leta: ", start_years_ago)
+
+    start_years_ago = datetime.datetime.strftime(start_years_ago, "%Y-%m-%d") # nato ga spremenimo nazaj v string
+    before_data = {}
+    if company != "DOW":
+        before_data = getBeforeData(company, start_years_ago, start_date, fundamentals)
+    #print("Before data")
+    #printData(before_data)
+    #print("end before data")
+
+    financial_data = financial_ratios(company, start_date, end_date, fundamentals)
+    company_age_sector = company_profile(company, fundamentals)
+    dfc_data = DCF(company, start_date, end_date, fundamentals)
+    # financial_growth = fGrowth(company, start_date, end_date, fundamentals)
+
+    printData(financial_data)
+    #print()
+    #print(company_age_sector)
+    #print()
+
+    before_keys = list(before_data.keys())
+    for x in financial_data:
+        # print("samo dividende X je: ", x)
+        age = abs((datetime.datetime.strptime(x, "%Y-%m-%d") - datetime.datetime.strptime(company_age_sector["ipoDate"], "%Y-%m-%d")).days)
+        #print("COMPANY AGE", int(age / 364))
+        financial_data[x]["company_age"] = int(age / 364)
+        financial_data[x]["sector"] = company_age_sector["sector"]
+        financial_data[x].update(dfc_data[pridobiZapisIstegaLeta(x, dfc_data)])
+        financial_data[x]["dividendPerShare"] = financial_data[x]["dividendYield"] * financial_data[x]["price"]
+
+    before_data.update(financial_data)
+    updated_before = before_data
+    #print("updated before")
+    #printData(updated_before)
+    #print("updated end")
+
+    for x in updated_before:
+
+        if x in financial_data: # gledamo samo datume, za katere racunamo speravi od start date naprej
+
+            financial_data[x]["dividendPayoutGrowth"] = 0 # default vrednost
+            five_ago = datetime.datetime.strptime(x, "%Y-%m-%d") - relativedelta(years=5)
+            #print("racunam stiri za nazaj", five_ago)
+            #print("Zacel racunat za: ", x)
+
+            check = 0
+            keys = list(updated_before.keys())
+            payoutGrowth = 0
+            for i in range(len(updated_before)):
+
+                if check == 1: # sestevamo vse eno letne rasti
+
+                    if updated_before[keys[i]]["dividendPerShare"] != 0 and updated_before[keys[i - 1]]["dividendPerShare"] != 0:
+
+                        currPayoutGrowth = updated_before[keys[i]]["dividendPerShare"] / updated_before[keys[i - 1]]["dividendPerShare"]
+                        #print("Enoletna rast: ", currPayoutGrowth - 1)
+                        payoutGrowth += currPayoutGrowth - 1
+
+                    if keys[i] == x:  # pridemo do leta za katero racunamo
+
+                        avgPayoutGrowth = payoutGrowth / 5
+                        #print("sestevek rasti: ", payoutGrowth)
+                        #print("avg rasti: ", avgPayoutGrowth)
+                        financial_data[x]["dividendPayoutGrowth"] = avgPayoutGrowth
+                        payoutGrowth = 0
+                        check = 0
+                        #print("Zracunal za leto: ", x)
+                        break
+
+                #print(f"prvi: {keys[i]} drugi: {five_ago}, rez: {keys[i] == five_ago}")
+                #print()
+                if datetime.datetime.strptime(keys[i], "%Y-%m-%d").year == five_ago.year:
+                    #print("check bo 1 za leto", x)
+                    check = 1 # od tu naprej racunam
+
+
+    return_data = {}
+    # pretvorimo se v datume, ki predstavljajo delovne dni
+    for datum in financial_data:
+
+        delovni_date = to_week_day(datetime.datetime.strptime(datum, "%Y-%m-%d"))
+        return_data[delovni_date] = {}
+        return_data[delovni_date] = financial_data[datum]
+
+    return return_data
+
 # pridobi samo financial data in company age in sector
 def getDataCompanySamoPEinPB(company, start_date, end_date, fundamentals):
 
@@ -459,6 +656,8 @@ def getDataCompany(company, start_date, end_date, fundamentals, prilagodiDatum):
     enterprise_data = enterprise_value(company, start_date, end_date, fundamentals)
 
     income_data = income_statement(company, start_date, end_date, fundamentals)
+
+    # TODO naredi se za 5 let nazaj profit margin in ROE
 
     """
     printData(data)
@@ -522,6 +721,18 @@ def getDataAllEverPEinPB(allCompanies):
 
     return data
 
+def getDataAllEverDividende(allCompanies):
+
+    data = {}
+    count = 0
+    for x in allCompanies:
+
+        data[x] = doDividendeAPIcalls(x)
+        count += 1
+        print(f"DOWNLOADED data for {x}. {count}/{len(allCompanies)}")
+
+    return data
+
 def getDataAllEver(allCompanies):
 
     data = {}
@@ -564,9 +775,12 @@ def avgAllFundamentalsObdobja(zacento_obdobje, koncno_obdobje, fundamentals, com
     #if od == do:  # ce je slucajno isto leto
      #   do += 1
     #print(f"pol OD: {od} , DO: {do}")
+    # prej je blo tko: for x in range(od - 1, do + 1):
+    od = od - 1
+    do = do + 1
 
     # naredimo slovar za vsako leto
-    for x in range(od - 1, do + 1):
+    for x in range(od, do):
         #print(datetime.datetime.strptime(str(x), "%Y").year)
         index_avg[str(x)] = {}
         index_avg[str(x)]["avgROE"] = 0
@@ -582,7 +796,7 @@ def avgAllFundamentalsObdobja(zacento_obdobje, koncno_obdobje, fundamentals, com
             if zacento_obdobje == "2005-11-21":
                 zacento_obdobje = "2004-11-21"
             company_data = getDataCompany(company, zacento_obdobje, koncno_obdobje, fundamentals, False)
-            printData(company_data)
+            #printData(company_data)
 
             for datum in company_data:
 
@@ -598,15 +812,23 @@ def avgAllFundamentalsObdobja(zacento_obdobje, koncno_obdobje, fundamentals, com
     # delimo z 30 da dobimo povprecje
     for x in index_avg:
 
-        index_avg[x]["avgROE"] /= 30
-        index_avg[x]["avgProfitMargin"] /= 30
-        index_avg[x]["avgGoodwill"] /= 30
-        index_avg[x]["avgRevenue"] /= 30
+        # dodamo popravek ker GM  nimamo not
+        if x in ["2004", "2005", "2006", "2007", "2008"]:
+            print(f"Delim samo z 29, x: {x} ")
+            index_avg[x]["avgROE"] /= 29
+            index_avg[x]["avgProfitMargin"] /= 29
+            index_avg[x]["avgGoodwill"] /= 29
+            index_avg[x]["avgRevenue"] /= 29
+        else:
+            index_avg[x]["avgROE"] /= 30
+            index_avg[x]["avgProfitMargin"] /= 30
+            index_avg[x]["avgGoodwill"] /= 30
+            index_avg[x]["avgRevenue"] /= 30
 
     return index_avg
 
 
-
+#start = "2007"
 #start = "2005-11-21"
 #end = "2008-2-19"
 
@@ -623,18 +845,19 @@ def avgAllFundamentalsObdobja(zacento_obdobje, koncno_obdobje, fundamentals, com
 #start = "2019-4-2"
 #end = "2020-10-1"
 
-""""
+"""
 begin_time = datetime.datetime.now()
-fundamental_data = getDataAllEverPEinPB(vsi_tickerji)
+fundamental_data = getDataAllEverDividende(vsi_tickerji)
 #company_data = getDataCompanySamoPEinPB("DIS", start, end, fundamental_data)
 for x in fundamental_data:
     print("Podjetje je: ", x)
-    company_data = getDataCompanySamoPEinPB(x, start, end, fundamental_data)
+    company_data = getDataCompanySamoDividende(x, start, end, fundamental_data)
+    print("Rezultati:")
     printData(company_data)
 
 print(datetime.datetime.now() - begin_time)
-"""
 
+"""
 #company = "DOW"
 
 #company_data = getDataCompany("MSFT", start, end)

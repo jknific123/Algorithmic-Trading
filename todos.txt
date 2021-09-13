@@ -1,6 +1,10 @@
 
 TODOs for diplomska
 
+# 70% = 11-21-2005 do 21-5-2016 UCNA
+
+# 30% = 21-5-2016 do 1-1-2021 TESTNA
+
 fundamental data api rewiev
 
 https://hackernoon.com/top-4-stock-market-apis-of-2021-8oq336w

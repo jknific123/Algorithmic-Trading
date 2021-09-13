@@ -208,9 +208,14 @@ def zacetniDf(data):
 def backtest(start, end, sma_period_short, sma_period_long, dowTickers):
 
     obdobja = []
+
+    # hardcodam za testno mnozico
+
+    if start == "2016-5-21":
+        obdobja.append(start)
     for x in dowTickers:
 
-        if x < end: ## zna bit da je tuki treba se = dat
+        if x >= start and x < end: ## zna bit da je tuki treba se = dat
             obdobja.append(x)
 
 
@@ -226,7 +231,7 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers):
     portfolio = {}
     izloceniTickerji = []
     starting_companies = []
-    begining = "2005-11-21"
+    begining = start # "2005-11-21"
     sezIzlocenih = []
 
     # te imajo probleme pri koncnem obdobju 2008-2-19
@@ -240,7 +245,14 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers):
 
         # zacetek
         if zacetnoObdobje == begining:
-            starting_companies = dowTickers[zacetnoObdobje]["all"]
+            # hardcodam za zacetno od ucne in testne mnozice
+            print("V zacetnem")
+
+            if zacetnoObdobje == "2005-11-21":
+                starting_companies = dowTickers[zacetnoObdobje]["all"]
+            elif zacetnoObdobje == "2016-5-21":
+                starting_companies = dowTickers["2015-3-19"]["all"]
+
             # starting_companies.remove("GM") # odstranimo časnovno linijo GM ker nimamo podatkov
             izloceniTickerji.append("GM")  # dodamo GM pod izlocene
 
@@ -259,7 +271,7 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers):
                     data = yf.download(x, start=zacetnoObdobje, end=plus_one_start_date, progress=False)
                     data = data[['Adj Close']].copy()
                     data = zacetniDf(data)  # dodamo stolpce
-                    return_df = sma_crossover(short_period, long_period, data, x, 0, 0, True)
+                    return_df = sma_crossover(sma_period_short, sma_period_long, data, x, 0, 0, True)
                     portfolio[x] = return_df
 
                 else:
@@ -277,7 +289,7 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers):
                         data = yf.download(x, start=zacetnoObdobje, end=koncnoObdobje, progress=False)
                         data = data[['Adj Close']].copy()
                         data = zacetniDf(data)  # dodamo stolpce
-                        return_df = sma_crossover(short_period, long_period, data, x, 0, 0, True)
+                        return_df = sma_crossover(sma_period_short, sma_period_long, data, x, 0, 0, True)
                         portfolio[x] = return_df
 
             print(portfolio.keys())
@@ -336,7 +348,7 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers):
 
                     # print("Shares", ex_data["Shares"][0])
                     # print("Cash", ex_data["Cash"][0])
-
+                    # TODO tukaj pride error
                     if ex_df["Shares"][-1] == 0:  # super samo prepisemo kes
                         new_df["Cash"].loc[plus_one_start_date] = ex_df["Cash"][-1]
 
@@ -374,7 +386,7 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers):
                     # concat_new["Total"].iloc[starting_index] = concat_new["Cash"].iloc[starting_index]
 
                     # startamo trading algo
-                    new_returns = sma_crossover(short_period, long_period, new_df, nov_ticker, starting_index, 0,
+                    new_returns = sma_crossover(sma_period_short, sma_period_long, new_df, nov_ticker, starting_index, 0,
                                                 True)  # zadnji argument True ker je razlicen ticker in zacnemo od zacetka trejdat, isti -> False ker samo nadaljujemo trejdanje
 
                     added_returns = new_returns[plus_one_start_date:]
@@ -403,7 +415,7 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers):
 
                     totals = portfolio[ostaliTicker]
                     zadnji_signal = 0
-
+                    # TODO tuki spet error
                     if totals['Shares'].iloc[-1] == 0:
                         zadnji_signal = 1  # nimamo delnic kar pomeni da smo jih prodali in jih moramo zdej kupit
                     elif totals['Shares'].iloc[-1] != 0:
@@ -418,12 +430,16 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers):
 
                     concat_data = pd.concat([totals, new_data])
 
-                    concat_totals = sma_crossover(short_period, long_period, concat_data, f"new{ostaliTicker}", starting_index,
+                    concat_totals = sma_crossover(sma_period_short, sma_period_long, concat_data, f"new{ostaliTicker}", starting_index,
                                                   zadnji_signal, False)
                     portfolio[ostaliTicker] = concat_totals
                     # profit_graph(concat_totals, 0, f"new{ostaliTicker}", round(concat_totals['Total'].iloc[-1], 4))
 
 
+    prikaziPodatkePortfolia(portfolio, sezIzlocenih,izloceniTickerji)
+
+
+def prikaziPodatkePortfolia(portfolio, sezIzlocenih, izloceniTickerji):
 
     # gremo cez cel portfolio in sestejemo Totals ter potem plotamo graf
 
@@ -440,9 +456,13 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers):
         #nan = tickerTotals["Total"].loc["2008-2-19"]
         #print(nan)
 
+        ## mogoce avg = tickerTotals["Total"].mean() in pol add(allFunds['Total'],tickerTotals['Total'], avg)
+
         if (count == 0):
+            tickerTotals["Total"] = tickerTotals["Total"].dropna()
             allFunds = tickerTotals[['Total']].copy()
         else:
+            tickerTotals["Total"] = tickerTotals["Total"].dropna()
             allFunds['Total'] = allFunds['Total'] + tickerTotals['Total']
 
         count += 1
@@ -471,9 +491,152 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers):
 
 
 
+
+def najdiOptimalneParametreNaEnem (data, ticker):
+
+    print("Testiram na ucni mnozici")
+    testni_rezultati = {}
+    counter = 0
+    for long in range(100, 210, 10):
+        #print("Trenutna Long vrednost: ", long)
+
+        for short in range(40, 110, 10):
+
+            testni_rezultati[f"[{short},{long}]"] = {}
+            print(f"Kombinacija: Short = {short} , Long = {long}")
+            testni_rezultati[f"[{short},{long}]"] = sma_crossover(short, long, data, ticker, 0, 0, True)
+            #print("Trenutna Short vrednost: ", short)
+            print()
+            counter += 1
+
+    print("Counter: ", counter)
+
+    return testni_rezultati
+
+
+def testirajNaEnemPodjetju():
+    test_ticker = "HD"
+    test_data_ucna = yf.download(test_ticker, start="2005-11-21", end="2016-5-21", progress=False)
+    test_data_ucna = test_data_ucna[['Adj Close']].copy()
+    test_data_ucna = zacetniDf(test_data_ucna)  # dodamo stolpce
+    # return_df = sma_crossover(short_period, long_period, test_data, test_ticker, 0, 0, True)
+
+    rez_ucni = najdiOptimalneParametreNaEnem(test_data_ucna, test_ticker)
+    print(datetime.datetime.now() - begin_time)
+
+    rez_total_ucni = {}
+    for x in rez_ucni:
+        rez_total_ucni[x] = {}
+        rez_total_ucni[x] = rez_ucni[x]['Total'].iloc[-1]
+        print(x, ": ", rez_ucni[x]['Total'].iloc[-1])
+
+    print()
+    print("Sorted ucni!")
+    print()
+
+    sorted_rez_total_ucni = {k: v for k, v in sorted(rez_total_ucni.items(), key=lambda item: item[1])}
+
+    for x in sorted_rez_total_ucni:
+        print(x, ": ", sorted_rez_total_ucni[x])
+
+    test_data_testna = yf.download(test_ticker, start="2016-5-21", end="2021-1-1", progress=False)
+    test_data_testna = test_data_testna[['Adj Close']].copy()
+    test_data_testna = zacetniDf(test_data_testna)  # dodamo stolpce
+    rez_testni = najdiOptimalneParametreNaEnem(test_data_testna, test_ticker)
+
+    rez_total_testna = {}
+    for x in rez_testni:
+        rez_total_testna[x] = {}
+        rez_total_testna[x] = rez_testni[x]['Total'].iloc[-1]
+        print(x, ": ", rez_testni[x]['Total'].iloc[-1])
+
+    print()
+    print("Sorted testni!")
+    print()
+
+    sorted_rez_total_testni = {k: v for k, v in sorted(rez_total_testna.items(), key=lambda item: item[1])}
+
+    for x in sorted_rez_total_testni:
+        print(x, ": ", sorted_rez_total_testni[x])
+
+
+#     ucni_top_stiri = sorted_rez_total_ucni[:-4]
+#     testni_top_stiri = sorted_rez_total_testni[:-4]
+#
+#     print("Top 4 ucni:")
+#     print(ucni_top_stiri)
+#
+#     print("Top 4 testni:")
+#     print(testni_top_stiri)
+
+def najdiOptimalneParametreNaPotrfoliu(start_period, end_period, dowTickers):
+
+
+    print("Testiram na ucni mnozici")
+    testni_rezultati = {}
+    counter = 0
+    for long in range(100, 210, 10):
+        #print("Trenutna Long vrednost: ", long)
+
+        for short in range(40, 110, 10):
+
+            if short != long:
+                testni_rezultati[f"[{short},{long}]"] = {}
+                print(f"Kombinacija: Short = {short} , Long = {long}")
+                testni_rezultati[f"[{short},{long}]"] = backtest(start_period, end_period, short, long, dowTickers)
+                #print("Trenutna Short vrednost: ", short)
+                print()
+            counter += 1
+
+    print("Counter: ", counter)
+
+    return testni_rezultati
+
+
+def testirajNaPortfoliu(dowTickers):
+
+    rez_ucni = najdiOptimalneParametreNaPotrfoliu("2005-11-21", "2016-5-21", dowTickers)
+    print("Koncal testiranej na ucni: ", datetime.datetime.now() - begin_time)
+
+    rez_total_ucni = {}
+    for x in rez_ucni:
+        rez_total_ucni[x] = {}
+        rez_total_ucni[x] = rez_ucni[x]['Total'].iloc[-1]
+        print(x, ": ", rez_ucni[x]['Total'].iloc[-1])
+
+    print()
+    print("Sorted ucni!")
+    print()
+
+    sorted_rez_total_ucni = {k: v for k, v in sorted(rez_total_ucni.items(), key=lambda item: item[1])}
+
+    for x in sorted_rez_total_ucni:
+        print(x, ": ", sorted_rez_total_ucni[x])
+
+    rez_testni = najdiOptimalneParametreNaPotrfoliu("2016-5-21", "2021-1-1", dowTickers)
+
+    rez_total_testna = {}
+    for x in rez_testni:
+        rez_total_testna[x] = {}
+        rez_total_testna[x] = rez_testni[x]['Total'].iloc[-1]
+        print(x, ": ", rez_testni[x]['Total'].iloc[-1])
+
+    print()
+    print("Sorted testni!")
+    print()
+
+    sorted_rez_total_testni = {k: v for k, v in sorted(rez_total_testna.items(), key=lambda item: item[1])}
+
+    for x in sorted_rez_total_testni:
+        print(x, ": ", sorted_rez_total_testni[x])
+
+# 70% = 11-21-2005 do 21-5-2016 UCNA
+
+# 30% = 21-5-2016 do 1-1-2021 TESTNA
+
 # SMA crossover strategy
 # datetmie = leto, mesec, dan
-short_period = 40
+short_period = 60
 long_period = 100
 
 
@@ -483,240 +646,60 @@ start = "2005-11-21"
 # end = "2020-10-1"
 # end = "2008-2-19"
 
-end = "2020-11-12"
+end = "2016-5-21"
+#end = "2020-11-12"
+
+#start = "2016-5-21"
+
+#end = "2021-1-1"
+
+#end = "2021-1-1"
+
+
+begin_time = datetime.datetime.now()
+
+#testirajNaEnemPodjetju()
 
 dowTickers = dow.endTickers # podatki o sezonah sprememb dow jones indexa
 backtest(start,end, short_period, long_period, dowTickers)
 
+#testirajNaPortfoliu(dowTickers)
 
-# pazi ko zlimaš skupi je se podvoji vrstica z istim datumom, končna prej, začetna zdej
-
-# print(index)
-
-# glede na end date obdobja gledam v slovar sprememb kje breajkat
-# slovar spremmemb je dowTickers -> spremembe indexa skozi leta
-
-# ce je obdobje po zadnji spremembi indexa prekratko sepravi manj kot long_period dni potem je problem -> dal sem long_period * 2
-
-# slovar tekocega indexa key -> ticker, value dataframe, ko se remova in pol adda concatat dataframe skupaj
-# na mesto removed podjetja se doda ticker added podjetja, na value mesto pa se concata dataframe prejšnjega podjetja
-# isto se prepiše ticker v datafrejmu
+print(datetime.datetime.now() - begin_time)
 
 
 
-# staro zaganjanje
+
+
+
+
+
+
+"""
+
+
+vsi_tickerji = ['AAPL', 'AIG', 'AMGN', 'AXP', 'BA', 'BAC', 'C', 'CAT', 'CRM', 'CSCO', 'CVX', 'DD', 'DOW', 'DIS',  'GE', #'GM',
+                'GS', 'HD', 'HON', 'HPQ', 'HWM', 'IBM', 'INTC', 'JNJ', 'JPM', 'KO', 'MCD', 'MDLZ', 'MMM', 'MO', 'MRK', 'MSFT',
+                'NKE', 'PFE', 'PG', 'RTX', 'T', 'TRV', 'UNH', 'V', 'VZ', 'WBA', 'WMT', 'XOM']
+
+for x in vsi_tickerji:
+    print("Testiram: ", x)
+    test_data = yf.download(x, start=start, end=end, progress=False)
+    test_data = test_data[['Adj Close']].copy()
+    test_data = zacetniDf(test_data)  # dodamo stolpce
+    return_df = sma_crossover(short_period, long_period, test_data, x, 0, 0, True)
+
+print(datetime.datetime.now() - begin_time)
+
+
+test_ticker = "HD"
+test_data = yf.download(test_ticker, start=start, end=end, progress=False)
+test_data = test_data[['Adj Close']].copy()
+test_data = zacetniDf(test_data)  # dodamo stolpce
+return_df = sma_crossover(short_period, long_period, test_data, test_ticker, 0, 0, True)
+
+#SMA_trading_graph(short_period, long_period, return_df, test_ticker)
+#profit_graph(return_df, 0, test_ticker, return_df["Total"].iloc[-1])
+
+print(datetime.datetime.now() - begin_time)
 """
-
-# Dow Jones Index podjetja not 20 let 1999 - 2020
-tickers = ['HD', 'INTC'] #, 'IBM', 'AXP', 'BA', 'CAT', 'KO', 'JNJ', 'JPM', 'MCD', 'MRK', 'MSFT', 'MMM', 'PG', 'WMT', 'DIS']
-
-
-# tuki potem for za usa podjetja iz dow jones indexa
-
-allFunds = pd.DataFrame
-allShares = {}
-
-for i in range(len(tickers)):
-    # pridobimo podatke preko apija
-    data = web.DataReader(tickers[i], 'yahoo', start='2000, 1, 1', end='2020, 1, 1')
-    data = data[['Adj Close']].copy()
-    totals = sma_crossover(short_period, long_period, data, tickers[i])
-
-    allShares[tickers[i]] = totals['Shares'].iloc[-1]
-    if (i == 0):
-        allFunds = totals[['Total']].copy()
-    else:
-        allFunds['Total'] = allFunds['Total'] + totals['Total']
-
-print(allFunds)
-profit_graph(allFunds, 1, round(allFunds['Total'].iloc[-1], 4))
-
-startFunds = len(tickers) * util.getMoney()
-endFunds = allFunds['Total'].iloc[-1]
-
-print("Zacetna sredstva: ", startFunds, "$")
-print("Skupna sredstva portfolia: ", round(allFunds['Total'].iloc[-1], 4), "$")
-print("Profit: ", round(allFunds['Total'].iloc[-1] - (len(tickers) * util.getMoney()), 4), "$")
-print("Kumulativni donos v procentih: ", round((endFunds - startFunds) / startFunds, 4) * 100, "%")
-
-
-print("Delnice, ki jih še imamo v portfoliu:")
-for key, value in allShares.items():
-    print(key, " : ", value)
-
-"""
-
-"""""
-
-for x in starting:
-
-    data = web.DataReader(x, 'yahoo', start='2005, 11, 21', end='2008, 2, 19')
-    data = data[['Adj Close']].copy()
-    data = zacetniDf(data) # dodamo stolpce
-    return_df = sma_crossover(short_period, long_period, data, x, 0, 0, True)
-    index[x] = return_df
-
-# print(index)
-
-print("ZAMENJAJ")
-# zamenjamo glede na obdobje indexa
-for x in index:
-
-    if x in odstrani['removed']:
-
-        #with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
-            # print()
-            # print(index[x].tail(1))
-            # print()
-        # print(index[x].tail(1)["Shares"])
-        # print(index[x].tail(1)["Cash"])
-        # print(x, "->", dodaj["added"][odstrani["removed"].index(x)])
-        nov_ticker = dodaj["added"][odstrani["removed"].index(x)]
-        naslednje_obdobje = '2008, 2, 19'
-        real_start_date = datetime.datetime.strptime(naslednje_obdobje, "%Y, %m, %d")
-        plus_one_start_date = real_start_date + datetime.timedelta(days=1)  #  adding one day
-        modified_date = plus_one_start_date - datetime.timedelta(days=(long_period * 2))  # odstevamo long period da dobimo dovolj podatkov
-        new_df = web.DataReader(nov_ticker, 'yahoo', start=modified_date, end=end)
-        new_df = new_df[['Adj Close']].copy()
-        new_df = zacetniDf(new_df)
-        ex_df = index[x]
-        ex_data = ex_df.tail(1)
-
-        # print("Shares", ex_data["Shares"][0])
-        # print("Cash", ex_data["Cash"][0])
-
-
-        if ex_df["Shares"][-1] == 0:  # super samo prepisemo kes
-            new_df["Cash"].loc[plus_one_start_date] = ex_df["Cash"][-1]
-
-        elif ex_df["Shares"][-1] > 0: # moramo prodat delnice in jih investirat v podjetje ki ga dodajamo
-
-            prodano = (ex_df['Shares'].iloc[-1] * ex_df['Adj Close'].iloc[-1])  # delnice v denar
-            prodanoFees = util.fees(prodano)  # ostanek denarja po fees
-            sellPrice = prodanoFees
-            ex_df['Sell'].iloc[-1] = prodanoFees  # zapisemo sell price
-            ex_df['Profit'].iloc[-1] = util.profit(ex_df['Buy'].iloc[-1], sellPrice)
-
-            ex_df['Buy'].iloc[-1] = 0  # zapisemo 0 da oznacimo da je zadnji signal bil sell
-
-            # ce je dobicek pozitiven zaracunamo davek na dobicek in ga odstejemo od prodanoFees da dobimo ostanek
-            if (ex_df['Profit'].iloc[-1] > 0):
-                prodanoFees = prodanoFees - util.taxes(ex_df['Profit'].iloc[-1])
-
-            # print("Cash before: ", ex_df['Cash'].iloc[-1])
-            # print("UpdateCash: ", np.nan_to_num(ex_df['Cash'].iloc[-1]) + prodanoFees)
-            ex_df['Cash'].iloc[-1] = np.nan_to_num(ex_df['Cash'].iloc[-1]) + prodanoFees  # posodbi cash
-            # print("RealUpdated Cash ", ex_df['Cash'].iloc[-1])
-            ex_df['Shares'].iloc[-1] = 0
-            ex_df['Total'].iloc[-1] = ex_df["Cash"].iloc[-1]
-
-            # prejsni df je posodobljen in delnice so prodane, samo prepisemo Cash v new_df
-            # print("Notri", ex_df.iloc[-1])
-            new_df["Cash"].loc[plus_one_start_date] = ex_df["Cash"][-1]
-            new_df["Total"].loc[plus_one_start_date] = ex_df["Cash"][-1]
-
-        odvec = new_df[:plus_one_start_date]
-        starting_index = len(odvec) - 1
-        # concat_new = pd.concat([ex_df, new_df])
-        # starting_index = len(ex_df)
-        # concat_new["Ticker"].iloc[starting_index] = dodaj["added"][odstrani["removed"].index(x)] # zapisemo nov ticker
-        # concat_new["Total"].iloc[starting_index] = concat_new["Cash"].iloc[starting_index]
-
-        # startamo trading algo
-        new_returns = sma_crossover(short_period, long_period, new_df, nov_ticker, starting_index, 0, True) # zadnji argument True ker je razlicen ticker in zacnemo od zacetka trejdat, isti -> False ker samo nadaljujemo trejdanje
-
-        added_returns = new_returns[plus_one_start_date:]
-        concat_returns = pd.concat([ex_df, added_returns])
-        profit_graph(concat_returns, 1, round(concat_returns['Total'].iloc[-1], 4))
-        new_index = {nov_ticker if k == x else k: v for k, v in index.items()}
-        new_index[nov_ticker] = concat_returns
-        isOk = new_index[nov_ticker]
-        index = new_index
-        print(index)
-
-    # end if x is in removed
-    elif x not in odstrani['removed']:
-
-        naslednje_obdobje = '2008, 2, 19'
-        real_start_date = datetime.datetime.strptime(naslednje_obdobje, "%Y, %m, %d")
-        plus_one_start_date = real_start_date + datetime.timedelta(days=1)  #  adding one day
-        # modified_date = plus_one_start_date - datetime.timedelta(days=(long_period * 2))  # odstevamo long period da dobimo dovolj podatkov
-
-        totals = index[x]
-        zadnji_signal = 0
-
-        if totals['Shares'].iloc[-1] == 0:
-            zadnji_signal = 1  # nimamo delnic kar pomeni da smo jih prodali in jih moramo zdej kupit
-        elif totals['Shares'].iloc[-1] != 0:
-            zadnji_signal = 2  # imamo delnice tako da jih lahko samo prodamo zdej
-
-        new_data = web.DataReader(x, 'yahoo', start=plus_one_start_date, end=end)
-        new_data = new_data[['Adj Close']].copy()
-        starting_index = len(totals)
-
-        concat_data = pd.concat([totals, new_data])
-
-        concat_totals = sma_crossover(short_period, long_period, concat_data, f"new{x}", starting_index, zadnji_signal, False)
-        index[x] = concat_totals
-        profit_graph(concat_totals, 1, round(concat_totals['Total'].iloc[-1], 4))
-
-
-
-
-# tuki naprej je ce je isto podjetje in samo nadaljujes trejdanje
-
-
-# v enem delu
-data1 = web.DataReader("HD", 'yahoo', start='2000, 1, 1', end='2020, 1, 1')
-data1 = data1[['Adj Close']].copy()
-# v nadaljevanju uporabljamo samo podatke od takrat, ko je dolgi sma že na voljo, prav tako kreiramo nova stolpca
-# za buy/sell signale
-data1['Buy'] = np.nan
-data1['Sell'] = np.nan
-data1['Cash'] = 0
-data1['Shares'] = 0
-data1['Profit'] = 0
-data1['Total'] = 0
-data1['Ticker'] = ""
-totals1 = sma_crossover(short_period, long_period, data1, "HD")
-#profit_graph(totals1, 1, round(totals1['Total'].iloc[-1], 4))
-
-
-# loceno
-data = web.DataReader("HD", 'yahoo', start='2000, 1, 1', end='2010, 1, 1')
-data = data[['Adj Close']].copy()
-
-# v nadaljevanju uporabljamo samo podatke od takrat, ko je dolgi sma že na voljo, prav tako kreiramo nova stolpca
-# za buy/sell signale
-data[f'SMA-{short_period}'] = np.nan
-data[f'SMA-{long_period}'] = np.nan
-data['Buy'] = np.nan
-data['Sell'] = np.nan
-data['Cash'] = 0
-data['Shares'] = 0
-data['Profit'] = 0
-data['Total'] = 0
-data['Ticker'] = ""
-
-zadnji_signal = 0
-totals = sma_crossover(short_period, long_period, data, "HD", 0, zadnji_signal, False)
-profit_graph(totals, 1, round(totals['Total'].iloc[-1], 4))
-
-
-if totals['Shares'].iloc[-1] == 0:
-    zadnji_signal = 1 # nimamo delnic kar pomeni da smo jih prodali in jih moramo zdej kupit
-elif totals['Shares'].iloc[-1] != 0:
-    zadnji_signal = 2 # imamo delnice tako da jih lahko samo prodamo zdej
-
-
-
-new_data = web.DataReader("HD", 'yahoo', start='2010, 1, 1', end='2020, 1, 1')
-new_data = new_data[['Adj Close']].copy()
-starting_index = len(totals)
-
-concat_data = pd.concat([totals, new_data])
-
-
-concat_totals = sma_crossover(short_period, long_period, concat_data, "newHD", starting_index, zadnji_signal, False)
-profit_graph(concat_totals, 1, round(concat_totals['Total'].iloc[-1], 4))
-"""""

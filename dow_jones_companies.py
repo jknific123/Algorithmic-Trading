@@ -68,12 +68,12 @@ for x in companies:
     # removed from index
     if x["addedSecurity"] == '':
 
-        """
+
         if x["removedSecurity"] == "Howmet Aerospace Inc":
             x["removedSecurity"] = "Alcoa Corporation"
             x["symbol"] = "AA"
         """
-
+        """
         slovarImen[x["dateAdded"]]["removed"].append(x["removedSecurity"])
         slovarTickers[x["dateAdded"]]["removed"].append(x["symbol"])
 
@@ -81,12 +81,12 @@ for x in companies:
     # added to index
     elif x["addedSecurity"] != '':
 
-        """
+
         if x["addedSecurity"] == "Howmet Aerospace Inc":
             x["addedSecurity"] = "Alcoa Corporation"
             x["symbol"] = "AA"
         """
-
+        """
         slovarImen[x["dateAdded"]]["added"].append(x["addedSecurity"])
         slovarTickers[x["dateAdded"]]["added"].append(x["symbol"])
 
@@ -338,7 +338,7 @@ def allTickersEver():
 
 endTickers = tickers
 allTickers = []
-
+"""
 for season in endTickers:
 
     print("Sezona: ", season)
@@ -348,7 +348,8 @@ for season in endTickers:
     print()
 
 allTickersEver()
-"""""
+"""
+"""
 allTickers = sorted(allTickers)
 allTickersEver = set(allTickers)
 print(sorted(allTickersEver))

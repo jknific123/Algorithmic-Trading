@@ -41,12 +41,14 @@ def pogojBuy(datum, currCompany_data, avgData):
     if currCompany_data[datum]["ROE"] < avgData[str(leto)]["avgROE"]:
         flag = False
         print("ROE false")
+        #None
     if currCompany_data[datum]["D/E"] > 2:
         flag = False
         print("D/E false")
     if currCompany_data[datum]["P/B"] > 2:
         flag = False
         print("P/B false")
+        #None
     if currCompany_data[datum]["profitMargin"] < 0.1:
         flag = False
         print("profitMargin false")
@@ -54,17 +56,19 @@ def pogojBuy(datum, currCompany_data, avgData):
         flag = False
         print("company_age false")
     if currCompany_data[datum]["goodwill"] < avgData[str(leto)]["avgGoodwill"]:
-        flag = False
-        print("goodwill false")
+        #flag = False
+        #print("goodwill false")
+        None
     if currCompany_data[datum]["revenue"] < avgData[str(leto)]["avgRevenue"]:
-        flag = False
-        print("revenue false")
+        #flag = False
+        #print("revenue false")
+        None
     if currCompany_data[datum]["dcf"] < currCompany_data[datum]["price"]:
         flag = False
         print("dcf false")
 
-        if flag == True:
-            print("ALLL TRUEEE BUYYY")
+    if flag == True:
+        print("ALLL TRUEEE BUYYY")
 
     return flag
 
@@ -85,10 +89,13 @@ def pogojSell(datum, currCompany_data, avgData):
     #if currCompany_data[datum]["company_age"] < 10:
      #   flag = False
     if currCompany_data[datum]["goodwill"] > avgData[str(leto)]["avgGoodwill"]:
-        flag = False
+        #flag = False
+        None
     if currCompany_data[datum]["revenue"] > avgData[str(leto)]["avgRevenue"]:
-        flag = False
-    if currCompany_data[datum]["dcf"] > currCompany_data[datum]["price"]:
+        #flag = False
+        None
+    if currCompany_data[datum]["dcf"] > currCompany_data[datum]["pr" \
+                                                                "ice"]:
         flag = False
 
     return flag
@@ -167,11 +174,13 @@ def value_investing_strategy(start_date, end_date, df, ticker, starting_index, s
         # P/E < 15, P/B < 2, ROE > 15%, market cap > 100M$ -> BUY signal
         if (trenutni_datum in vsi_datumi and pogojBuy(trenutni_datum, company_data, avg_fundamentals)) or (x == 0 and pogojBuy(prvi_datum_v_company_data, company_data, avg_fundamentals)):
             print("SEM V BUY")
+            print("datum: ", trenutni_datum)
 
             can_buy = math.floor(df['Cash'].iloc[x] / (df['Adj Close'].iloc[x] + util.percentageFee(util.feePercentage, df['Adj Close'].iloc[x]))) # to je biu poopravek, dalo je buy signal tudi ce ni bilo denarja za kupit delnico
             if check != 2 and can_buy > 0: # zadnji signal ni bil buy in imamo dovolj denarja za nakup
 
                 print("SEM V BUY IN BOM KUPIL", trenutni_datum)
+                print("Podjetje kupljeno: ", ticker)
 
                 # kupi kolikor je možno delnic glede na cash -> drugi del je cena delnice + fee na nakup delnice
                 stDelnic = math.floor(df['Cash'].iloc[x] / (df['Adj Close'].iloc[x] + util.percentageFee(util.feePercentage, df['Adj Close'].iloc[x])))

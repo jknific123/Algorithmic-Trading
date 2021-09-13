@@ -558,7 +558,7 @@ pe_meja = 15
 
 begin_time = datetime.datetime.now()
 dowTickers = dow.endTickers # podatki o sezona sprememb dow jones indexa
-fundamental_data = fundamentals.getAllFundamentals(fundamentals.vsi_tickerji)
+fundamental_data = fundamentals.getDataAllEverPEinPB(fundamentals.vsi_tickerji) # tukaj spremenil na samo pepb get all
 backtest(start, end, pe_meja, dowTickers, fundamental_data)
 print(datetime.datetime.now() - begin_time)
 
