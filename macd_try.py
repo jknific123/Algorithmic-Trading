@@ -545,7 +545,7 @@ start = "2005-11-21"
 
 end = "2016-5-21"
 
-holdObdobje = 1
+holdObdobje = 365
 
 # end = "2020-11-12"
 

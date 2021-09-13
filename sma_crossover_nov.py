@@ -24,8 +24,8 @@ def days_between(d1, d2):
 
 def sma_crossover(sPeriod, lPeriod, df, ticker, starting_index, status, odZacetkaAliNe, holdObdobje):
     # naredimo nova stolpca za oba SMA
-    df[f'SMA-{sPeriod}'] = df['Adj Close'].rolling(window=sPeriod, min_periods=1, center=False).mean()
-    df[f'SMA-{lPeriod}'] = df['Adj Close'].rolling(window=lPeriod, min_periods=1, center=False).mean()
+    df[f'SMA-{sPeriod}'] = df['Close'].rolling(window=sPeriod, min_periods=1, center=False).mean()
+    df[f'SMA-{lPeriod}'] = df['Close'].rolling(window=lPeriod, min_periods=1, center=False).mean()
 
     # v nadaljevanju uporabljamo samo podatke od takrat, ko je dolgi sma že na voljo
     if starting_index == 0:  # before :   odZacetkaAliNe is True
@@ -48,7 +48,7 @@ def sma_crossover(sPeriod, lPeriod, df, ticker, starting_index, status, odZacetk
                 df['Cash'].iat[x] = np.nan_to_num(df['Cash'].iat[x - 1])  # prenesemo prejsnji Cash naprej
             elif x == starting_index and odZacetkaAliNe is False:  # takrat ko je isto podjetje kot prej
                 df['Cash'].iat[x] = np.nan_to_num(df['Cash'].iat[x - 1])  # prenesemo prejsnji Cash naprej
-            df['Total'].iat[x] = (df['Cash'].iat[x] + df['Shares'].iat[x] * df['Adj Close'].iat[
+            df['Total'].iat[x] = (df['Cash'].iat[x] + df['Shares'].iat[x] * df['Close'].iat[
                 x])  # izracunamo total TODO probably treba dodat fees
             df['Ticker'].iat[x] = ticker
             df['Buy'].iat[x] = df['Buy'].iat[x - 1]
@@ -61,7 +61,7 @@ def sma_crossover(sPeriod, lPeriod, df, ticker, starting_index, status, odZacetk
             df['Shares'].iat[x] = np.nan_to_num(df['Shares'].iat[x])
             if df['Cash'].iat[x] == 0:  # nimamo se denarja
                 df['Cash'].iat[x] = util.getMoney()
-            df['Total'].iat[x] = (df['Cash'].iat[x] + (df['Shares'].iat[x] * df['Adj Close'].iat[x]))
+            df['Total'].iat[x] = (df['Cash'].iat[x] + (df['Shares'].iat[x] * df['Close'].iat[x]))
             df['Ticker'].iat[x] = ticker
 
         pretekli_dnevi_buy = 0
@@ -87,27 +87,27 @@ def sma_crossover(sPeriod, lPeriod, df, ticker, starting_index, status, odZacetk
                 else:
                     vmes_eno_leto = False
 
-            can_buy = math.floor(df['Cash'].iat[x] / (df['Adj Close'].iat[x] + util.percentageFee(util.feePercentage,
+            can_buy = math.floor(df['Cash'].iat[x] / (df['Close'].iat[x] + util.percentageFee(util.feePercentage,
                                                                                                     df[
-                                                                                                        'Adj Close'].iat[
+                                                                                                        'Close'].iat[
                                                                                                         x])))  # to je biu poopravek, dalo je buy signal tudi ce ni bilo denarja za kupit delnico
             if check != 2 and can_buy > 0:  # zadnji signal ni bil buy in imamo dovolj denarja za nakup
 
                 # kupi kolikor je možno delnic glede na cash -> drugi del je cena delnice + fee na nakup delnice
                 stDelnic = math.floor(df['Cash'].iat[x] / (
-                            df['Adj Close'].iat[x] + util.percentageFee(util.feePercentage, df['Adj Close'].iat[x])))
-                buyPrice = stDelnic * df['Adj Close'].iat[
+                            df['Close'].iat[x] + util.percentageFee(util.feePercentage, df['Close'].iat[x])))
+                buyPrice = stDelnic * df['Close'].iat[
                     x]  # stDelnic * njihova cena -> dejanski denar potreben za nakup TODO tudi tuki dodaj fees
                 df['Buy'].iat[x] = buyPrice  # zapisemo buy price
                 df['Sell'].iat[x] = 0  # zapisemo 0 da oznacimo da je bil zadnji signal buy
                 df['Sell-date'].iat[x] = ""  # zapisemo "" da oznacimo da je bil zadnji signal buy
 
                 # za graf trgovanja
-                df['Buy-Signal'].iat[x] = df["Adj Close"].iat[x]
+                df['Buy-Signal'].iat[x] = df["Close"].iat[x]
                 df["Buy-date"].iat[x] = df.index[x].strftime("%Y-%m-%d")  # zapisem datum nakupa
 
                 df['Cash'].iat[x] = np.nan_to_num(df['Cash'].iat[x]) - (
-                        stDelnic * df['Adj Close'].iat[x])  # posodbi cash TODO tudi tuki dodaj fees
+                        stDelnic * df['Close'].iat[x])  # posodbi cash TODO tudi tuki dodaj fees
                 df['Shares'].iat[x] = df['Shares'].iat[x] + stDelnic
 
                 check = 2
@@ -120,13 +120,13 @@ def sma_crossover(sPeriod, lPeriod, df, ticker, starting_index, status, odZacetk
                 # TODO dodaj še davek na dobiček 27,5% -> done
 
                 # prodaj vse delnic izracunaj profit in placaj davek
-                prodano = (df['Shares'].iat[x] * df['Adj Close'].iat[x])  # delnice v denar
+                prodano = (df['Shares'].iat[x] * df['Close'].iat[x])  # delnice v denar
                 prodanoFees = util.fees(prodano)  # ostanek denarja po fees
                 sellPrice = prodanoFees
                 df['Sell'].iat[x] = prodanoFees  # zapisemo sell price
                 df['Profit'].iat[x] = util.profit(df['Buy'].iat[x], sellPrice)
                 # za graf trgovanja
-                df['Sell-Signal'].iat[x] = df["Adj Close"].iat[x]
+                df['Sell-Signal'].iat[x] = df["Close"].iat[x]
                 df["Sell-date"].iat[x] = df.index[x].strftime("%Y-%m-%d") # zapisem datum nakupa
                 # sell_date = df.index[x].strftime("%Y-%m-%d") # zapisem datum nakupa
                 # print(f"buy: ", df["Buy-date"].iat[x], "sell: ", df["Sell-date"].iat[x])
@@ -154,7 +154,7 @@ def sma_crossover(sPeriod, lPeriod, df, ticker, starting_index, status, odZacetk
 
     # with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
     # print(df)
-    # newDf = df[['Adj Close', 'Buy', 'Sell', 'Cash', 'Shares', 'Total']].copy()
+    # newDf = df[['Close', 'Buy', 'Sell', 'Cash', 'Shares', 'Total']].copy()
     # print(newDf)
     return df
 
@@ -167,7 +167,7 @@ def SMA_trading_graph(sPeriod, lPeriod, df, company):
     ax1 = fig.add_subplot(111, ylabel='Cena v $')
 
     # cena
-    df['Adj Close'].plot(ax=ax1, color='black', alpha=0.5)
+    df['Close'].plot(ax=ax1, color='black', alpha=0.5)
 
     # kratki in dolgi SMA
     df[[f'SMA-{sPeriod}', f'SMA-{lPeriod}']].plot(ax=ax1, linestyle="--")
@@ -296,7 +296,7 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stock_da
                     plus_one_start_date = real_end_date + datetime.timedelta(days=1)
 
                     data = getStocks.getCompanyStockDataInRange(date_from=zacetnoObdobje, date_to=plus_one_start_date, companyTicker=x, allStockData=stock_data) # yf.download(x, start=zacetnoObdobje, end=plus_one_start_date, progress=False)
-                    data = data[['Adj Close']].copy()
+                    data = data[['Close']].copy()
                     data = zacetniDf(data)  # dodamo stolpce
                     return_df = sma_crossover(sma_period_short, sma_period_long, data, x, 0, 0, True, hold_obdobje)
                     portfolio[x] = return_df
@@ -305,7 +305,7 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stock_da
                     # izjema za podjetje GM, za katerega nimam podatkov zato samo naredim prazen dataframe
                     if x == "GM":
                         index = pd.date_range(zacetnoObdobje, "2009-6-8", freq='D')
-                        columns = ["Adj Close"]
+                        columns = ["Close"]
                         prazen = pd.DataFrame(index=index, columns=columns)
                         prazen = zacetniDf(prazen)
                         prazen["Cash"] = prazen["Cash"].add(util.getMoney())
@@ -314,7 +314,7 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stock_da
 
                     elif x != "GM":
                         data = getStocks.getCompanyStockDataInRange(date_from=zacetnoObdobje, date_to=koncnoObdobje, companyTicker=x, allStockData=stock_data) # yf.download(x, start=zacetnoObdobje, end=koncnoObdobje, progress=False)
-                        data = data[['Adj Close']].copy()
+                        data = data[['Close']].copy()
                         data = zacetniDf(data)  # dodamo stolpce
                         return_df = sma_crossover(sma_period_short, sma_period_long, data, x, 0, 0, True, hold_obdobje)
                         portfolio[x] = return_df
@@ -367,7 +367,7 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stock_da
                     # new_df = web.DataReader(nov_ticker, 'yahoo', start=modified_date, end=koncnoObdobje)
                     new_df = getStocks.getCompanyStockDataInRange(date_from=modified_date, date_to=koncnoObdobje, companyTicker=nov_ticker, allStockData=stock_data) # yf.download(nov_ticker, start=modified_date, end=koncnoObdobje, progress=False)
 
-                    new_df = new_df[['Adj Close']].copy()
+                    new_df = new_df[['Close']].copy()
                     new_df = zacetniDf(new_df)
                     # ex_df = index[odstranjenTicker]
                     ex_df = portfolio[odstranjenTicker]
@@ -381,7 +381,7 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stock_da
 
                     elif ex_df["Shares"][-1] > 0:  # moramo prodat delnice in jih investirat v podjetje ki ga dodajamo
 
-                        prodano = (ex_df['Shares'].iat[-1] * ex_df['Adj Close'].iat[-1])  # delnice v denar
+                        prodano = (ex_df['Shares'].iat[-1] * ex_df['Close'].iat[-1])  # delnice v denar
                         prodanoFees = util.fees(prodano)  # ostanek denarja po fees
                         sellPrice = prodanoFees
                         ex_df['Sell'].iat[-1] = prodanoFees  # zapisemo sell price
@@ -453,7 +453,7 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stock_da
                     # new_data = web.DataReader(ostaliTicker, 'yahoo', start=plus_one_start_date, end=koncnoObdobje)
                     new_data = getStocks.getCompanyStockDataInRange(date_from=plus_one_start_date, date_to=koncnoObdobje, companyTicker=ostaliTicker, allStockData=stock_data) # yf.download(ostaliTicker, start=plus_one_start_date, end=koncnoObdobje, progress=False)
 
-                    new_data = new_data[['Adj Close']].copy()
+                    new_data = new_data[['Close']].copy()
                     starting_index = len(totals)
 
                     concat_data = pd.concat([totals, new_data])
@@ -548,7 +548,7 @@ def najdiOptimalneParametreNaEnem(data, ticker, hold_obdobje):
 def testirajNaEnemPodjetju(hold_obdobje):
     test_ticker = "HD"
     test_data_ucna = yf.download(test_ticker, start="2005-11-21", end="2016-5-21", progress=False)
-    test_data_ucna = test_data_ucna[['Adj Close']].copy()
+    test_data_ucna = test_data_ucna[['Close']].copy()
     test_data_ucna = zacetniDf(test_data_ucna)  # dodamo stolpce
     # return_df = sma_crossover(short_period, long_period, test_data, test_ticker, 0, 0, True)
 
@@ -572,7 +572,7 @@ def testirajNaEnemPodjetju(hold_obdobje):
 
     # to dej stran, se ne testira na testni
     test_data_testna = yf.download(test_ticker, start="2016-5-21", end="2021-1-1", progress=False)
-    test_data_testna = test_data_testna[['Adj Close']].copy()
+    test_data_testna = test_data_testna[['Close']].copy()
     test_data_testna = zacetniDf(test_data_testna)  # dodamo stolpce
     rez_testni = najdiOptimalneParametreNaEnem(test_data_testna, test_ticker, hold_obdobje)
 
@@ -597,10 +597,13 @@ def najdiOptimalneParametreNaPotrfoliu(start_period, end_period, dowTickers, sto
     print("Testiram na ucni mnozici")
     ucni_rezultati = {}
     counter = 0
-    for long in range(100, 210, 10): # 210
+    long_values = [100, 124, 150, 175, 200]
+    short_values = [40, 54, 70, 85, 100]
+
+    for long in long_values: # 210 range(100, 210, 10)
         # print("Trenutna Long vrednost: ", long)
 
-        for short in range(40, 110 , 10): # 110
+        for short in short_values: # 110 range(40, 110 , 10)
 
             if short != long:
                 ucni_rezultati[f"[{short},{long}]"] = {}
@@ -681,9 +684,9 @@ begin_time = datetime.datetime.now()
 dowTickers = dow.endTickers  # podatki o sezonah sprememb dow jones indexa
 stock_data = getStocks.getAllStockData(start_date=start, end_date=end)
 
-backtest(start, end, short_period, long_period, dowTickers, stock_data, holdObdobje)
+# backtest(start, end, short_period, long_period, dowTickers, stock_data, holdObdobje)
 
-# testirajNaPortfoliu(dowTickers, stock_data, holdObdobje)
+testirajNaPortfoliu(dowTickers, stock_data, holdObdobje)
 
 print(datetime.datetime.now() - begin_time)
 
@@ -697,7 +700,7 @@ vsi_tickerji = ['AAPL', 'AIG', 'AMGN', 'AXP', 'BA', 'BAC', 'C', 'CAT', 'CRM', 'C
 for x in vsi_tickerji:
     print("Testiram: ", x)
     test_data = yf.download(x, start=start, end=end, progress=False)
-    test_data = test_data[['Adj Close']].copy()
+    test_data = test_data[['Close']].copy()
     test_data = zacetniDf(test_data)  # dodamo stolpce
     return_df = sma_crossover(short_period, long_period, test_data, x, 0, 0, True)
 
@@ -706,7 +709,7 @@ print(datetime.datetime.now() - begin_time)
 
 test_ticker = "HD"
 test_data = yf.download(test_ticker, start=start, end=end, progress=False)
-test_data = test_data[['Adj Close']].copy()
+test_data = test_data[['Close']].copy()
 test_data = zacetniDf(test_data)  # dodamo stolpce
 return_df = sma_crossover(short_period, long_period, test_data, test_ticker, 0, 0, True)
 
