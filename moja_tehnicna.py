@@ -26,22 +26,22 @@ def pogojBollingerBands(x, df):
         return "Sell"
 
 
-def pogojStohascticOscilator(x, df):
+def pogojStohascticOscilator(x, df, d_sma_period):
 
-    if df["%K"].iat[x] < 20 and df[f'%D-{d_sma_period}-days'].iat[x] < 20 and df["%K"].iat[x] < df[f'%D-{d_sma_period}-days'].iat[x]:
+    if df["%K"].iat[x] < 20 and df[f'%D-{d_sma_period}-days'].iat[x] < 20 and df["%K"].iat[x] > df[f'%D-{d_sma_period}-days'].iat[x]:
         return "Buy"
-    elif df["%K"].iat[x] > 80 and df[f'%D-{d_sma_period}-days'].iat[x] > 80 and df["%K"].iat[x] > df[f'%D-{d_sma_period}-days'].iat[x]:
+    elif df["%K"].iat[x] > 80 and df[f'%D-{d_sma_period}-days'].iat[x] > 80 and df["%K"].iat[x] < df[f'%D-{d_sma_period}-days'].iat[x]:
         return "Sell"
 
 
-def pogojMACD(x, df):
+def pogojMACD(x, df, signal_period):
 
     if df["MACD"].iat[x] > df[f"Signal-{signal_period}"].iat[x]:
         return "Buy"
     elif df["MACD"].iat[x] < df[f"Signal-{signal_period}"].iat[x]:
         return "Sell"
 
-def pogojBuy(x, df):
+def pogojBuy(x, df, d_sma_period, signal_period):
 
     count = 0
     """
@@ -73,8 +73,8 @@ def pogojBuy(x, df):
         return False
     """
     bol = pogojBollingerBands(x, df)
-    osc = pogojStohascticOscilator(x, df)
-    macd = pogojMACD(x, df)
+    osc = pogojStohascticOscilator(x, df, d_sma_period)
+    macd = pogojMACD(x, df, signal_period)
 
     if bol == "Buy" and osc == "Buy" and macd == "Buy": #
     #if bol == "Buy":
@@ -83,7 +83,7 @@ def pogojBuy(x, df):
         return False
 
 
-def pogojSell(x, df):
+def pogojSell(x, df, d_sma_period, signal_period):
 
     """
     count = 0
@@ -114,8 +114,8 @@ def pogojSell(x, df):
         return False
     """
     bol = pogojBollingerBands(x, df)
-    osc = pogojStohascticOscilator(x, df)
-    macd = pogojMACD(x, df)
+    osc = pogojStohascticOscilator(x, df, d_sma_period)
+    macd = pogojMACD(x, df, signal_period)
 
     if bol == "Sell" and osc == "Sell" and macd == "Sell": #
     #if bol == "Sell":
@@ -193,7 +193,7 @@ def mixed_tehnical_strategy(short_period, long_period, signal_period, high_low_p
             pretekli_dnevi_buy = days_between(df["Buy-date"].iat[x], df.index[x].strftime("%Y-%m-%d"))
 
         # %K < 20 in %D < 20 in %K < %D -> buy signal
-        if pogojBuy(x, df):
+        if pogojBuy(x, df, d_sma_period, signal_period):
 
             can_buy = math.floor(df['Cash'].iat[x] / (df['Close'].iat[x] + util.percentageFee(util.feePercentage, df['Close'].iat[x]))) # to je biu poopravek, dalo je buy signal tudi ce ni bilo denarja za kupit delnico
             if check != 2 and can_buy > 0: # zadnji signal ni bil buy in imamo dovolj denarja za nakup
@@ -217,7 +217,7 @@ def mixed_tehnical_strategy(short_period, long_period, signal_period, high_low_p
                 check = 2
 
         # %K > 80 in %D > 80 in %K > %D -> sell signal
-        elif pogojSell(x, df) and pretekli_dnevi_buy >= holdObdobje:
+        elif pogojSell(x, df, d_sma_period, signal_period) and pretekli_dnevi_buy >= holdObdobje:
 
             if check != 1 and check != 0:
 
@@ -600,22 +600,52 @@ def najdiOptimalneParametreNaPotrfoliu(start_period, end_period, dowTickers, sto
     print("Testiram na ucni mnozici")
     ucni_rezultati = {}
     counter = 0
-    for long in range(100, 210, 10): # 210
+
+    # MACD parameters
+    macd_dnevni = [[20, 40, 9], [20, 35, 9], [18, 40, 9]]
+    macd_tedenski = [[20, 35, 9], [20, 40, 9], [18, 40, 9]]
+    macd_mesecni = [[20, 35, 9], [20, 40, 9], [18, 40, 9]]
+    macd_letni = [[20 ,24, 9], [18, 24, 9], [18, 30, 9]]
+
+    # Stohastic oscilator parameters
+    stohastic_dnevni = [[5, 9], [9, 9], [5, 6]]
+    stohastic_tedenski = [[5, 9], [9, 9], [5, 6]]
+    stohastic_mesecni = [[5, 9], [9, 9], [5, 6]]
+    stohastic_letni = [[20 ,9], [20, 6], [9 , 3]]
+
+    # Bollinger bands parameters
+    bollinger_dnevni = [[50, 2.1], [40, 2.1], [30, 2]]
+    bollinger_tedenski = [[50, 2.1], [40, 2.1], [30, 2]]
+    bollinger_mesecni = [[40, 2.1], [50, 2.1], [30, 2]]
+    bollinger_letni = [[30, 2], [40, 2.1], [50, 2.1]]
+
+
+
+    for macd in macd_dnevni: # 210
         # print("Trenutna Long vrednost: ", long)
 
-        for short in range(40, 110 , 10): # 110
+        for stohastic in stohastic_dnevni:
 
-            if short != long:
-                ucni_rezultati[f"[{short},{long}]"] = {}
-                print(f"Kombinacija: Short = {short} , Long = {long}")
+            for bollinger in bollinger_dnevni:
+
+                ucni_rezultati[f"[{macd},{stohastic},{bollinger}]"] = {}
+                print(f"Kombinacija: MACD = {macd} , Stohastic = {stohastic}, Bollinger = {bollinger}")
+                short_period = macd[0]
+                long_period = macd[1]
+                signal_period = macd[2]
+                high_low_period = stohastic[0]
+                d_sma_period = stohastic[1]
+                sma_period = bollinger[0]
+                bands_multiplayer = bollinger[1]
+                # print("BBSMA ", sma_period)
                 # print debug
                 #print("Before: " ,ucni_rezultati[f"[{short},{long}]"])
-                temp = backtest(start_period, end_period, short, long, dowTickers, stock_data, hold_obdobje)
+                temp = backtest(start_period, end_period, short_period, long_period, signal_period, high_low_period, d_sma_period, sma_period, bands_multiplayer, dowTickers, hold_obdobje, stock_data)
                 #print("Data: ", temp)
-                ucni_rezultati[f"[{short},{long}]"] = temp
+                ucni_rezultati[f"[{macd},{stohastic},{bollinger}]"] = temp
                 # print("Trenutna Short vrednost: ", short)
                 print()
-            counter += 1
+                counter += 1
 
     print("Counter: ", counter)
 
@@ -684,7 +714,9 @@ begin_time = datetime.datetime.now()
 dowTickers = dow.endTickers # podatki o sezona sprememb dow jones indexa,
 stock_data = getStocks.getAllStockData(start_date=start, end_date=end)
 
-backtest(start, end, short_period, long_period, signal_period, high_low_period, d_sma_period, sma_period, bands_multiplayer, dowTickers, holdObdobje, stock_data)
+# backtest(start, end, short_period, long_period, signal_period, high_low_period, d_sma_period, sma_period, bands_multiplayer, dowTickers, holdObdobje, stock_data)
+
+testirajNaPortfoliu(dowTickers, stock_data, holdObdobje)
 
 
 print(datetime.datetime.now() - begin_time)
