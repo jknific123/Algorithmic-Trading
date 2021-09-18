@@ -319,7 +319,7 @@ def plotShares(df, company):
     with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
         print(df['Shares'])
 
-def zacetniDf(data, short_period, long_period, high_low_period, d_sma_period):
+def zacetniDf(data, short_period, long_period, signal_period, high_low_period, d_sma_period):
 
     # kreiramo nova stolpca za buy/sell signale
     # MACD
@@ -405,7 +405,7 @@ def backtest(start, end, short_period, long_period, signal_period, high_low_peri
 
                     data = getStocks.getCompanyStockDataInRange(date_from=zacetnoObdobje, date_to=plus_one_start_date, companyTicker=x, allStockData=stock_data) # yf.download(x, start=zacetnoObdobje, end=plus_one_start_date, progress=False)
                     data = data[["High", "Low", 'Close']].copy()
-                    data = zacetniDf(data, short_period, long_period, high_low_period, d_sma_period)  # dodamo stolpce
+                    data = zacetniDf(data, short_period, long_period, high_low_period, signal_period, d_sma_period)  # dodamo stolpce
                     return_df = mixed_tehnical_strategy(short_period, long_period, signal_period, high_low_period, d_sma_period, sma_period, bands_multiplayer, data, x, 0, 0, True, holdObdobje)
                     portfolio[x] = return_df
 
@@ -416,7 +416,7 @@ def backtest(start, end, short_period, long_period, signal_period, high_low_peri
                         index = pd.date_range(zacetnoObdobje, "2009-6-8", freq='D')
                         columns = ["Close"]
                         prazen = pd.DataFrame(index=index, columns=columns)
-                        prazen = zacetniDf(prazen, short_period, long_period, high_low_period, d_sma_period)
+                        prazen = zacetniDf(prazen, short_period, long_period, high_low_period, signal_period, d_sma_period)
                         prazen["Cash"] = prazen["Cash"].add(util.getMoney())
                         prazen["Total"] = prazen["Cash"]
                         portfolio[x] = prazen
@@ -424,7 +424,7 @@ def backtest(start, end, short_period, long_period, signal_period, high_low_peri
                     elif x != "GM":
                         data = getStocks.getCompanyStockDataInRange(date_from=zacetnoObdobje, date_to=koncnoObdobje, companyTicker=x, allStockData=stock_data) # yf.download(x, start=zacetnoObdobje, end=koncnoObdobje, progress=False)
                         data = data[["High", "Low", 'Close']].copy()
-                        data = zacetniDf(data, short_period, long_period, high_low_period, d_sma_period)  # dodamo stolpce
+                        data = zacetniDf(data, short_period, long_period, high_low_period, signal_period, d_sma_period)  # dodamo stolpce
                         return_df = mixed_tehnical_strategy(short_period, long_period, signal_period, high_low_period, d_sma_period, sma_period, bands_multiplayer, data, x, 0, 0, True, holdObdobje)
                         portfolio[x] = return_df
 
@@ -457,7 +457,7 @@ def backtest(start, end, short_period, long_period, signal_period, high_low_peri
                     new_df = getStocks.getCompanyStockDataInRange(date_from=modified_date, date_to=koncnoObdobje, companyTicker=nov_ticker, allStockData=stock_data) # yf.download(nov_ticker, start=modified_date, end=koncnoObdobje, progress=False)
 
                     new_df = new_df[["High", "Low", 'Close']].copy()
-                    new_df = zacetniDf(new_df, short_period, long_period, high_low_period, d_sma_period)
+                    new_df = zacetniDf(new_df, short_period, long_period, high_low_period, signal_period, d_sma_period)
                     ex_df = portfolio[odstranjenTicker]
                     ex_data = ex_df.tail(1)
 
@@ -621,12 +621,12 @@ def najdiOptimalneParametreNaPotrfoliu(start_period, end_period, dowTickers, sto
 
 
 
-    for macd in macd_dnevni: # 210
+    for macd in macd_letni: # 210
         # print("Trenutna Long vrednost: ", long)
 
-        for stohastic in stohastic_dnevni:
+        for stohastic in stohastic_letni:
 
-            for bollinger in bollinger_dnevni:
+            for bollinger in bollinger_letni:
 
                 ucni_rezultati[f"[{macd},{stohastic},{bollinger}]"] = {}
                 print(f"Kombinacija: MACD = {macd} , Stohastic = {stohastic}, Bollinger = {bollinger}")
@@ -683,17 +683,17 @@ def testirajNaPortfoliu(dowTickers, stock_data, hold_obdobje):
 # datetmie = leto, mesec, dan
 
 # MACD
-short_period = 12
-long_period = 26
-signal_period = 9
+#short_period = 12
+#long_period = 26
+#signal_period = 9
 
 # Stohastic oscilator
-high_low_period = 14
-d_sma_period = 3
+#high_low_period = 14
+#d_sma_period = 3
 
 # Bollinger bands
-sma_period = 20
-bands_multiplayer = 2
+#sma_period = 20
+#bands_multiplayer = 2
 
 # testing date time
 start = "2005-11-21"
@@ -707,7 +707,7 @@ end = "2016-5-21"
 #end = "2011-11-21"
 
 
-holdObdobje = 1
+holdObdobje = 365
 
 begin_time = datetime.datetime.now()
 
@@ -725,7 +725,7 @@ print(datetime.datetime.now() - begin_time)
 test_ticker = "AAPL"
 test_data = yf.download(test_ticker, start=start, end=end, progress=False)
 test_data = test_data[["High", "Low", "Close"]].copy()
-test_data = zacetniDf(test_data, short_period, long_period, high_low_period, d_sma_period)  # dodamo stolpce
+test_data = zacetniDf(test_data, short_period, long_period, high_low_period, signal_period, d_sma_period)  # dodamo stolpce
 return_df = mixed_tehnical_strategy(short_period, long_period, signal_period, high_low_period, d_sma_period, sma_period, bands_multiplayer, test_data, test_ticker, 0, 0, True)
 
 profit_graph(return_df, 0, test_ticker, return_df["Total"].iat[-1])
