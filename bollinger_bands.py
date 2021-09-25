@@ -538,8 +538,8 @@ def testirajNaPortfoliu(dowTickers, stock_data, hold_obdobje):
 # Bollinger bands strategy
 # datetmie = leto, mesec, dan
 
-sma_period = 20
-bands_multiplayer = 2
+# sma_period = 20
+# bands_multiplayer = 2
 
 # testing date time
 start = "2005-11-21"

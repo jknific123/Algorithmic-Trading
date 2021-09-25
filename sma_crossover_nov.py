@@ -657,8 +657,8 @@ def testirajNaPortfoliu(dowTickers, stock_data, hold_obdobje):
 
 # SMA crossover strategy
 # datetmie = leto, mesec, dan
-short_period = 80
-long_period = 180
+#short_period = 80
+#long_period = 180
 
 # testing date time
 start = "2005-11-21"

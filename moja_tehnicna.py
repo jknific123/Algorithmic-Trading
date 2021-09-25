@@ -621,12 +621,12 @@ def najdiOptimalneParametreNaPotrfoliu(start_period, end_period, dowTickers, sto
 
 
 
-    for macd in macd_letni: # 210
+    for macd in macd_dnevni: # 210
         # print("Trenutna Long vrednost: ", long)
 
-        for stohastic in stohastic_letni:
+        for stohastic in stohastic_dnevni:
 
-            for bollinger in bollinger_letni:
+            for bollinger in bollinger_dnevni:
 
                 ucni_rezultati[f"[{macd},{stohastic},{bollinger}]"] = {}
                 print(f"Kombinacija: MACD = {macd} , Stohastic = {stohastic}, Bollinger = {bollinger}")
@@ -707,7 +707,7 @@ end = "2016-5-21"
 #end = "2011-11-21"
 
 
-holdObdobje = 365
+holdObdobje = 1
 
 begin_time = datetime.datetime.now()
 

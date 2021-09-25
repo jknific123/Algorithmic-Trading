@@ -528,9 +528,9 @@ def testirajNaPortfoliu(dowTickers, stock_data, hold_obdobje):
 
 # MACD crossover strategy
 # datetmie = leto, mesec, dan
-short_period = 12 # 12 #20
-long_period = 26 #26 #40
-signal_period = 9#9
+# short_period = 12 # 12 #20
+# long_period = 26 #26 #40
+# signal_period = 9#9
 
 
 # testing date time
