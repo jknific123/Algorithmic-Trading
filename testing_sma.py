@@ -15,6 +15,7 @@ import yfinance as yf
 from numba import jit
 from functools import cache
 
+
 @cache
 def days_between(d1, d2):
     if d1 == "":
@@ -22,7 +23,6 @@ def days_between(d1, d2):
     d1 = datetime.datetime.strptime(d1, "%Y-%m-%d")
     d2 = datetime.datetime.strptime(d2, "%Y-%m-%d")
     return abs((d2 - d1).days)
-
 
 def sma_crossover(sPeriod, lPeriod, df, ticker, starting_index, status, odZacetkaAliNe, holdObdobje):
     # naredimo nova stolpca za oba SMA
@@ -41,7 +41,8 @@ def sma_crossover(sPeriod, lPeriod, df, ticker, starting_index, status, odZacetk
     # 1 -> zacenjamo od tam ko je bil zadnji signal sell
     # 2 -> zacenjamo od tam ko je bil zadnji signal buy
     check = status
-    for x in range(starting_index, len(df)):
+    dfNumpy = df.to_records(index=True)# df.to_dict()
+    for x in range(starting_index, len(dfNumpy)):
 
         # filing shares, cash, total
         if (x - 1) >= 0:  # preverimo ce smo znotraj tabele
