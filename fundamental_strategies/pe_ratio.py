@@ -1,26 +1,27 @@
 import math
 
-import pandas_datareader.data as web
 import pandas as pd
 import datetime as datetime
 import numpy as np
 import matplotlib.pyplot as plt
-import utils as util
-import dow_jones_companies as dow
+from utility import utils as util
+from dow_index_data import dow_jones_companies as dow
 import yfinance as yf
-import requests
-import fundamental_indicators as fundamentals
+from stock_fundamental_data import fundamental_indicators as fundamentals
 
+from functools import cache
 
 api_key = "950c6e208107d01d9616681a4cf99685"
 years = 30
 
 # vrne naslednji delovni datum ce trenutni datum ni delovni dan, uazme date time in vrne datum v string formatu
+@cache
 def to_week_day(date):
     if date.isoweekday() in set((6, 7)):
         date += datetime.timedelta(days=-date.isoweekday() + 8)
     return date.strftime("%Y-%m-%d")
 
+@cache
 def coolPe(key_metrics):
 
     for x in key_metrics:
@@ -28,6 +29,7 @@ def coolPe(key_metrics):
             key_metrics.remove(x)
     return key_metrics
 
+@cache
 def vrni_pe(start_date, end_date, key_metrics):
 
     pe_vrednosti = {}
@@ -42,6 +44,7 @@ def vrni_pe(start_date, end_date, key_metrics):
     return pe_vrednosti
 
 
+@cache
 def vrni_lanski_PE(start_date, end_date, key_metrics):
 
     lanski_pe = {}
@@ -75,6 +78,7 @@ def vrni_lanski_PE(start_date, end_date, key_metrics):
 #
 #     return lanski_pe
 
+@cache
 def printajPEje(res):
     for x in res:
         print(f"datum: {x}, pe ratio: {res[x]}"),

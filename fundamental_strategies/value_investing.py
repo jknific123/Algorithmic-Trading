@@ -1,15 +1,13 @@
 import math
 
-import pandas_datareader.data as web
 import pandas as pd
 import datetime as datetime
 import numpy as np
 import matplotlib.pyplot as plt
-import utils as util
-import dow_jones_companies as dow
+from utility import utils as util
+from dow_index_data import dow_jones_companies as dow
 import yfinance as yf
-import requests
-import fundamental_indicators as fundamentals
+from stock_fundamental_data import fundamental_indicators as fundamentals
 
 api_key = "950c6e208107d01d9616681a4cf99685"
 years = 30

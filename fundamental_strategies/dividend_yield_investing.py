@@ -1,26 +1,89 @@
 import math
 
-import pandas_datareader.data as web
 import pandas as pd
 import datetime as datetime
 import numpy as np
 import matplotlib.pyplot as plt
-import utils as util
-import dow_jones_companies as dow
+from utility import utils as util
+from dow_index_data import dow_jones_companies as dow
 import yfinance as yf
-import requests
-import fundamental_indicators as fundamentals
-
+from stock_fundamental_data import fundamental_indicators as fundamentals
 
 api_key = "950c6e208107d01d9616681a4cf99685"
 years = 30
 
+million = 1000000
+hundred_million = 100 * million
 
-def pb_ratio_strategy(start_date, end_date, pb_mejna_vrednost, df, ticker, starting_index, status, odZacetkaAliNe, fundamental_data):
+# vrne naslednji delovni datum ce trenutni datum ni delovni dan, uazme date time in vrne datum v string formatu
+def to_week_day(date):
 
-    company_data = fundamentals.getDataCompanySamoPEinPB(ticker, start_date, end_date, fundamental_data)
-    fundamentals.printData(company_data)
+    if date.isoweekday() in set((6, 7)):
+        date += datetime.timedelta(days=-date.isoweekday() + 8)
+    return date.strftime("%Y-%m-%d")
 
+
+def pogojBuy(datum, currCompany_data):
+
+    print("SEM v pogojBuy")
+    #print(currCompany_data)
+    #print()
+    #print()
+
+    flag = True
+    leto = datetime.datetime.strptime(datum, "%Y-%m-%d").year
+    print("leto",leto)
+    print("datum", datum)
+    if currCompany_data[datum]["dividendYield"] < 0.02 or currCompany_data[datum]["dividendYield"] > 0.06:
+        flag = False
+        print("dividendYield false")
+    if currCompany_data[datum]["dividendPayoutGrowth"] < 0.01 or currCompany_data[datum]["dividendPayoutGrowth"] > 0.09:
+        flag = False
+        print("dividendPayoutGrowth false")
+    if currCompany_data[datum]["dividendPayoutRatio"] < 0.35 or currCompany_data[datum]["dividendPayoutRatio"] > 0.55:
+        flag = False
+        print("dividendPayoutRatio false")
+
+        if flag == True:
+            print("ALLL TRUEEE BUYYY")
+
+    return flag
+
+def pogojSell(datum, currCompany_data):
+
+    print("SEM v pogojSell")
+
+    flag = True
+    leto = datetime.datetime.strptime(datum, "%Y-%m-%d").year
+    print("leto",leto)
+    print("datum", datum)
+
+    if currCompany_data[datum]["dividendYield"] > 0.02 and currCompany_data[datum]["dividendYield"] < 0.06:
+        flag = False
+    if currCompany_data[datum]["dividendPayoutGrowth"] > 0.03 and currCompany_data[datum]["dividendPayoutGrowth"] < 0.09:
+        #None
+        flag = False
+    if currCompany_data[datum]["dividendPayoutRatio"] > 0.35 and currCompany_data[datum]["dividendPayoutRatio"] < 0.55:
+        # None
+        flag = False
+
+    return flag
+
+
+
+def dividend_investing_strategy(start_date, end_date, df, ticker, starting_index, status, odZacetkaAliNe, fundamental_data):
+
+
+    #company_data = fundamentals.getDataCompany(ticker, start_date, end_date, fundamental_data, True)
+    #print("Printam fundamentals na zacetku strategije")
+    #fundamentals.printData(company_data)
+    company_dividend_data = fundamentals.getDataCompanySamoDividende(ticker, start_date, end_date, fundamental_data)
+    print("Printam dividends na zacetku strategije")
+    fundamentals.printData(company_dividend_data)
+
+    # company_dividend_data = dividendPayouthGrowth(company_dividend_data)
+    # print("Printam dividends po dodajanju payout growth")
+    # fundamentals.printData(company_dividend_data)
     # za racunanje davka na dobiček
     sellPrice = 0
 
@@ -52,24 +115,30 @@ def pb_ratio_strategy(start_date, end_date, pb_mejna_vrednost, df, ticker, start
             df['Ticker'].iloc[x] = ticker
 
 
+
         # pridobim trenutni datum, datum lanskega reporta in list vseh datumov
         trenutni_datum = df.index[x].strftime("%Y-%m-%d")
-        prvi_datum_v_company_data = list(company_data.keys())[0]
-        vsi_datumi = list(company_data.keys())
+        prvi_datum_v_company_data = list(company_dividend_data.keys())[0]
+        vsi_datumi = list(company_dividend_data.keys())
         vsi_datumi.remove(prvi_datum_v_company_data) # da ga ne gledam 2x
 
         if x == 0:
             print("JE NA PRVEM MESTU")
-            df["P/B ratio"].iloc[x] = company_data[prvi_datum_v_company_data]["P/B"]
+            print(prvi_datum_v_company_data)
+            df['DividendYield'].iloc[x] = company_dividend_data[prvi_datum_v_company_data]["dividendYield"]
+            df['DividendPayoutGrowth'].iloc[x] = company_dividend_data[prvi_datum_v_company_data]["dividendPayoutGrowth"]
+            df['DividendPayoutRatio'].iloc[x] = company_dividend_data[prvi_datum_v_company_data]["dividendPayoutRatio"]
 
 
         if trenutni_datum in vsi_datumi:
             print("JE V SLOVAR KEYS")
-            df["P/B ratio"].iloc[x] = company_data[trenutni_datum]["P/B"]
+            df['DividendYield'].iloc[x] = company_dividend_data[trenutni_datum]["dividendYield"]
+            df['DividendPayoutGrowth'].iloc[x] = company_dividend_data[trenutni_datum]["dividendPayoutGrowth"]
+            df['DividendPayoutRatio'].iloc[x] = company_dividend_data[trenutni_datum]["dividendPayoutRatio"]
 
 
-        # pe ratio < 16 -> BUY signal
-        if (trenutni_datum in vsi_datumi and company_data[trenutni_datum]["P/B"] < pb_mejna_vrednost and company_data[trenutni_datum]["P/B"] > 0) or ((x == 0 or x == starting_index) and company_data[prvi_datum_v_company_data]["P/B"] < pb_mejna_vrednost and company_data[prvi_datum_v_company_data]["P/B"] > 0):
+        # P/E < 15, P/B < 2, ROE > 15%, market cap > 100M$ -> BUY signal
+        if (trenutni_datum in vsi_datumi and pogojBuy(trenutni_datum, company_dividend_data)) or (x == 0 and pogojBuy(prvi_datum_v_company_data, company_dividend_data)):
             print("SEM V BUY")
 
             can_buy = math.floor(df['Cash'].iloc[x] / (df['Adj Close'].iloc[x] + util.percentageFee(util.feePercentage, df['Adj Close'].iloc[x]))) # to je biu poopravek, dalo je buy signal tudi ce ni bilo denarja za kupit delnico
@@ -93,8 +162,9 @@ def pb_ratio_strategy(start_date, end_date, pb_mejna_vrednost, df, ticker, start
 
                 check = 2
 
-        # pe ratio > 16 -> sell signal
-        elif (trenutni_datum in vsi_datumi and company_data[trenutni_datum]["P/B"] > pb_mejna_vrednost) or ((x == 0 or x == starting_index) and company_data[prvi_datum_v_company_data]["P/B"] > pb_mejna_vrednost):
+        # P/E > 15, P/B > 2, ROE < 15%, market cap < 100M$ -> Sell signal
+        #elif (trenutni_datum in slovar_keys and slovar_pb[trenutni_datum] > 1) or (x == 0 and slovar_pb[prvi_datum_v_slovar_pb] > 1): marketCapitalization
+        elif (trenutni_datum in vsi_datumi and pogojSell(trenutni_datum, company_dividend_data)) or (x == 0 and pogojSell(prvi_datum_v_company_data, company_dividend_data)):
             print("SEM V SELL")
 
             if check != 1 and check != 0:
@@ -136,7 +206,7 @@ def pb_ratio_strategy(start_date, end_date, pb_mejna_vrednost, df, ticker, start
     return df
 
 
-def pe_trading_graph(df, company):
+def mojaFundamentalna_trading_graph(df, company):
     # prikaz grafa gibanja cene in kupovanja ter prodajanja delnice
 
     fig = plt.figure(figsize=(8, 6), dpi=200)
@@ -177,23 +247,13 @@ def profit_graph(df, mode, company, cash):
     plt.show()
 
 
-def plotShares(df, company):
-    fig = plt.figure(figsize=(8, 6), dpi=200)
-    fig.suptitle(company)
-    ax1 = fig.add_subplot(111, ylabel='Num of shares')
-    df['Shares'].plot(ax=ax1, color='black', alpha=0.5)
-    legend = plt.legend(loc="upper left", edgecolor="black")
-    legend.get_frame().set_alpha(None)
-    legend.get_frame().set_facecolor((0, 0, 1, 0.1))
-    plt.show()
-
-    with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
-        print(df['Shares'])
-
 def zacetniDf(data):
 
     # kreiramo nova stolpca za buy/sell signale
-    data["P/B ratio"] = np.nan
+    data['DividendYield'] = np.nan
+    data['DividendPayoutGrowth'] = np.nan
+    data['DividendPayoutRatio'] = np.nan
+
     data['Buy'] = np.nan
     data['Sell'] = np.nan
     data['Cash'] = 0
@@ -207,7 +267,7 @@ def zacetniDf(data):
     return data
 
 
-def backtest(start, end, pb_mejna_vrednost, dowTickers, fundamental_data):
+def backtest(start, end, dowTickers, fundamental_data):
 
     obdobja = []
     for x in dowTickers:
@@ -239,8 +299,12 @@ def backtest(start, end, pb_mejna_vrednost, dowTickers, fundamental_data):
         koncnoObdobje = obdobja[i + 1]
         print(i, zacetnoObdobje, "+", koncnoObdobje)
 
+        #avg_data = fundamentals.avgAllFundamentalsObdobja(zacetnoObdobje, koncnoObdobje, fundamental_data, dowTickers[zacetnoObdobje]["all"])
+        #print("PRINTAM AVG FUNDAMENTALS")
+        #fundamentals.printData(avg_data)
+
         # zacetek
-        if zacetnoObdobje == start:
+        if zacetnoObdobje == begining:
             starting_companies = dowTickers[zacetnoObdobje]["all"]
             # starting_companies.remove("GM") # odstranimo časnovno linijo GM ker nimamo podatkov
             izloceniTickerji.append("GM") # dodamo GM pod izlocene
@@ -256,7 +320,7 @@ def backtest(start, end, pb_mejna_vrednost, dowTickers, fundamental_data):
                     data = yf.download(x, start=zacetnoObdobje, end=plus_one_start_date, progress=False)
                     data = data[['Adj Close']].copy()
                     data = zacetniDf(data)  # dodamo stolpce
-                    return_df = pb_ratio_strategy(zacetnoObdobje, koncnoObdobje, pb_mejna_vrednost, data, x, 0, 0, True, fundamental_data)
+                    return_df = dividend_investing_strategy(zacetnoObdobje, koncnoObdobje, data, x, 0, 0, True, fundamental_data)
                     portfolio[x] = return_df
 
                 else:
@@ -275,7 +339,7 @@ def backtest(start, end, pb_mejna_vrednost, dowTickers, fundamental_data):
                         data = yf.download(x, start=zacetnoObdobje, end=koncnoObdobje, progress=False)
                         data = data[['Adj Close']].copy()
                         data = zacetniDf(data)  # dodamo stolpce
-                        return_df = pb_ratio_strategy(zacetnoObdobje, koncnoObdobje, pb_mejna_vrednost, data, x, 0, 0, True, fundamental_data)
+                        return_df = dividend_investing_strategy(zacetnoObdobje, koncnoObdobje, data, x, 0, 0, True, fundamental_data)
                         portfolio[x] = return_df
 
 
@@ -286,7 +350,7 @@ def backtest(start, end, pb_mejna_vrednost, dowTickers, fundamental_data):
 
 
         # ce nismo na zacetku gremo cez removed in added in naredimo menjave ter trejdamo za naslednje obdobje
-        elif zacetnoObdobje != start:
+        elif zacetnoObdobje != begining:
 
             dodani = []
             # gremo najprej cez removed in opravimo zamenjave
@@ -340,7 +404,7 @@ def backtest(start, end, pb_mejna_vrednost, dowTickers, fundamental_data):
                     starting_index = len(odvec) - 1
 
                     # startamo trading algo
-                    new_returns = pb_ratio_strategy(zacetnoObdobje, koncnoObdobje, pb_mejna_vrednost, new_df, nov_ticker, starting_index, 0,
+                    new_returns = dividend_investing_strategy(zacetnoObdobje, koncnoObdobje, new_df, nov_ticker, starting_index, 0,
                                                 True, fundamental_data)  # zadnji argument True ker je razlicen ticker in zacnemo od zacetka trejdat, isti -> False ker samo nadaljujemo trejdanje
 
                     added_returns = new_returns[plus_one_start_date:]
@@ -382,7 +446,7 @@ def backtest(start, end, pb_mejna_vrednost, dowTickers, fundamental_data):
 
                     concat_data = pd.concat([totals, new_data])
 
-                    concat_totals = pb_ratio_strategy(zacetnoObdobje, koncnoObdobje, pb_mejna_vrednost, concat_data, ostaliTicker, starting_index,
+                    concat_totals = dividend_investing_strategy(zacetnoObdobje, koncnoObdobje, concat_data, ostaliTicker, starting_index,
                                                   zadnji_signal, False, fundamental_data) # old: f"new{ostaliTicker}"
                     portfolio[ostaliTicker] = concat_totals
 
@@ -403,7 +467,7 @@ def backtest(start, end, pb_mejna_vrednost, dowTickers, fundamental_data):
         if (count == 0):
             allFunds = tickerTotals[['Total']].copy()
         else:
-            allFunds['Total'] = allFunds['Total'].add(tickerTotals['Total'], fill_value = 1000)  # + tickerTotals['Total']
+            allFunds['Total'] = allFunds['Total'] + tickerTotals['Total']
 
         count += 1
 
@@ -426,35 +490,34 @@ def backtest(start, end, pb_mejna_vrednost, dowTickers, fundamental_data):
         print(key, " : ", value)
 
 
-# Bollinger bands strategy
-# datetmie = leto, mesec, dan
 
 
 # testing date time
 start = "2005-11-21"
 #end = "2012-10-25"
 #end = "2008-4-1"
-# end = "2020-10-1"
+#end = "2020-10-1"
 end = "2020-11-21"
 # end = "2008-2-19"
 
-#end = "2011-11-21"
+# end = "2011-11-21"
 
-pb_meja = 1
 begin_time = datetime.datetime.now()
-
 dowTickers = dow.endTickers # podatki o sezona sprememb dow jones indexa
-fundamental_data = fundamentals.getDataAllEverPEinPB(fundamentals.vsi_tickerji) # tukaj spremenil na samo pepb get all
-backtest(start, end, pb_meja, dowTickers, fundamental_data)
+fundamental_data = fundamentals.getDataAllEverDividende(fundamentals.vsi_tickerji)
+backtest(start, end, dowTickers, fundamental_data)
 print(datetime.datetime.now() - begin_time)
 
 """
 test_ticker = "HD"
+fundamental_data = fundamentals.getDataAllEverDividende([test_ticker])
 test_data = yf.download(test_ticker, start=start, end=end, progress=False)
 test_data = test_data[['Adj Close']].copy()
 test_data = zacetniDf(test_data)  # dodamo stolpce
-return_df = pe_ratio_strategy(start, end, test_data, test_ticker, 0, 0, True)
+return_df = dividend_investing_strategy(start, end, test_data, test_ticker, 0, 0, True, fundamental_data)
 
-pe_trading_graph(return_df, test_ticker)
+mojaFundamentalna_trading_graph(return_df, test_ticker)
+
 """
+
 

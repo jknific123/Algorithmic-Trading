@@ -1,12 +1,11 @@
 import math
-import pandas_datareader.data as web
 import pandas as pd
 import datetime as datetime
 import numpy as np
 import matplotlib.pyplot as plt
 
-import utils as util
-import dow_jones_companies as dow
+from utility import utils as util
+from dow_index_data import dow_jones_companies as dow
 import yfinance as yf
 
 

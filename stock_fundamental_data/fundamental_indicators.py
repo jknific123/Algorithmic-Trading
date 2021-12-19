@@ -1,11 +1,5 @@
-import math
-import pandas as pd
 import datetime as datetime
-import numpy as np
-import matplotlib.pyplot as plt
-import utils as util
 # import dow_jones_companies as dow
-import yfinance as yf
 import requests
 from dateutil.relativedelta import relativedelta
 

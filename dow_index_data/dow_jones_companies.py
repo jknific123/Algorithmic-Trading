@@ -1,8 +1,4 @@
 # !/usr/bin/env python
-import pandas as pd
-import yfinance as yf
-import datetime as datetime
-import matplotlib.pyplot as plt
 
 try:
     # For Python 3.0 and later
@@ -31,15 +27,13 @@ def get_jsonparsed_data(url):
     return json.loads(data)
 
 
-url = (
-    "https://financialmodelingprep.com/api/v3/historical/dowjones_constituent?apikey=950c6e208107d01d9616681a4cf99685")
+url = ("https://financialmodelingprep.com/api/v3/historical/dowjones_constituent?apikey=950c6e208107d01d9616681a4cf99685")
 # print(get_jsonparsed_data(url))
 
 companies = get_jsonparsed_data(url)
 
 slovarImen = {}
 slovarTickers = {}
-
 
 # slovar -> key: leto
 # value: lists
@@ -68,7 +62,6 @@ for x in companies:
     # removed from index
     if x["addedSecurity"] == '':
 
-
         if x["removedSecurity"] == "Howmet Aerospace Inc":
             x["removedSecurity"] = "Alcoa Corporation"
             x["symbol"] = "AA"
@@ -81,7 +74,6 @@ for x in companies:
     # added to index
     elif x["addedSecurity"] != '':
 
-
         if x["addedSecurity"] == "Howmet Aerospace Inc":
             x["addedSecurity"] = "Alcoa Corporation"
             x["symbol"] = "AA"
@@ -89,8 +81,6 @@ for x in companies:
         """
         slovarImen[x["dateAdded"]]["added"].append(x["addedSecurity"])
         slovarTickers[x["dateAdded"]]["added"].append(x["symbol"])
-
-
 
 # print()
 # print()
@@ -160,7 +150,6 @@ print()
 
 # print("Glavni del imena")
 for x in obrnjenSlovarImen:
-
     # odstranimo removed
     """""
     print("X: ", x)
@@ -181,17 +170,12 @@ for x in obrnjenSlovarImen:
     print("Diff2: ", tekociSet.difference(starting))
     """""
 
-
     starting = tekociSet
 
-
-    #print(starting)
-    #print(len(starting))
-    # print()
+    # print(starting)  # print(len(starting))  # print()
 
 # print("Glavni del imena")
 for x in obrnjenSlovarTickers:
-
     # odstranimo removed
     """""
     print("X: ", x)
@@ -212,11 +196,9 @@ for x in obrnjenSlovarTickers:
     print("Diff2: ", tekociSetTickers.difference(startingTickers))
     """""
 
-
     startingTickers = tekociSetTickers
 
-    #print()
-
+    # print()
 
 # print(obrnjenSlovarImen.keys())
 
@@ -264,25 +246,24 @@ for x in obrnjenSlovarTickers:
 
 # changing keys of dictionary
 # November 21, 2005 -> 2008, 11, 21
-tickers = {"2005-11-21" if k == 'April 8, 2004' else k:v for k,v in obrnjenSlovarTickers.items()}
-tickers = {"2008-2-19" if k == 'February 19, 2008' else k:v for k,v in tickers.items()}
-tickers = {"2008-9-22" if k == 'September 22, 2008' else k:v for k,v in tickers.items()}
-tickers = {"2009-6-8" if k == 'June 8, 2009' else k:v for k,v in tickers.items()}
-tickers = {"2012-9-24" if k == 'September 24, 2012' else k:v for k,v in tickers.items()}
-tickers = {"2013-9-23" if k == 'September 23, 2013' else k:v for k,v in tickers.items()}
-tickers = {"2015-3-19" if k == 'March 19, 2015' else k:v for k,v in tickers.items()}
-tickers = {"2017-9-1" if k == 'September 1, 2017' else k:v for k,v in tickers.items()}
-tickers = {"2018-6-26" if k == 'June 26, 2018' else k:v for k,v in tickers.items()}
-tickers = {"2019-4-2" if k == 'April 2, 2019' else k:v for k,v in tickers.items()}
-tickers = {"2020-8-31" if k == 'August 31, 2020' else k:v for k,v in tickers.items()}
+tickers = {"2005-11-21" if k == 'April 8, 2004' else k: v for k, v in obrnjenSlovarTickers.items()}
+tickers = {"2008-2-19" if k == 'February 19, 2008' else k: v for k, v in tickers.items()}
+tickers = {"2008-9-22" if k == 'September 22, 2008' else k: v for k, v in tickers.items()}
+tickers = {"2009-6-8" if k == 'June 8, 2009' else k: v for k, v in tickers.items()}
+tickers = {"2012-9-24" if k == 'September 24, 2012' else k: v for k, v in tickers.items()}
+tickers = {"2013-9-23" if k == 'September 23, 2013' else k: v for k, v in tickers.items()}
+tickers = {"2015-3-19" if k == 'March 19, 2015' else k: v for k, v in tickers.items()}
+tickers = {"2017-9-1" if k == 'September 1, 2017' else k: v for k, v in tickers.items()}
+tickers = {"2018-6-26" if k == 'June 26, 2018' else k: v for k, v in tickers.items()}
+tickers = {"2019-4-2" if k == 'April 2, 2019' else k: v for k, v in tickers.items()}
+tickers = {"2020-8-31" if k == 'August 31, 2020' else k: v for k, v in tickers.items()}
 
 # tickers = {"1999-11-1" if k == 'November 1, 1999' else k:v for k,v in tickers.items()}
 
 
-del tickers["2017-9-1"] # zbrišem ker ima podjetje DD v removed in added tko da ni pomembno
+del tickers["2017-9-1"]  # zbrišem ker ima podjetje DD v removed in added tko da ni pomembno
 
-
-names = {"November 21, 2005" if k == 'April 8, 2004' else k:v for k,v in obrnjenSlovarImen.items()}
+names = {"November 21, 2005" if k == 'April 8, 2004' else k: v for k, v in obrnjenSlovarImen.items()}
 
 """""
 print()
@@ -317,8 +298,8 @@ for x in names:
     print()
 """""
 
-def allTickersEver():
 
+def allTickersEver():
     allTickers = []
     for season in endTickers:
         print("Sezona: ", season)

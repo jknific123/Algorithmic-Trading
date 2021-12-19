@@ -1,14 +1,13 @@
 import math
 
-import pandas_datareader.data as web
 import pandas as pd
 import datetime as datetime
+
 import numpy as np
 import matplotlib.pyplot as plt
-import utils as util
-import dow_jones_companies as dow
-import yfinance as yf
-import get_stock_data as getStocks
+from utility import utils as util
+from dow_index_data import dow_jones_companies as dow
+from stock_ohlc_data import get_stock_data as getStocks
 
 
 def days_between(d1, d2):
@@ -19,18 +18,25 @@ def days_between(d1, d2):
     d2 = datetime.datetime.strptime(d2, "%Y-%m-%d")
     return abs((d2 - d1).days)
 
-def macd(sPeriod, lPeriod,signal_period, df, ticker, starting_index, status, odZacetkaAliNe, holdObdobje):
+def bollingerBands(sma_period,bands_multiplayer, df, ticker, starting_index, status, odZacetkaAliNe, holdObdobje):
     # naredimo nove stolpce za EMA-e, MACD in signal line
+    """
+    df[f'SMA-{sma_period}'] = df['Close'].rolling(window=sma_period, min_periods=1, center=False).mean()
+    df["STD"] = df['Close'].rolling(window=sma_period, min_periods=1, center=False).std()
+    df['Upper band'] = df[f'SMA-{sma_period}'] + (df["STD"] * bands_multiplayer)
+    df['Lower band'] = df[f'SMA-{sma_period}'] - (df["STD"] * bands_multiplayer)
+    """
 
-    df[f'EMA-{sPeriod}'] = df['Close'].ewm(span=sPeriod, adjust=False).mean()
-    df[f'EMA-{lPeriod}'] = df['Close'].ewm(span=lPeriod, adjust=False).mean()
-    df["MACD"] = df[f'EMA-{sPeriod}'] - df[f'EMA-{lPeriod}']
-    df[f"Signal-{signal_period}"] = df["MACD"].ewm(span=signal_period, adjust=False).mean()
+    df["Typical price"] = (df["High"] + df["Low"] + df["Close"]) / 3
+    df["STD"] = df["Typical price"].rolling(window=sma_period, min_periods=1, center=False).std(ddof=0)
+    df[f"TP SMA"] = df["Typical price"].rolling(sma_period).mean()
+    df['Upper band'] = df[f"TP SMA"] + bands_multiplayer * df["STD"]
+    df['Lower band'] = df[f"TP SMA"] - bands_multiplayer * df["STD"]
 
 
     # v nadaljevanju uporabljamo samo podatke od takrat, ko je dolgi EMA že na voljo
     if starting_index == 0:
-        df = df[lPeriod:]
+        df = df[sma_period:]
 
     # za racunanje davka na dobiček
     sellPrice = 0
@@ -41,6 +47,13 @@ def macd(sPeriod, lPeriod,signal_period, df, ticker, starting_index, status, odZ
     # 2 -> zacenjamo od tam ko je bil zadnji signal buy
     check = status
     for x in range(starting_index, len(df)):
+
+        """
+        print(df.index[x])
+
+        if df.index[x] == datetime.datetime.strptime("2008-1-17", "%Y-%m-%d"): # datetime.datetime(2008-1-17)
+            print("HURAAYYY")
+        """
 
         # filing shares, cash, total
         if (x - 1) >= 0:  # preverimo ce smo znotraj tabele
@@ -68,9 +81,9 @@ def macd(sPeriod, lPeriod,signal_period, df, ticker, starting_index, status, odZ
         if df["Buy-date"].iat[x] != "": #buy_date != "":
             pretekli_dnevi_buy = days_between(df["Buy-date"].iat[x], df.index[x].strftime("%Y-%m-%d"))
 
-        # MACD > signal line -> buy signal
-        if df["MACD"].iat[x] > df[f"Signal-{signal_period}"].iat[x]:
-            # print("MACD: ", df["MACD"].iat[x]," Signal line: ", df[f"Signal-{signal_period}"].iat[x])
+        # cena < Lower band -> buy signal
+        if df["Close"].iat[x] < df[f'Lower band'].iat[x]: # x > 0 and df["Close"].iat[x - 1] < df[f'Lower band'].iat[x - 1] and
+
 
             can_buy = math.floor(df['Cash'].iat[x] / (df['Close'].iat[x] + util.percentageFee(util.feePercentage, df['Close'].iat[x]))) # to je biu poopravek, dalo je buy signal tudi ce ni bilo denarja za kupit delnico
             if check != 2 and can_buy > 0: # zadnji signal ni bil buy in imamo dovolj denarja za nakup
@@ -87,15 +100,14 @@ def macd(sPeriod, lPeriod,signal_period, df, ticker, starting_index, status, odZ
                 df["Buy-date"].iat[x] = df.index[x].strftime("%Y-%m-%d")  # zapisem datum nakupa
 
 
-
                 df['Cash'].iat[x] = np.nan_to_num(df['Cash'].iat[x]) - (
                         stDelnic * df['Close'].iat[x])  # posodbi cash TODO tudi tuki dodaj fees
                 df['Shares'].iat[x] = df['Shares'].iat[x] + stDelnic
 
                 check = 2
 
-        # MACD < signal line -> sell signal
-        elif df["MACD"].iat[x] < df[f"Signal-{signal_period}"].iat[x] and pretekli_dnevi_buy >= holdObdobje:
+        # cena > Upper band -> sell signal
+        elif df["Close"].iat[x] > df[f'Upper band'].iat[x] and pretekli_dnevi_buy >= holdObdobje: # x > 0 and df["Close"].iat[x - 1] > df[f'Upper band'].iat[x - 1] and
 
             if check != 1 and check != 0:
 
@@ -118,7 +130,6 @@ def macd(sPeriod, lPeriod,signal_period, df, ticker, starting_index, status, odZ
                 # ce je dobicek pozitiven zaracunamo davek na dobicek in ga odstejemo od prodanoFees da dobimo ostanek
                 if (df['Profit'].iat[x] > 0):
                     prodanoFees = prodanoFees - util.taxes(df['Profit'].iat[x])
-                    #print("Profit taxes", util.taxes(df['Profit'].iat[x]))
 
                 df['Cash'].iat[x] = np.nan_to_num(df['Cash'].iat[x]) + prodanoFees  # posodbi cash
                 df['Shares'].iat[x] = 0
@@ -140,24 +151,20 @@ def macd(sPeriod, lPeriod,signal_period, df, ticker, starting_index, status, odZ
     return df
 
 
-def MACD_trading_graph(sPeriod, lPeriod, signal_period, df, company):
+def bollinger_trading_graph(sma_period, bands_multiplayer, df, company):
     # prikaz grafa gibanja cene in kupovanja ter prodajanja delnice
 
     fig = plt.figure(figsize=(8, 6), dpi=200)
-    fig.suptitle(f"{company}, trgovalni signali")
+    fig.suptitle(company)
     ax1 = fig.add_subplot(111, ylabel='Cena v $')
 
-    fig2 = plt.figure(figsize=(8, 6), dpi=200)
-    fig2.suptitle(f"{company}: MACD in signalna črta")
-    ax2 = fig2.add_subplot(111, ylabel='Vrednost MACD in Signalne črte')
     # cena
     df['Close'].plot(ax=ax1, color='black', label="Cena", alpha=0.5)
+    #df[f'SMA-{sma_period}'].plot(ax=ax1 ,color='orange', linestyle="--")
 
-    # MACD in signal line
-    df[["MACD", f'Signal-{signal_period}']].plot(ax=ax2, linestyle="--")
-    #df[["MACD", f'Signal-{signal_period}']].plot(ax=ax1, linestyle="--", secondary_y=True)
-    #df['Close'].plot(ax=ax2, alpha=0.25, secondary_y=True)
-
+    # kratki in dolgi SMA
+    df['Upper band'].plot(ax=ax1, label="Zgornji pas", color="blue", linestyle="--")
+    df['Lower band'].plot(ax=ax1, label="Spodnji pas", color="purple", linestyle="--")
 
     # buy/sell signali
     ax1.plot(df['Buy-Signal'], '^', markersize=6, color='green', label='Buy signal', lw=2)
@@ -199,16 +206,18 @@ def plotShares(df, company):
     legend.get_frame().set_facecolor((0, 0, 1, 0.1))
     plt.show()
 
-    #with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
-    #    print(df['Shares'])
+    with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
+        print(df['Shares'])
 
-def zacetniDf(data):
+def zacetniDf(data, sma_period):
 
     # kreiramo nova stolpca za buy/sell signale
-    data[f'EMA-{short_period}'] = np.nan
-    data[f'EMA-{long_period}'] = np.nan
-    data["MACD"] = np.nan
-    data[f"Signal-{signal_period}"] = np.nan
+    #data[f'SMA-{sma_period}'] = np.nan
+    data["Typical price"] = np.nan
+    data["STD"] = np.nan
+    data["TP SMA"] = np.nan
+    data['Upper band'] = np.nan
+    data['Lower band'] = np.nan
     data['Buy'] = np.nan
     data['Sell'] = np.nan
     data['Cash'] = 0
@@ -224,7 +233,7 @@ def zacetniDf(data):
     return data
 
 
-def backtest(start, end, short_period, long_period, signal_period, dowTickers, stock_data, holdObdoje):
+def backtest(start, end, sma_period, bands_multiplayer, dowTickers, stock_data, holdObdobje):
 
     obdobja = []
     for x in dowTickers:
@@ -237,7 +246,7 @@ def backtest(start, end, short_period, long_period, signal_period, dowTickers, s
     if end > zadnjeObdobje:
         obdobja.append(end)  # appendamo end date ker skoraj nikoli ne bo čisto točno eno obdobje iz dowTickers
 
-    #print("Obdobja: ", obdobja)
+    print("Obdobja: ", obdobja)
 
 
 
@@ -254,7 +263,7 @@ def backtest(start, end, short_period, long_period, signal_period, dowTickers, s
 
         zacetnoObdobje = obdobja[i]
         koncnoObdobje = obdobja[i + 1]
-        # print(i, zacetnoObdobje, "+", koncnoObdobje)
+        print(i, zacetnoObdobje, "+", koncnoObdobje)
 
         # zacetek
         if zacetnoObdobje == begining:
@@ -263,17 +272,17 @@ def backtest(start, end, short_period, long_period, signal_period, dowTickers, s
             izloceniTickerji.append("GM") # dodamo GM pod izlocene
 
             for x in starting_companies:
-                # print("Company: ", x)
+                print("Company: ", x)
 
                 if x in problematicni and koncnoObdobje == "2008-2-19": # to podjetje ima izjemo
-                    # print("Popravljam problematicne")
+                    print("Popravljam problematicne")
                     real_end_date = datetime.datetime.strptime(koncnoObdobje, "%Y-%m-%d")
                     plus_one_start_date = real_end_date + datetime.timedelta(days=1)
 
                     data = getStocks.getCompanyStockDataInRange(date_from=zacetnoObdobje, date_to=plus_one_start_date, companyTicker=x, allStockData=stock_data) # yf.download(x, start=zacetnoObdobje, end=plus_one_start_date, progress=False)
-                    data = data[['Close']].copy()
-                    data = zacetniDf(data)  # dodamo stolpce
-                    return_df = macd(short_period, long_period, signal_period, data, x, 0, 0, True, holdObdobje)
+                    data = data[["High", "Low", "Close"]].copy()
+                    data = zacetniDf(data, sma_period)  # dodamo stolpce
+                    return_df = bollingerBands(sma_period, bands_multiplayer, data, x, 0, 0, True, holdObdobje)
                     portfolio[x] = return_df
 
                 else:
@@ -283,23 +292,23 @@ def backtest(start, end, short_period, long_period, signal_period, dowTickers, s
                         index = pd.date_range(zacetnoObdobje, "2009-6-8", freq='D')
                         columns = ["Close"]
                         prazen = pd.DataFrame(index=index, columns=columns)
-                        prazen = zacetniDf(prazen)
+                        prazen = zacetniDf(prazen, sma_period)
                         prazen["Cash"] = prazen["Cash"].add(util.getMoney())
                         prazen["Total"] = prazen["Cash"]
                         portfolio[x] = prazen
 
                     elif x != "GM":
                         data = getStocks.getCompanyStockDataInRange(date_from=zacetnoObdobje, date_to=koncnoObdobje, companyTicker=x, allStockData=stock_data) # yf.download(x, start=zacetnoObdobje, end=koncnoObdobje, progress=False)
-                        data = data[['Close']].copy()
-                        data = zacetniDf(data)  # dodamo stolpce
-                        return_df = macd(short_period, long_period, signal_period, data, x, 0, 0, True, holdObdobje)
+                        data = data[["High", "Low", "Close"]].copy()
+                        data = zacetniDf(data, sma_period)  # dodamo stolpce
+                        return_df = bollingerBands(sma_period, bands_multiplayer, data, x, 0, 0, True, holdObdobje)
                         portfolio[x] = return_df
 
 
-            # print(portfolio.keys())
-            # print(starting_companies)
-            # print(dowTickers["2005-11-21"]["all"])
-            # print("LEN: ", len(portfolio))
+            print(portfolio.keys())
+            print(starting_companies)
+            print(dowTickers["2005-11-21"]["all"])
+            print("LEN: ", len(portfolio))
 
 
         # ce nismo na zacetku gremo cez removed in added in naredimo menjave ter trejdamo za naslednje obdobje
@@ -315,22 +324,22 @@ def backtest(start, end, short_period, long_period, signal_period, dowTickers, s
 
 
                     nov_ticker = dowTickers[zacetnoObdobje]["added"][dowTickers[zacetnoObdobje]["removed"].index(odstranjenTicker)]
-                    # print(odstranjenTicker, "->", nov_ticker)
+                    print(odstranjenTicker, "->", nov_ticker)
                     # naslednje_obdobje = '2008, 2, 19'
                     real_start_date = datetime.datetime.strptime(zacetnoObdobje, "%Y-%m-%d")
                     plus_one_start_date = real_start_date + datetime.timedelta(days=1)  # adding one day
                     modified_date = plus_one_start_date - datetime.timedelta(
-                        days=(long_period * 2))  # odstevamo long period da dobimo dovolj podatkov
+                        days=(sma_period * 2))  # odstevamo long period da dobimo dovolj podatkov
                     new_df = getStocks.getCompanyStockDataInRange(date_from=modified_date, date_to=koncnoObdobje, companyTicker=nov_ticker, allStockData=stock_data) # yf.download(nov_ticker, start=modified_date, end=koncnoObdobje, progress=False)
 
-                    new_df = new_df[['Close']].copy()
-                    new_df = zacetniDf(new_df)
+                    new_df = new_df[["High", "Low", "Close"]].copy()
+                    new_df = zacetniDf(new_df, sma_period)
                     ex_df = portfolio[odstranjenTicker]
                     ex_data = ex_df.tail(1)
 
 
                     if ex_df["Shares"][-1] == 0:  # super samo prepisemo kes
-                        new_df["Cash"].loc[plus_one_start_date] = ex_df["Cash"][-1]
+                        new_df["Cash"].at[plus_one_start_date] = ex_df["Cash"][-1]
 
                     elif ex_df["Shares"][-1] > 0:  # moramo prodat delnice in jih investirat v podjetje ki ga dodajamo
 
@@ -351,14 +360,14 @@ def backtest(start, end, short_period, long_period, signal_period, dowTickers, s
                         ex_df['Total'].iat[-1] = ex_df["Cash"].iat[-1]
 
                         # prejsni df je posodobljen in delnice so prodane, samo prepisemo Cash v new_df
-                        new_df["Cash"].loc[plus_one_start_date] = ex_df["Cash"][-1]
-                        new_df["Total"].loc[plus_one_start_date] = ex_df["Cash"][-1]
+                        new_df["Cash"].at[plus_one_start_date] = ex_df["Cash"][-1]
+                        new_df["Total"].at[plus_one_start_date] = ex_df["Cash"][-1]
 
                     odvec = new_df[:plus_one_start_date]
                     starting_index = len(odvec) - 1
 
                     # startamo trading algo
-                    new_returns = macd(short_period, long_period, signal_period, new_df, nov_ticker, starting_index, 0,
+                    new_returns = bollingerBands(sma_period, bands_multiplayer, new_df, nov_ticker, starting_index, 0,
                                                 True, holdObdobje)  # zadnji argument True ker je razlicen ticker in zacnemo od zacetka trejdat, isti -> False ker samo nadaljujemo trejdanje
 
                     added_returns = new_returns[plus_one_start_date:]
@@ -367,14 +376,14 @@ def backtest(start, end, short_period, long_period, signal_period, dowTickers, s
                     new_portfolio[nov_ticker] = concat_returns
                     portfolio = new_portfolio
                     dodani.append(nov_ticker)
-                    # print("Po izlocanju: ", odstranjenTicker)
-                    # print(sorted(portfolio.keys()))
+                    print("Po izlocanju: ", odstranjenTicker)
+                    print(sorted(portfolio.keys()))
 
             # smo updejtali vse removed, zdej pa samo nadaljujemo trejdanej z usemi ostalimi
 
             ostali = set(portfolio.keys()) - set(dodani)
             ostali = sorted(list(ostali))
-            # print("Ostali tickerji: ", sorted(ostali))
+            print("Ostali tickerji: ", sorted(ostali))
             for ostaliTicker in ostali:
 
                 real_start_date = datetime.datetime.strptime(zacetnoObdobje, "%Y-%m-%d")
@@ -386,23 +395,21 @@ def backtest(start, end, short_period, long_period, signal_period, dowTickers, s
                     totals = portfolio[ostaliTicker]
                     zadnji_signal = 0
 
-                    #print("Podjetje: ", ostaliTicker)
-                    #print("df: ", totals)
-                    #print()
                     if totals['Shares'].iat[-1] == 0:
                         zadnji_signal = 1  # nimamo delnic kar pomeni da smo jih prodali in jih moramo zdej kupit
                     elif totals['Shares'].iat[-1] != 0:
+
                         zadnji_signal = 2  # imamo delnice tako da jih lahko samo prodamo zdej
 
-                    # print("Trenutni ostali ticker: ", ostaliTicker)
+                    print("Trenutni ostali ticker: ", ostaliTicker)
                     new_data = getStocks.getCompanyStockDataInRange(date_from=plus_one_start_date, date_to=koncnoObdobje, companyTicker=ostaliTicker, allStockData=stock_data) # yf.download(ostaliTicker, start=plus_one_start_date, end=koncnoObdobje, progress=False)
 
-                    new_data = new_data[['Close']].copy()
+                    new_data = new_data[["High", "Low", "Close"]].copy()
                     starting_index = len(totals)
 
                     concat_data = pd.concat([totals, new_data])
 
-                    concat_totals = macd(short_period, long_period, signal_period, concat_data, f"new{ostaliTicker}", starting_index,
+                    concat_totals = bollingerBands(sma_period, bands_multiplayer, concat_data, f"new{ostaliTicker}", starting_index,
                                                   zadnji_signal, False, holdObdobje)
                     portfolio[ostaliTicker] = concat_totals
 
@@ -410,16 +417,17 @@ def backtest(start, end, short_period, long_period, signal_period, dowTickers, s
 
     return totals
 
+
 def prikaziPodatkePortfolia(portfolio, izloceniTickerji):
     # gremo cez cel portfolio in sestejemo Totals ter potem plotamo graf
 
     allFunds = pd.DataFrame
     allShares = {}
     count = 0
-    # print("Pred totals: ", portfolio.keys())
+    print("Pred totals: ", portfolio.keys())
     for ticker in portfolio:
 
-        # print(ticker)
+        print(ticker)
         tickerTotals = portfolio[ticker]
         allShares[ticker] = tickerTotals['Shares'].iat[-1]
 
@@ -460,42 +468,42 @@ def prikaziPodatkePortfolia(portfolio, izloceniTickerji):
         print(key, " : ", value)
 
     print("Izloceni")
+    #print(sezIzlocenih)
     print(izloceniTickerji)
 
     return allFunds
-
 
 def najdiOptimalneParametreNaPotrfoliu(start_period, end_period, dowTickers, stock_data, hold_obdobje):
     print("Testiram na ucni mnozici")
     ucni_rezultati = {}
     counter = 0
-    ema1_vrednosti = [10, 12, 15, 18, 20]
-    ema2_vrednosti = [20, 24, 30, 35, 40]
-    signal_vrednosti = [3, 6, 9]
-
-    for ema1 in ema1_vrednosti:
+    # key = sma_lenght, value = std_multiplier
+    slovar_parametrov = {}
+    slovar_parametrov[10] = 1.9
+    slovar_parametrov[20] = 2
+    slovar_parametrov[30] = 2
+    slovar_parametrov[40] = 2.1
+    slovar_parametrov[50] = 2.1
+    for sma_length in slovar_parametrov: # 10 - 50
         # print("Trenutna Long vrednost: ", long)
 
-        for ema2 in ema2_vrednosti:
+        #for std_multiplier in range(40, 110 , 10): # 110
 
-            for signal in signal_vrednosti:
+            ucni_rezultati[f"[{sma_length},{slovar_parametrov[sma_length]}]"] = {}
+            print(f"Kombinacija: SMA length = {sma_length} , std_multiplier = {slovar_parametrov[sma_length]}")
+            # print debug
+            #print("Before: " ,ucni_rezultati[f"[{short},{long}]"])
+            temp = backtest(start_period, end_period, sma_length, slovar_parametrov[sma_length], dowTickers, stock_data, hold_obdobje)
+            # backtest(start, end, sma_period, bands_multiplayer, dowTickers, stock_data, holdObdobje)
+            #print("Data: ", temp)
+            ucni_rezultati[f"[{sma_length},{slovar_parametrov[sma_length]}]"] = temp
+            # print("Trenutna Short vrednost: ", short)
+            print()
+            counter += 1
 
-                if ema1 != ema2:
-                    ucni_rezultati[f"[{ema1},{ema2},{signal}]"] = {}
-                    print(f"Kombinacija: Ema1 = {ema1} , Ema2 = {ema2} , Signal = {signal}")
-                    # print debug
-                    #print("Before: " ,ucni_rezultati[f"[{short},{long}]"])
-                    temp = backtest(start_period, end_period, ema1, ema2, signal, dowTickers, stock_data, hold_obdobje)
-                    #print("Data: ", temp)
-                    ucni_rezultati[f"[{ema1},{ema2},{signal}]"] = temp
-                    # print("Trenutna Short vrednost: ", short)
-                    print()
-                counter += 1
-
-    #print("Counter: ", counter)
+    print("Counter: ", counter)
 
     return ucni_rezultati
-
 
 def testirajNaPortfoliu(dowTickers, stock_data, hold_obdobje):
 
@@ -524,49 +532,62 @@ def testirajNaPortfoliu(dowTickers, stock_data, hold_obdobje):
     for x in sorted_rez_total_ucni:
         print(x, ": ", sorted_rez_total_ucni[x])
 
-
-
-# MACD crossover strategy
+# Bollinger bands strategy
 # datetmie = leto, mesec, dan
-# short_period = 12 # 12 #20
-# long_period = 26 #26 #40
-# signal_period = 9#9
 
+# sma_period = 20
+# bands_multiplayer = 2
 
 # testing date time
 start = "2005-11-21"
 #end = "2012-10-25"
 #end = "2008-4-1"
-# end = "2020-10-1"
+#end = "2020-10-1"
 # end = "2008-2-19"
+#end = "2021-1-1"
 
-#start = "2020-1-1"
-#end = "2021-12-30"
-
+#end = "2012-1-1"
 end = "2016-5-21"
-
 holdObdobje = 365
-
-# end = "2020-11-12"
 
 begin_time = datetime.datetime.now()
 
 dowTickers = dow.endTickers # podatki o sezona sprememb dow jones indexa
 stock_data = getStocks.getAllStockData(start_date=start, end_date=end)
-# backtest(start, end, short_period, long_period, signal_period, dowTickers, stock_data, holdObdobje)
+
+# backtest(start, end, sma_period, bands_multiplayer, dowTickers, stock_data, holdObdobje)
 
 testirajNaPortfoliu(dowTickers, stock_data, holdObdobje)
 
 print(datetime.datetime.now() - begin_time)
 
-
 """
 test_ticker = "HD"
 test_data = yf.download(test_ticker, start=start, end=end, progress=False)
-test_data = test_data[['Close']].copy()
-test_data = zacetniDf(test_data)  # dodamo stolpce
-return_df = macd(short_period, long_period, signal_period, test_data, test_ticker, 0, 0, True)
+test_data = test_data[["High", "Low", "Close"]].copy()
+test_data = zacetniDf(test_data, sma_period)  # dodamo stolpce
+return_df = bollingerBands(sma_period, bands_multiplayer, test_data, test_ticker, 0, 0, True)
+print(datetime.datetime.now() - begin_time)
 
-MACD_trading_graph(short_period, long_period, signal_period, return_df, test_ticker)
+
+bollinger_trading_graph(sma_period, bands_multiplayer, return_df, test_ticker)
 profit_graph(return_df, 0, test_ticker, return_df["Total"].iat[-1])
+"""
+
+
+
+"""
+df = yf.download("HD", start=start, end=end, progress=False)
+df = zacetniDf(df, sma_period)
+df["Typical price"] = (df["High"] + df["Low"] + df["Close"]) / 3
+df["STD"] = df["Typical price"].rolling(window=sma_period, min_periods=1, center=False).std(ddof=0)
+df[f"TP SMA"] = df["Typical price"].rolling(sma_period).mean()
+df['Upper band'] = df[f"TP SMA"] + bands_multiplayer * df["STD"]
+df['Lower band'] = df[f"TP SMA"] - bands_multiplayer * df["STD"]
+
+ax = df[["Close", "Upper band", "Lower band"]].plot(color=["blue", "red", "green"])
+plt.show()
+
+#bollinger_trading_graph(sma_period, bands_multiplayer, df, "HD")
+
 """

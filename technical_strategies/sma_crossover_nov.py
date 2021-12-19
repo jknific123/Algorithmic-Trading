@@ -1,20 +1,16 @@
 import math
-import pandas_datareader.data as web
 import pandas as pd
 import datetime as datetime
-from datetime import timedelta
 
 import numpy as np
 import matplotlib.pyplot as plt
 
-import get_stock_data as getStocks
-import utils as util
-import dow_jones_companies as dow
+from stock_ohlc_data import get_stock_data as getStocks
+from utility import utils as util
+from dow_index_data import dow_jones_companies as dow
 import yfinance as yf
 
-from numba import jit
 from functools import cache
-
 
 @cache
 def days_between(d1, d2):
@@ -23,6 +19,7 @@ def days_between(d1, d2):
     d1 = datetime.datetime.strptime(d1, "%Y-%m-%d")
     d2 = datetime.datetime.strptime(d2, "%Y-%m-%d")
     return abs((d2 - d1).days)
+
 
 def sma_crossover(sPeriod, lPeriod, df, ticker, starting_index, status, odZacetkaAliNe, holdObdobje):
     # naredimo nova stolpca za oba SMA
@@ -41,8 +38,7 @@ def sma_crossover(sPeriod, lPeriod, df, ticker, starting_index, status, odZacetk
     # 1 -> zacenjamo od tam ko je bil zadnji signal sell
     # 2 -> zacenjamo od tam ko je bil zadnji signal buy
     check = status
-    dfNumpy = df.to_records(index=True)# df.to_dict()
-    for x in range(starting_index, len(dfNumpy)):
+    for x in range(starting_index, len(df)):
 
         # filing shares, cash, total
         if (x - 1) >= 0:  # preverimo ce smo znotraj tabele
@@ -311,17 +307,17 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stock_da
                         prazen["Total"] = prazen["Cash"]
                         portfolio[x] = prazen
 
-                    # izjema za podjetje AA, za katerega nimam podatkov zato samo naredim prazen dataframe
-                    elif x == "AA":
-                        index = pd.date_range(zacetnoObdobje, "2013-9-23", freq='D')
-                        columns = ["Close"]
-                        prazen = pd.DataFrame(index=index, columns=columns)
-                        prazen = zacetniDf(prazen)
-                        prazen["Cash"] = prazen["Cash"].add(util.getMoney())
-                        prazen["Total"] = prazen["Cash"]
-                        portfolio[x] = prazen
+                    # # izjema za podjetje HWM, za katerega nimam podatkov zato samo naredim prazen dataframe
+                    # elif x == "AA":
+                    #     index = pd.date_range(zacetnoObdobje, "2013-9-23", freq='D')
+                    #     columns = ["Close"]
+                    #     prazen = pd.DataFrame(index=index, columns=columns)
+                    #     prazen = zacetniDf(prazen)
+                    #     prazen["Cash"] = prazen["Cash"].add(util.getMoney())
+                    #     prazen["Total"] = prazen["Cash"]
+                    #     portfolio[x] = prazen
 
-                    elif x != "GM" and x != 'AA':
+                    elif x != "GM":  # and x != 'AA'
                         data = getStocks.getCompanyStockDataInRange(date_from=zacetnoObdobje, date_to=koncnoObdobje, companyTicker=x,
                                                                     allStockData=stock_data)  # yf.download(x, start=zacetnoObdobje, end=koncnoObdobje, progress=False)
                         data = data[['Close']].copy()
