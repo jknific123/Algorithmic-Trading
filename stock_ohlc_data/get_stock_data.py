@@ -1,89 +1,94 @@
+import os
+from pathlib import Path
 import pandas as pd
-
 import yfinance as yf
-
-# ['AAPL']
-
-
-vsi_tickerji = ['AAPL', 'AIG', 'AMGN', 'AXP', 'BA', 'BAC', 'C', 'CAT', 'CRM', 'CSCO', 'CVX', 'DD', 'DOW', 'DIS', 'GE',  # 'GM',
-                'GS', 'HD', 'HON', 'HPQ', "AA", 'IBM', 'INTC', 'JNJ', 'JPM', 'KO', 'MCD', 'MDLZ', 'MMM', 'MO', 'MRK', 'MSFT',  # 'HWM' -> "AA" ->
-                'NKE', 'PFE', 'PG', 'RTX', 'T', 'TRV', 'UNH', 'V', 'VZ', 'WBA', 'WMT', 'XOM']
+import datetime as datetime
 
 
-def getAllStockData(start_date, end_date):
-    data = {}
-    count = 0
-    for x in vsi_tickerji:
+class StockOHLCData:
+    vsi_tickerji = ['AAPL', 'AIG', 'AMGN', 'AXP', 'BA', 'BAC', 'C', 'CAT', 'CRM', 'CSCO', 'CVX', 'DD', 'DOW', 'DIS', 'GE',  # 'GM',
+                    'GS', 'HD', 'HON', 'HPQ', "AA", 'IBM', 'INTC', 'JNJ', 'JPM', 'KO', 'MCD', 'MDLZ', 'MMM', 'MO', 'MRK', 'MSFT',  # 'HWM' -> "AA" ->
+                    'NKE', 'PFE', 'PG', 'RTX', 'T', 'TRV', 'UNH', 'V', 'VZ', 'WBA', 'WMT', 'XOM']
 
-        if x == "DOW":
-            temp_start_date = '2019-03-20'
-            temp_data = yf.download(x, start=temp_start_date, end=end_date, progress=False)  # downloadam podatke za doticno podjetje in jih shranim v slovar
-        else:
-            temp_data = yf.download(x, start=start_date, end=end_date, progress=False)  # downloadam podatke za doticno podjetje in jih shranim v slovar,
+    stock_prices_data = {}
 
-        temp_data = temp_data[["High", "Low", "Close", "Adj Close"]].copy()  # da vzamemo samo ceno
-        data[x] = temp_data
+    def __init__(self):
+        print('Inicializacija objekta StockOHLCData')
+        # StockOHLCData.downloadAllStockDataToCsv(self) # rabimo samo v primeru ko je treba downloadat cene delnic
+        StockOHLCData.readCsvToDataFrame(self)
+        print('Inicializacija končana!')
 
-        count += 1
-        print(f"DOWNLOADED stock data for {x}. {count}/{len(vsi_tickerji)}")
+    # Metoda vrne slovar datafrejmov, ki vsebujejo cene delnic podjetji
+    def getAllStockData(self):
+        return StockOHLCData.stock_prices_data
 
-    return data
+    # Metoda za downloadanje cen delnic iz yfinance API-ja
+    def getAllStockDataFromAPI(self, start_date, end_date):
+        data = {}
+        count = 0
+        for x in StockOHLCData.vsi_tickerji:
 
+            if x == "DOW":
+                temp_start_date = '2019-03-20'
+                temp_data = yf.download(x, start=temp_start_date, end=end_date, progress=False)  # downloadam podatke za doticno podjetje in jih shranim v slovar
+            else:
+                temp_data = yf.download(x, start=start_date, end=end_date, progress=False)  # downloadam podatke za doticno podjetje in jih shranim v slovar,
 
-def getCompanyStockDataInRange(date_from, date_to, companyTicker, allStockData):
-    return_dataframe = pd.DataFrame
-    return_dataframe = allStockData[companyTicker].loc[date_from:date_to]
+            temp_data = temp_data[["High", "Low", "Close", "Adj Close"]].copy()  # da vzamemo samo ceno
+            data[x] = temp_data
 
-    return return_dataframe
+            count += 1
+            print(f"DOWNLOADED stock data for {x}. {count}/{len(StockOHLCData.vsi_tickerji)}")
 
+        return data
 
-# end = "2021-1-1"
+    # Metoda za pridobitev dataframa (cene delnic) v določenem obdobju
+    def getCompanyStockDataInRange(self, date_from, date_to, companyTicker):
+        return_dataframe = pd.DataFrame
+        # startTime = datetime.datetime.now()
+        # print("date_from type: ", type(date_from))
+        # print("date_to type: ", type(date_to))
+        # print("date from: ", date_from)
+        # print("date to: ", date_to)
+        return_dataframe = self.stock_prices_data[companyTicker].loc[date_from:date_to]
+        # print("Čas getCompanyStockDataInRange", datetime.datetime.now() - startTime)
+        return return_dataframe
 
-# getAllStockData("2005-11-21", "2016-5-21")
+    # Metoda za downloadanje cen delnic iz yfinance API-ja, ki se nato shranijo lokalno v .csv datotekah
+    def downloadAllStockDataToCsv(self, start_date="2005-11-21", end_date="2021-1-1"):
+        count = 0
+        for ticker in StockOHLCData.vsi_tickerji:
+            data = yf.download(ticker, start=start_date, end=end_date, progress=False)
+            # data['ticker'] = ticker
+            # data.to_csv(f'ticker_{ticker}.csv')  # ticker_AAPL.csv for example
+            data.to_csv(f'D:\Faks\Algorithmic-Trading\stock_ohlc_data\/raw_data_ohlc\stock_data_{ticker}.csv')  # \/ je zato ker je tam r in če je samo \r ne dela
+            count += 1
+            print(f"DOWNLOADED stock data for {ticker}. {count}/{len(StockOHLCData.vsi_tickerji)}")
+        print('done downloading csv data!')
 
+    # Metoda za branje podatkov iz .csv datotek v dataframe, ki so shranjeni v slovarju objekta
+    def readCsvToDataFrame(self):
+        # set the path to the files
+        p = Path('D:\Faks\Algorithmic-Trading\stock_ohlc_data\/raw_data_ohlc')
 
-def getAllStockDataFromCsv():
-    None
+        # find the files; this is a generator, not a list
+        files = p.glob('stock_data_*.csv')
+        # read the files into a dictionary of dataframes
+        for file in files:
+            tmpFileName = os.path.basename(file)
+            tmpSplitArgs = tmpFileName.split('_')
+            tmpSplitDotArgs = tmpSplitArgs[2].split('.')
+            StockOHLCData.stock_prices_data[tmpSplitDotArgs[0]] = pd.read_csv(file, index_col=[0])
 
-
-def downloadAllStockDataToCsv(start_date="2005-11-21", end_date="2021-1-1"):
-    data = {}
-    count = 0
-    for x in vsi_tickerji:
-
-        if x == "DOW":
-            temp_start_date = '2019-03-20'
-            temp_data = yf.download(x, start=temp_start_date, end=end_date, progress=False)  # downloadam podatke za doticno podjetje in jih shranim v slovar
-        else:
-            temp_data = yf.download(x, start=start_date, end=end_date, progress=False)  # downloadam podatke za doticno podjetje in jih shranim v slovar,
-
-        temp_data = temp_data[["High", "Low", "Close", "Adj Close"]].copy()  # da vzamemo samo ceno
-        data[x] = temp_data
-
-        count += 1
-        print(f"DOWNLOADED stock data for {x}. {count}/{len(vsi_tickerji)}")
-
-
-def testToCsv(start_date="2005-11-21", end_date="2021-1-1"):
-    tickerStrings = ['AAPL', 'MSFT']
-    for ticker in tickerStrings:
-        data = yf.download(ticker, start=start_date, end=end_date, progress=False)
-        # data.to_csv(f'ticker_{ticker}.csv')  # ticker_AAPL.csv for example
-        data.to_csv(f'D:\Faks\Algorithmic-Trading\stock_ohlc_data\stock_data_{ticker}.csv')  # ticker_AAPL.csv for example
-    print('done!')
-
-
-testToCsv()
-
-"""
-test_ticker = "HD"
-test_data_ucna = yf.download(test_ticker, start="2005-11-21", end="2021-1-1", progress=False)
-test_data_ucna = test_data_ucna[['Adj Close']].copy()
-
-skrajsan = getCompanyStockDataInRange("2016-5-21", "2020-1-1", test_ticker, test_data_ucna)
-
-skrajsan_yfinance = yf.download(test_ticker, start="2016-5-21", end="2020-1-1", progress=False)
-skrajsan_yfinance = skrajsan_yfinance[['Adj Close']].copy()
-
-print("finito")
-"""
+    """
+    test_ticker = "HD"
+    test_data_ucna = yf.download(test_ticker, start="2005-11-21", end="2021-1-1", progress=False)
+    test_data_ucna = test_data_ucna[['Adj Close']].copy()
+    
+    skrajsan = getCompanyStockDataInRange("2016-5-21", "2020-1-1", test_ticker, test_data_ucna)
+    
+    skrajsan_yfinance = yf.download(test_ticker, start="2016-5-21", end="2020-1-1", progress=False)
+    skrajsan_yfinance = skrajsan_yfinance[['Adj Close']].copy()
+    
+    print("finito")
+    """

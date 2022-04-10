@@ -1,4 +1,169 @@
 
+# SMA grafi preden sem jih premaknil v svoj fajl
+
+"""
+
+def SMA_trading_graph(sPeriod, lPeriod, df, company):
+    # prikaz grafa gibanja cene in kupovanja ter prodajanja delnice
+
+    fig = plt.figure(figsize=(8, 6), dpi=200)
+    fig.suptitle(company)
+    ax1 = fig.add_subplot(111, ylabel='Cena v $')
+
+    # cena
+    df['Close'].plot(ax=ax1, color='black', alpha=0.5)
+
+    # kratki in dolgi SMA
+    df[[f'SMA-{sPeriod}', f'SMA-{lPeriod}']].plot(ax=ax1, linestyle="--")
+
+    # buy/sell signali
+    ax1.plot(df['Buy-Signal'], '^', markersize=6, color='green', label='Buy signal', lw=2)
+    ax1.plot(df['Sell-Signal'], 'v', markersize=6, color='red', label='Sell signal', lw=2)
+    legend = plt.legend(loc="upper left", edgecolor="black")
+    legend.get_frame().set_alpha(None)
+    legend.get_frame().set_facecolor((0, 0, 1, 0.1))
+    plt.show()
+
+
+
+
+
+
+"""
+
+
+# SMA testiranje preden sem ga premaknil v svoj file
+
+"""
+
+def najdiOptimalneParametreNaEnem(data, ticker, hold_obdobje):
+    print("Testiram na ucni mnozici")
+    testni_rezultati = {}
+    counter = 0
+    for long in range(100, 210, 10):
+        # print("Trenutna Long vrednost: ", long)
+
+        for short in range(40, 110, 10):
+            testni_rezultati[f"[{short},{long}]"] = {}
+            print(f"Kombinacija: Short = {short} , Long = {long}")
+            testni_rezultati[f"[{short},{long}]"] = sma_crossover(short, long, data, ticker, 0, 0, True, hold_obdobje)
+            # print("Trenutna Short vrednost: ", short)
+            print()
+            counter += 1
+
+    print("Counter: ", counter)
+
+    return testni_rezultati
+
+
+def testirajNaEnemPodjetju(hold_obdobje):
+    test_ticker = "HD"
+    test_data_ucna = yf.download(test_ticker, start="2005-11-21", end="2016-5-21", progress=False)
+    test_data_ucna = test_data_ucna[['Close']].copy()
+    test_data_ucna = zacetniDf(test_data_ucna)  # dodamo stolpce
+    # return_df = sma_crossover(short_period, long_period, test_data, test_ticker, 0, 0, True)
+
+    rez_ucni = najdiOptimalneParametreNaEnem(test_data_ucna, test_ticker, hold_obdobje)
+    print(datetime.datetime.now() - begin_time)
+
+    rez_total_ucni = {}
+    for x in rez_ucni:
+        rez_total_ucni[x] = {}
+        rez_total_ucni[x] = rez_ucni[x]['Total'].iat[-1]
+        print(x, ": ", rez_ucni[x]['Total'].iat[-1])
+
+    print()
+    print("Sorted ucni!")
+    print()
+
+    sorted_rez_total_ucni = {k: v for k, v in sorted(rez_total_ucni.items(), key=lambda item: item[1])}
+
+    for x in sorted_rez_total_ucni:
+        print(x, ": ", sorted_rez_total_ucni[x])
+
+    # to dej stran, se ne testira na testni
+    test_data_testna = yf.download(test_ticker, start="2016-5-21", end="2021-1-1", progress=False)
+    test_data_testna = test_data_testna[['Close']].copy()
+    test_data_testna = zacetniDf(test_data_testna)  # dodamo stolpce
+    rez_testni = najdiOptimalneParametreNaEnem(test_data_testna, test_ticker, hold_obdobje)
+
+    rez_total_testna = {}
+    for x in rez_testni:
+        rez_total_testna[x] = {}
+        rez_total_testna[x] = rez_testni[x]['Total'].iat[-1]
+        print(x, ": ", rez_testni[x]['Total'].iat[-1])
+
+    print()
+    print("Sorted testni!")
+    print()
+
+    sorted_rez_total_testni = {k: v for k, v in sorted(rez_total_testna.items(), key=lambda item: item[1])}
+
+    for x in sorted_rez_total_testni:
+        print(x, ": ", sorted_rez_total_testni[x])
+
+
+def najdiOptimalneParametreNaPotrfoliu(start_period, end_period, dowTickers, stockPricesDB, hold_obdobje):
+    print("Testiram na ucni mnozici")
+    ucni_rezultati = {}
+    counter = 0
+    long_values = [100, 124, 150, 175, 200]
+    short_values = [40, 54, 70, 85, 100]
+
+    for long in long_values:  # 210 range(100, 210, 10)
+        # print("Trenutna Long vrednost: ", long)
+
+        for short in short_values:  # 110 range(40, 110 , 10)
+
+            if short != long:
+                ucni_rezultati[f"[{short},{long}]"] = {}
+                print(f"Kombinacija: Short = {short} , Long = {long}")
+                # print debug
+                # print("Before: " ,ucni_rezultati[f"[{short},{long}]"])
+                temp = backtest(start_period, end_period, short, long, dowTickers, stockPricesDB, hold_obdobje)
+                # print("Data: ", temp)
+                ucni_rezultati[f"[{short},{long}]"] = temp
+                # print("Trenutna Short vrednost: ", short)
+                print()
+            counter += 1
+
+    print("Counter: ", counter)
+
+    return ucni_rezultati
+
+
+def testirajNaPortfoliu(dowTickers, stockPricesDB, hold_obdobje):
+    rez_ucni = najdiOptimalneParametreNaPotrfoliu("2005-11-21", "2016-5-21", dowTickers, stockPricesDB, hold_obdobje)
+    print("Koncal testiranej na ucni: ", datetime.datetime.now() - begin_time)
+
+    rez_total_ucni = {}
+    for x in rez_ucni:
+        rez_total_ucni[x] = {}
+        # print debug
+        print("Kombinacija : ", x)
+        # print("Before in rez_total_ucni: ", rez_total_ucni[x])
+        # print("Before in rez_total_ucni type: ", type(rez_total_ucni[x]))
+        # print("Before in rez_ucni[x][Total].iat[-1]: ", rez_total_ucni[x])
+        # print("Before in rez_ucni[x][Total].iat[-1] type: ", type(rez_total_ucni[x]))
+        rez_total_ucni[x] = rez_ucni[x]['Total'].iat[-1]
+        # print("After: ", rez_total_ucni[x])
+        print()
+
+    print()
+    print("Sorted ucni!")
+    print()
+
+    sorted_rez_total_ucni = {k: v for k, v in sorted(rez_total_ucni.items(), key=lambda item: item[1])}
+
+    for x in sorted_rez_total_ucni:
+        print(x, ": ", sorted_rez_total_ucni[x])
+
+
+
+"""
+
+
+
 # iz bollinger bands
 
 """
@@ -380,6 +545,7 @@ print(len(zacetnaSezona["all"]))
 
 """""
 
+"""
 
 def preveri():
 
@@ -539,6 +705,7 @@ def brezGM():
 
 # brezGM()
 
+"""
 
 """""
 start = '2005-11-21'

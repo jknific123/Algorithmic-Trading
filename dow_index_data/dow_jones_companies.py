@@ -247,21 +247,21 @@ for x in obrnjenSlovarTickers:
 # changing keys of dictionary
 # November 21, 2005 -> 2008, 11, 21
 tickers = {"2005-11-21" if k == 'April 8, 2004' else k: v for k, v in obrnjenSlovarTickers.items()}
-tickers = {"2008-2-19" if k == 'February 19, 2008' else k: v for k, v in tickers.items()}
-tickers = {"2008-9-22" if k == 'September 22, 2008' else k: v for k, v in tickers.items()}
-tickers = {"2009-6-8" if k == 'June 8, 2009' else k: v for k, v in tickers.items()}
-tickers = {"2012-9-24" if k == 'September 24, 2012' else k: v for k, v in tickers.items()}
-tickers = {"2013-9-23" if k == 'September 23, 2013' else k: v for k, v in tickers.items()}
-tickers = {"2015-3-19" if k == 'March 19, 2015' else k: v for k, v in tickers.items()}
-tickers = {"2017-9-1" if k == 'September 1, 2017' else k: v for k, v in tickers.items()}
-tickers = {"2018-6-26" if k == 'June 26, 2018' else k: v for k, v in tickers.items()}
-tickers = {"2019-4-2" if k == 'April 2, 2019' else k: v for k, v in tickers.items()}
-tickers = {"2020-8-31" if k == 'August 31, 2020' else k: v for k, v in tickers.items()}
+tickers = {"2008-02-19" if k == 'February 19, 2008' else k: v for k, v in tickers.items()}
+tickers = {"2008-09-22" if k == 'September 22, 2008' else k: v for k, v in tickers.items()}
+tickers = {"2009-06-08" if k == 'June 8, 2009' else k: v for k, v in tickers.items()}
+tickers = {"2012-09-24" if k == 'September 24, 2012' else k: v for k, v in tickers.items()}
+tickers = {"2013-09-23" if k == 'September 23, 2013' else k: v for k, v in tickers.items()}
+tickers = {"2015-03-19" if k == 'March 19, 2015' else k: v for k, v in tickers.items()}
+tickers = {"2017-09-01" if k == 'September 1, 2017' else k: v for k, v in tickers.items()}
+tickers = {"2018-06-26" if k == 'June 26, 2018' else k: v for k, v in tickers.items()}
+tickers = {"2019-04-02" if k == 'April 2, 2019' else k: v for k, v in tickers.items()}
+tickers = {"2020-08-31" if k == 'August 31, 2020' else k: v for k, v in tickers.items()}
 
 # tickers = {"1999-11-1" if k == 'November 1, 1999' else k:v for k,v in tickers.items()}
 
 
-del tickers["2017-9-1"]  # zbrišem ker ima podjetje DD v removed in added tko da ni pomembno
+del tickers["2017-09-01"]  # zbrišem ker ima podjetje DD v removed in added tko da ni pomembno
 
 names = {"November 21, 2005" if k == 'April 8, 2004' else k: v for k, v in obrnjenSlovarImen.items()}
 
@@ -319,6 +319,7 @@ def allTickersEver():
 
 endTickers = tickers
 allTickers = []
+print('endTickers!: ', endTickers)
 """
 for season in endTickers:
 
