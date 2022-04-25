@@ -3,12 +3,11 @@ import pandas as pd
 import datetime as datetime
 import numpy as np
 
-from functools import cache, reduce
+from functools import cache
 
-from stock_ohlc_data import get_stock_data as getStocks
 from technical_strategies.sma_crossover.sma_grafi import profit_graph, SMA_trading_graph, plotShares
 from utility import utils as util
-from dow_index_data import dow_jones_companies as dow
+# from dow_index_data import dow_jones_companies as dow
 
 
 @cache
@@ -181,8 +180,9 @@ def setObdobja(startObdobja, endObdobja, dowTickersObdobja):
     # hardcodam za testno mnozico
     obdobja = []
 
-    if startObdobja == "2016-5-21":
+    if startObdobja == "2016-05-21":
         obdobja.append(startObdobja)
+
     for x in dowTickersObdobja:
 
         if startObdobja <= x < endObdobja:  # zna bit da je tuki treba se = dat
@@ -223,8 +223,8 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stockPri
 
             if zacetnoObdobje == "2005-11-21":
                 starting_companies = dowTickers[zacetnoObdobje]["all"]
-            elif zacetnoObdobje == "2016-5-21":
-                starting_companies = dowTickers["2015-3-19"]["all"]
+            elif zacetnoObdobje == "2016-05-21":
+                starting_companies = dowTickers["2015-03-19"]["all"]
 
             izloceniTickerji.append("GM")  # dodamo GM pod izlocene
 
@@ -390,7 +390,7 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stockPri
                 plus_one_start_date = (real_start_date + datetime.timedelta(days=1)).strftime("%Y-%m-%d")  # adding one day
                 # modified_date = plus_one_start_date - datetime.timedelta(days=(long_period * 2))  # odstevamo long period da dobimo dovolj podatkov
 
-                if ostaliTicker != "GM" :  #and ostaliTicker != "AA"
+                if ostaliTicker != "GM":  #and ostaliTicker != "AA"
 
                     totals = portfolio[ostaliTicker]
                     zadnji_signal = 0

@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from utility import utils as util
-from dow_index_data import dow_jones_companies as dow
+from dow_index_data import dow_jones_companies_api as dow
 import yfinance as yf
 
 

@@ -55,7 +55,7 @@ class StockOHLCData:
         return return_dataframe
 
     # Metoda za downloadanje cen delnic iz yfinance API-ja, ki se nato shranijo lokalno v .csv datotekah
-    def downloadAllStockDataToCsv(self, start_date="2005-11-21", end_date="2021-1-1"):
+    def downloadAllStockDataToCsv(self, start_date="2005-11-21", end_date="2022-01-01"):  # TODO: popravljen je ta datum, treba preverit da se downloadajo zdej pravilno delnice
         count = 0
         for ticker in StockOHLCData.vsi_tickerji:
             data = yf.download(ticker, start=start_date, end=end_date, progress=False)

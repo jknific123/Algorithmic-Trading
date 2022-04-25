@@ -1,7 +1,8 @@
 import datetime as datetime
 
 from technical_strategies.sma_crossover.sma_crossover_nov import sma_crossover, zacetniDf, backtest
-from dow_index_data import dow_jones_companies as dow
+# from dow_index_data import dow_jones_companies as dow
+from dow_index_data import dow_jones_index_data_csv as dowIndexData
 from stock_ohlc_data import get_stock_data as getStocks
 
 
@@ -41,7 +42,7 @@ def testirajNaEnemPodjetju(hold_obdobje):
     rez_total_ucni = {}
     for x in rez_ucni:
         rez_total_ucni[x] = {}
-        rez_total_ucni[x] = rez_ucni[x]['Total'].iat[-1]  # print(x, ": ", rez_ucni[x]['Total'].iat[-1])
+        rez_total_ucni[x] = rez_ucni[x]['Total'].iat[-1]
 
     print()
     print("Sorted ucni!")
@@ -53,7 +54,7 @@ def testirajNaEnemPodjetju(hold_obdobje):
         print(x, ": ", sorted_rez_total_ucni[x])
 
 
-def najdiOptimalneParametreNaPotrfoliu(start_period, end_period, dowTickers, stockPricesDB, hold_obdobje):
+def najdiOptimalneParametreNaPotrfoliu(start_period, end_period, dowTickers, stock_prices_db, hold_obdobje):
     print("Testiram na ucni mnozici")
     ucni_rezultati = {}
     counter = 0
@@ -70,7 +71,7 @@ def najdiOptimalneParametreNaPotrfoliu(start_period, end_period, dowTickers, sto
                 print(f"Kombinacija: Short = {short} , Long = {long}")
                 # print debug
                 # print("Before: " ,ucni_rezultati[f"[{short},{long}]"])
-                temp = backtest(start_period, end_period, short, long, dowTickers, stockPricesDB, hold_obdobje)
+                temp = backtest(start_period, end_period, short, long, dowTickers, stock_prices_db, hold_obdobje)
                 # print("Data: ", temp)
                 ucni_rezultati[f"[{short},{long}]"] = temp
                 # print("Trenutna Short vrednost: ", short)
@@ -82,8 +83,9 @@ def najdiOptimalneParametreNaPotrfoliu(start_period, end_period, dowTickers, sto
     return ucni_rezultati
 
 
-def testirajNaPortfoliu(dowTickers, stockPricesDB, hold_obdobje):
-    rez_ucni = najdiOptimalneParametreNaPotrfoliu(start_period="2005-11-21", end_period="2016-5-21", dowTickers=dowTickers, stockPricesDB=stockPricesDB, hold_obdobje=hold_obdobje)
+def testirajNaPortfoliu(dowTickers, stock_prices_db, hold_obdobje):
+    rez_ucni = najdiOptimalneParametreNaPotrfoliu(start_period="2005-11-21", end_period="2016-05-21", dowTickers=dowTickers,
+                                                  stock_prices_db=stock_prices_db, hold_obdobje=hold_obdobje)
     print("Koncal testiranej na ucni: ", datetime.datetime.now() - begin_time)
 
     rez_total_ucni = {}
@@ -109,27 +111,35 @@ def testirajNaPortfoliu(dowTickers, stockPricesDB, hold_obdobje):
         print(x, ": ", sorted_rez_total_ucni[x])
 
 
-def testirajNaPortfoliuEnoKombinacijo(short_sma, long_sma, dowTickers, stockPricesDB, hold_obdobje):
-    tmp = backtest(start="2005-11-21", end="2016-5-21", sma_period_short=short_sma, sma_period_long=long_sma, dowTickers=dowTickers, stockPricesDB=stockPricesDB,
+def testirajNaPortfoliuEnoKombinacijo(start_date, end_date, short_sma, long_sma, dowTickers, stock_prices_db, hold_obdobje):
+    tmp = backtest(start=start_date, end=end_date, sma_period_short=short_sma, sma_period_long=long_sma, dowTickers=dowTickers, stockPricesDB=stock_prices_db,
                    hold_obdobje=hold_obdobje)
 
     print('Total profit: ', tmp['Total'].iat[-1])
 
 
 """
- Tukaj se izvaja testiranje SMA Crossover strategije:
+ Od tukaj naprej se izvaja testiranje SMA Crossover strategije:
 """
 
 holdObdobje = 1
 
 begin_time = datetime.datetime.now()
 
-dowTickers = dow.endTickers  # podatki o sezonah sprememb dow jones indexa
+# dowTickers = dow.endTickers  # podatki o sezonah sprememb dow jones indexa preko apija
+dowJonesIndexData = dowIndexData.dowJonesIndexData
 stockPricesDB = getStocks.StockOHLCData()
 print('sma strategy po klicu inicializacije objekta')
 
 # testirajNaEnemPodjetju(hold_obdobje=holdObdobje)
-# testirajNaPortfoliu(dowTickers, stockPricesDB, holdObdobje)
-testirajNaPortfoliuEnoKombinacijo(short_sma=85, long_sma=200, dowTickers=dowTickers, stockPricesDB=stockPricesDB, hold_obdobje=holdObdobje)
+testirajNaPortfoliu(dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
+
+# ucna mnozica
+# testirajNaPortfoliuEnoKombinacijo(start_date="2005-11-21", end_date="2016-05-21", short_sma=85, long_sma=200, dowTickers=dowJonesIndexData,
+#                                   stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
+
+# testna mnozica
+# testirajNaPortfoliuEnoKombinacijo(start_date="2016-05-21", end_date="2021-01-01", short_sma=85, long_sma=200, dowTickers=dowJonesIndexData,
+#                                   stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
 
 print('KONEC!!! ', datetime.datetime.now() - begin_time)

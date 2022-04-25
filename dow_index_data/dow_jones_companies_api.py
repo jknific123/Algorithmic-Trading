@@ -1,4 +1,5 @@
 # !/usr/bin/env python
+import pandas as pd
 
 try:
     # For Python 3.0 and later
@@ -27,7 +28,7 @@ def get_jsonparsed_data(url):
     return json.loads(data)
 
 
-url = ("https://financialmodelingprep.com/api/v3/historical/dowjones_constituent?apikey=950c6e208107d01d9616681a4cf99685")
+url = "https://financialmodelingprep.com/api/v3/historical/dowjones_constituent?apikey=950c6e208107d01d9616681a4cf99685"
 # print(get_jsonparsed_data(url))
 
 companies = get_jsonparsed_data(url)
@@ -69,7 +70,6 @@ for x in companies:
         """
         slovarImen[x["dateAdded"]]["removed"].append(x["removedSecurity"])
         slovarTickers[x["dateAdded"]]["removed"].append(x["symbol"])
-
 
     # added to index
     elif x["addedSecurity"] != '':
@@ -320,6 +320,12 @@ def allTickersEver():
 endTickers = tickers
 allTickers = []
 print('endTickers!: ', endTickers)
+
+# pretvorimo slovar v DF in ga nato shranimo na disk kot .csv datoteko
+df = pd.DataFrame(endTickers)
+df.to_csv(f'D:\Faks\Algorithmic-Trading\dow_index_data\DowJonesCompaniesData.csv')
+
+print('SEM V DOW JONES COMPANIES')
 """
 for season in endTickers:
 
