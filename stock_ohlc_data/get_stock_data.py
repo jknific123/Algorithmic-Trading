@@ -42,7 +42,7 @@ class StockOHLCData:
 
         return data
 
-    # Metoda za pridobitev dataframa (cene delnic) v določenem obdobju
+    # Metoda za pridobitev dataframa (cene delnic) v določenem obdobju - datum je index
     def getCompanyStockDataInRange(self, date_from, date_to, companyTicker):
         return_dataframe = pd.DataFrame
         # startTime = datetime.datetime.now()
@@ -54,13 +54,21 @@ class StockOHLCData:
         # print("Čas getCompanyStockDataInRange", datetime.datetime.now() - startTime)
         return return_dataframe
 
+    # Metoda za pridobitev dataframa (cene delnic) v določenem obdobju – datum je del tabele, index je int
+    def getCompanyStockDataInRangeTabela(self, date_from, date_to, companyTicker):
+        return_dataframe = pd.DataFrame
+        tmpDF = self.stock_prices_data[companyTicker]
+        tmpDF["Date"] = pd.to_datetime(tmpDF["Date"])
+        mask = (tmpDF["Date"] >= date_from) & (tmpDF["Date"] <= date_to)
+        return_dataframe = tmpDF.loc[mask]
+        # print("Čas getCompanyStockDataInRange", datetime.datetime.now() - startTime)
+        return return_dataframe
+
     # Metoda za downloadanje cen delnic iz yfinance API-ja, ki se nato shranijo lokalno v .csv datotekah
-    def downloadAllStockDataToCsv(self, start_date="2005-11-21", end_date="2022-01-01"):  # TODO: popravljen je ta datum, treba preverit da se downloadajo zdej pravilno delnice
+    def downloadAllStockDataToCsv(self, start_date="2005-11-21", end_date="2022-01-01"):
         count = 0
         for ticker in StockOHLCData.vsi_tickerji:
             data = yf.download(ticker, start=start_date, end=end_date, progress=False)
-            # data['ticker'] = ticker
-            # data.to_csv(f'ticker_{ticker}.csv')  # ticker_AAPL.csv for example
             data.to_csv(f'D:\Faks\Algorithmic-Trading\stock_ohlc_data\/raw_data_ohlc\stock_data_{ticker}.csv')  # \/ je zato ker je tam r in če je samo \r ne dela
             count += 1
             print(f"DOWNLOADED stock data for {ticker}. {count}/{len(StockOHLCData.vsi_tickerji)}")
@@ -79,6 +87,22 @@ class StockOHLCData:
             tmpSplitArgs = tmpFileName.split('_')
             tmpSplitDotArgs = tmpSplitArgs[2].split('.')
             StockOHLCData.stock_prices_data[tmpSplitDotArgs[0]] = pd.read_csv(file, index_col=[0])
+
+    # Metoda za branje podatkov iz .csv datotek v dataframe, ki so shranjeni v slovarju objekta - datum je del tabele, index je int
+    def readCsvToDataFrameTabela(self):
+        # set the path to the files
+        p = Path('D:\Faks\Algorithmic-Trading\stock_ohlc_data\/raw_data_ohlc')
+
+        # find the files; this is a generator, not a list
+        files = p.glob('stock_data_*.csv')
+        # read the files into a dictionary of dataframes
+        for file in files:
+            tmpFileName = os.path.basename(file)
+            tmpSplitArgs = tmpFileName.split('_')
+            tmpSplitDotArgs = tmpSplitArgs[2].split('.')
+            StockOHLCData.stock_prices_data[tmpSplitDotArgs[0]] = pd.read_csv(file, index_col=[0])
+
+            StockOHLCData.stock_prices_data[tmpSplitDotArgs[0]] = pd.read_csv(file)  # index_col=[0]
 
     """
     test_ticker = "HD"
