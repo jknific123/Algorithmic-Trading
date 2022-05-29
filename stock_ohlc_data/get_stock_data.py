@@ -100,8 +100,6 @@ class StockOHLCData:
             tmpFileName = os.path.basename(file)
             tmpSplitArgs = tmpFileName.split('_')
             tmpSplitDotArgs = tmpSplitArgs[2].split('.')
-            StockOHLCData.stock_prices_data[tmpSplitDotArgs[0]] = pd.read_csv(file, index_col=[0])
-
             StockOHLCData.stock_prices_data[tmpSplitDotArgs[0]] = pd.read_csv(file)  # index_col=[0]
 
     """
