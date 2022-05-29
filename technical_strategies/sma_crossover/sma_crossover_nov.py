@@ -7,7 +7,9 @@ from functools import cache
 
 from technical_strategies.sma_crossover.sma_grafi import profit_graph, SMA_trading_graph, plotShares
 from utility import utils as util
-# from dow_index_data import dow_jones_companies as dow
+import sma_utils as sma_utils
+
+pd.options.mode.chained_assignment = None  # default='warn'
 
 
 @cache
@@ -21,8 +23,6 @@ def days_between(d1, d2):
 
 def sma_crossover(sPeriod, lPeriod, df, ticker, starting_index, status, odZacetkaAliNe, holdObdobje):
 
-    # dodamo stolpce
-    # df = zacetniDf(data=df, short_period=sPeriod, long_period=lPeriod)
     # naredimo/napolnimo nova stolpca za oba SMA
     df[f'SMA-{sPeriod}'] = df['Close'].rolling(window=sPeriod, min_periods=1, center=False).mean()  # TODO a je to res ok, vedno gre rolling za celoten dataframe, tudi potem ko so ze konkatenirani
     df[f'SMA-{lPeriod}'] = df['Close'].rolling(window=lPeriod, min_periods=1, center=False).mean()
@@ -44,114 +44,105 @@ def sma_crossover(sPeriod, lPeriod, df, ticker, starting_index, status, odZacetk
 
         # filing shares, cash, total
         if (x - 1) >= 0:  # preverimo ce smo znotraj tabele
-            df['Shares'].iat[x] = np.nan_to_num(df['Shares'].iat[x - 1])  # prenesemo prejsnje st delnic naprej
+            df['Shares'].to_numpy()[x] = np.nan_to_num(df['Shares'].to_numpy()[x - 1])  # prenesemo prejsnje st delnic naprej
 
             if x != starting_index:  # za izjeme ko dodamo nov ticker in ne smemo zbrisat starting cash
-                df['Cash'].iat[x] = np.nan_to_num(df['Cash'].iat[x - 1])  # prenesemo prejsnji Cash naprej
+                df['Cash'].to_numpy()[x] = np.nan_to_num(df['Cash'].to_numpy()[x - 1])  # prenesemo prejsnji Cash naprej
             elif x == starting_index and odZacetkaAliNe is False:  # takrat ko je isto podjetje kot prej
-                df['Cash'].iat[x] = np.nan_to_num(df['Cash'].iat[x - 1])  # prenesemo prejsnji Cash naprej
+                df['Cash'].to_numpy()[x] = np.nan_to_num(df['Cash'].to_numpy()[x - 1])  # prenesemo prejsnji Cash naprej
 
-            df['Total'].iat[x] = (df['Cash'].iat[x] + df['Shares'].iat[x] * df['Close'].iat[x])  # izracunamo total TODO probably treba dodat fees
-            df['Ticker'].iat[x] = ticker
-            df['Buy'].iat[x] = df['Buy'].iat[x - 1]
-            df['Sell'].iat[x] = df['Sell'].iat[x - 1]
-            df['Buy-date'].iat[x] = df['Buy-date'].iat[x - 1]
-            df['Sell-date'].iat[x] = df['Sell-date'].iat[x - 1]
+            df['Total'].to_numpy()[x] = (df['Cash'].to_numpy()[x] + df['Shares'].to_numpy()[x] * df['Close'].to_numpy()[x])  # izracunamo total TODO probably treba dodat fees
+            df['Ticker'].to_numpy()[x] = ticker
+            df['Buy'].to_numpy()[x] = df['Buy'].to_numpy()[x - 1]
+            df['Sell'].to_numpy()[x] = df['Sell'].to_numpy()[x - 1]
+            df['Buy-date'].to_numpy()[x] = df['Buy-date'].to_numpy()[x - 1]
+            df['Sell-date'].to_numpy()[x] = df['Sell-date'].to_numpy()[x - 1]
 
 
         else:  # zacetek tabele -> inicializacija vrednosti
-            df['Shares'].iat[x] = np.nan_to_num(df['Shares'].iat[x])
-            if df['Cash'].iat[x] == 0:  # nimamo se denarja
-                df['Cash'].iat[x] = util.getMoney()
-            df['Total'].iat[x] = (df['Cash'].iat[x] + (df['Shares'].iat[x] * df['Close'].iat[x]))
-            df['Ticker'].iat[x] = ticker
+            df['Shares'].to_numpy()[x] = np.nan_to_num(df['Shares'].to_numpy()[x])
+            if df['Cash'].to_numpy()[x] == 0:  # nimamo se denarja
+                df['Cash'].to_numpy()[x] = util.getMoney()
+            df['Total'].to_numpy()[x] = (df['Cash'].to_numpy()[x] + (df['Shares'].to_numpy()[x] * df['Close'].to_numpy()[x]))
+            df['Ticker'].to_numpy()[x] = ticker
 
         pretekli_dnevi_buy = 0
-        if df["Buy-date"].iat[x] != "":  # buy_date != "":
-            pretekli_dnevi_buy = days_between(df["Buy-date"].iat[x], df.index[x])  # .strftime("%Y-%m-%d")
+        if df["Buy-date"].to_numpy()[x] != "":  # buy_date != "":
+            pretekli_dnevi_buy = days_between(df["Buy-date"].to_numpy()[x], df.index[x])  # .strftime("%Y-%m-%d")
 
         # pretekli_dnevi_sell = 0
         # if df["Sell-date"].iat[x] != "":
         #    pretekli_dnevi_sell = days_between(df["Sell-date"].iat[x], df.index[x].strftime("%Y-%m-%d"))
 
         # sSMA > lSMA -> buy signal
-        if df[f'SMA-{sPeriod}'].iat[x] > df[f'SMA-{lPeriod}'].iat[x]:
+        if df[f'SMA-{sPeriod}'].to_numpy()[x] > df[f'SMA-{lPeriod}'].to_numpy()[x]:
 
             # ce bi hotel tudi tuki das to v if za kupit -> and vmes_eno_leto
             vmes_eno_leto = False
             if check == 0:
                 vmes_eno_leto = True
             elif check == 1:
-                preteklo = days_between(df["Sell-date"].iat[x], df.index[x])  # .strftime("%Y-%m-%d")
+                preteklo = days_between(df["Sell-date"].to_numpy()[x], df.index[x])  # .strftime("%Y-%m-%d")
                 if preteklo >= holdObdobje:  # 7 glede na obdobje ki ga gledam 30dni = mesec 365_= leto
                     vmes_eno_leto = True
                 else:
                     vmes_eno_leto = False
 
             # to je biu popravek, dalo je buy signal tudi ce ni bilo denarja za kupit delnico
-            can_buy = math.floor(df['Cash'].iat[x] / (df['Close'].iat[x] + util.percentageFee(util.feePercentage, df['Close'].iat[x])))
+            can_buy = math.floor(df['Cash'].to_numpy()[x] / (df['Close'].to_numpy()[x] + util.percentageFee(util.feePercentage, df['Close'].to_numpy()[x])))
             if check != 2 and can_buy > 0:  # zadnji signal ni bil buy in imamo dovolj denarja za nakup
 
                 # kupi kolikor je možno delnic glede na cash -> drugi del je cena delnice + fee na nakup delnice
-                stDelnic = math.floor(df['Cash'].iat[x] / (df['Close'].iat[x] + util.percentageFee(util.feePercentage, df['Close'].iat[x])))
-                buyPrice = stDelnic * df['Close'].iat[x]  # stDelnic * njihova cena -> dejanski denar potreben za nakup TODO tudi tuki dodaj fees
-                df['Buy'].iat[x] = buyPrice  # zapisemo buy price
-                df['Sell'].iat[x] = 0  # zapisemo 0 da oznacimo da je bil zadnji signal buy
-                df['Sell-date'].iat[x] = ""  # zapisemo "" da oznacimo da je bil zadnji signal buy
+                stDelnic = math.floor(df['Cash'].to_numpy()[x] / (df['Close'].to_numpy()[x] + util.percentageFee(util.feePercentage, df['Close'].to_numpy()[x])))
+                buyPrice = stDelnic * df['Close'].to_numpy()[x]  # stDelnic * njihova cena -> dejanski denar potreben za nakup TODO tudi tuki dodaj fees
+                df['Buy'].to_numpy()[x] = buyPrice  # zapisemo buy price
+                df['Sell'].to_numpy()[x] = 0  # zapisemo 0 da oznacimo da je bil zadnji signal buy
+                df['Sell-date'].to_numpy()[x] = ""  # zapisemo "" da oznacimo da je bil zadnji signal buy
 
                 # za graf trgovanja
-                df['Buy-Signal'].iat[x] = df["Close"].iat[x]
-                df["Buy-date"].iat[x] = df.index[x]  # .strftime("%Y-%m-%d")   # zapisem datum nakupa
+                df['Buy-Signal'].to_numpy()[x] = df["Close"].to_numpy()[x]
+                df["Buy-date"].to_numpy()[x] = df.index[x]  # .strftime("%Y-%m-%d")   # zapisem datum nakupa
 
-                df['Cash'].iat[x] = np.nan_to_num(df['Cash'].iat[x]) - (stDelnic * df['Close'].iat[x])  # posodbi cash TODO tudi tuki dodaj fees
-                df['Shares'].iat[x] = df['Shares'].iat[x] + stDelnic
+                df['Cash'].to_numpy()[x] = np.nan_to_num(df['Cash'].to_numpy()[x]) - (stDelnic * df['Close'].to_numpy()[x])  # posodbi cash TODO tudi tuki dodaj fees
+                df['Shares'].to_numpy()[x] = df['Shares'].to_numpy()[x] + stDelnic
 
                 check = 2
 
         # sSMA < lSMA -> sell signal
-        elif df[f'SMA-{sPeriod}'].iat[x] < df[f'SMA-{lPeriod}'].iat[x] and pretekli_dnevi_buy >= holdObdobje:
+        elif df[f'SMA-{sPeriod}'].to_numpy()[x] < df[f'SMA-{lPeriod}'].to_numpy()[x] and pretekli_dnevi_buy >= holdObdobje:
 
             if check != 1 and check != 0:
 
                 # TODO dodaj še davek na dobiček 27,5% -> done
 
                 # prodaj vse delnic izracunaj profit in placaj davek
-                prodano = (df['Shares'].iat[x] * df['Close'].iat[x])  # delnice v denar
+                prodano = (df['Shares'].to_numpy()[x] * df['Close'].to_numpy()[x])  # delnice v denar
                 prodanoFees = util.fees(prodano)  # ostanek denarja po fees
                 sellPrice = prodanoFees
-                df['Sell'].iat[x] = prodanoFees  # zapisemo sell price
-                df['Profit'].iat[x] = util.profit(df['Buy'].iat[x], sellPrice)
+                df['Sell'].to_numpy()[x] = prodanoFees  # zapisemo sell price
+                df['Profit'].to_numpy()[x] = util.profit(df['Buy'].to_numpy()[x], sellPrice)
                 # za graf trgovanja
-                df['Sell-Signal'].iat[x] = df["Close"].iat[x]
-                df["Sell-date"].iat[x] = df.index[x]  # zapisem datum nakupa  # .strftime("%Y-%m-%d")
+                df['Sell-Signal'].to_numpy()[x] = df["Close"].to_numpy()[x]
+                df["Sell-date"].to_numpy()[x] = df.index[x]  # zapisem datum nakupa  # .strftime("%Y-%m-%d")
                 # sell_date = df.index[x].strftime("%Y-%m-%d") # zapisem datum nakupa
                 # print(f"buy: ", df["Buy-date"].iat[x], "sell: ", df["Sell-date"].iat[x])
-                razlika_datumov = days_between(df["Buy-date"].iat[x], df["Sell-date"].iat[x])
+                razlika_datumov = days_between(df["Buy-date"].to_numpy()[x], df["Sell-date"].to_numpy()[x])
                 # df["Pretekli cas"].iat[x] = razlika_datumov
 
-                df['Buy'].iat[x] = 0  # zapisemo 0 da oznacimo da je zadnji signal bil sell
-                df['Buy-date'].iat[x] = ""  # zapisemo "" da oznacimo da je zadnji signal bil sell
+                df['Buy'].to_numpy()[x] = 0  # zapisemo 0 da oznacimo da je zadnji signal bil sell
+                df['Buy-date'].to_numpy()[x] = ""  # zapisemo "" da oznacimo da je zadnji signal bil sell
 
                 # ce je dobicek pozitiven zaracunamo davek na dobicek in ga odstejemo od prodanoFees da dobimo ostanek
-                if df['Profit'].iat[x] > 0:
-                    prodanoFees = prodanoFees - util.taxes(df['Profit'].iat[x])
+                if df['Profit'].to_numpy()[x] > 0:
+                    prodanoFees = prodanoFees - util.taxes(df['Profit'].to_numpy()[x])
 
-                df['Cash'].iat[x] = np.nan_to_num(df['Cash'].iat[x]) + prodanoFees  # posodbi cash
-                df['Shares'].iat[x] = 0
+                df['Cash'].to_numpy()[x] = np.nan_to_num(df['Cash'].to_numpy()[x]) + prodanoFees  # posodbi cash
+                df['Shares'].to_numpy()[x] = 0
                 # updejtamo total
-                df['Total'].iat[x] = df['Cash'].iat[x]
+                df['Total'].to_numpy()[x] = df['Cash'].to_numpy()[x]
 
                 check = 1
 
-    # print(df)
-    # plotShares(df, ticker)
-    # SMA_trading_graph(sPeriod, lPeriod, df, ticker)
-    # profit_graph(df, 0, ticker)
-
-    # with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
-    # print(df)
-    # newDf = df[['Close', 'Buy', 'Sell', 'Cash', 'Shares', 'Total']].copy()
-    # print(newDf)
     return df
 
 
@@ -232,7 +223,7 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stockPri
             for x in starting_companies:
                 print("Company: ", x)
                 # if x != "GM" and x != "HWM":
-
+                # TODO tukaj not se sploh ne pride več ???
                 if x in problematicni and koncnoObdobje == "2008-2-19":  # to podjetje ima izjemo
                     print("Popravljam problematicne")
                     real_end_date = datetime.datetime.strptime(koncnoObdobje, "%Y-%m-%d")
@@ -247,23 +238,13 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stockPri
                 else:
                     # izjema za podjetje GM, za katerega nimam podatkov zato samo naredim prazen dataframe
                     if x == "GM":
-                        index = pd.date_range(zacetnoObdobje, "2009-6-8", freq='D')
-                        columns = ["Close"]
-                        prazen = pd.DataFrame(index=index, columns=columns)
+                        # pridobim df od podjetja HD in zbrišem podatke tako da je potem prazen
+                        prazen = stockPricesDB.getCompanyStockDataInRange(date_from=zacetnoObdobje, date_to=koncnoObdobje, companyTicker="HD")
+                        prazen = prazen[['Close']].copy()
                         prazen = zacetniDf(prazen)
-                        prazen["Cash"] = prazen["Cash"].add(util.getMoney())
-                        prazen["Total"] = prazen["Cash"]
-                        portfolio[x] = prazen
-
-                    # # izjema za podjetje HWM, za katerega nimam podatkov zato samo naredim prazen dataframe
-                    # elif x == "AA":
-                    #     index = pd.date_range(zacetnoObdobje, "2013-9-23", freq='D')
-                    #     columns = ["Close"]
-                    #     prazen = pd.DataFrame(index=index, columns=columns)
-                    #     prazen = zacetniDf(prazen)
-                    #     prazen["Cash"] = prazen["Cash"].add(util.getMoney())
-                    #     prazen["Total"] = prazen["Cash"]
-                    #     portfolio[x] = prazen
+                        prazen["Close"] = 0
+                        return_df = sma_crossover(sma_period_short, sma_period_long, prazen, x, 0, 0, True, hold_obdobje)
+                        portfolio[x] = return_df  # prazen
 
                     elif x != "GM":  # and x != 'AA'
                         data = stockPricesDB.getCompanyStockDataInRange(date_from=zacetnoObdobje, date_to=koncnoObdobje, companyTicker=x)
@@ -333,24 +314,24 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stockPri
 
                     elif ex_df["Shares"][-1] > 0:  # moramo prodat delnice in jih investirat v podjetje ki ga dodajamo
 
-                        prodano = (ex_df['Shares'].iat[-1] * ex_df['Close'].iat[-1])  # delnice v denar
+                        prodano = (ex_df['Shares'].to_numpy()[-1] * ex_df['Close'].to_numpy()[-1])  # delnice v denar
                         prodanoFees = util.fees(prodano)  # ostanek denarja po fees
                         sellPrice = prodanoFees
-                        ex_df['Sell'].iat[-1] = prodanoFees  # zapisemo sell price
-                        ex_df['Profit'].iat[-1] = util.profit(ex_df['Buy'].iat[-1], sellPrice)
+                        ex_df['Sell'].to_numpy()[-1] = prodanoFees  # zapisemo sell price
+                        ex_df['Profit'].to_numpy()[-1] = util.profit(ex_df['Buy'].to_numpy()[-1], sellPrice)
 
-                        ex_df['Buy'].iat[-1] = 0  # zapisemo 0 da oznacimo da je zadnji signal bil sell
+                        ex_df['Buy'].to_numpy()[-1] = 0  # zapisemo 0 da oznacimo da je zadnji signal bil sell
 
                         # ce je dobicek pozitiven zaracunamo davek na dobicek in ga odstejemo od prodanoFees da dobimo ostanek
-                        if ex_df['Profit'].iat[-1] > 0:
-                            prodanoFees = prodanoFees - util.taxes(ex_df['Profit'].iat[-1])
+                        if ex_df['Profit'].to_numpy()[-1] > 0:
+                            prodanoFees = prodanoFees - util.taxes(ex_df['Profit'].to_numpy()[-1])
 
                         # print("Cash before: ", ex_df['Cash'].iloc[-1])
                         # print("UpdateCash: ", np.nan_to_num(ex_df['Cash'].iloc[-1]) + prodanoFees)
-                        ex_df['Cash'].iat[-1] = np.nan_to_num(ex_df['Cash'].iat[-1]) + prodanoFees  # posodbi cash
+                        ex_df['Cash'].to_numpy()[-1] = np.nan_to_num(ex_df['Cash'].to_numpy()[-1]) + prodanoFees  # posodbi cash
                         # print("RealUpdated Cash ", ex_df['Cash'].iloc[-1])
-                        ex_df['Shares'].iat[-1] = 0
-                        ex_df['Total'].iat[-1] = ex_df["Cash"].iat[-1]
+                        ex_df['Shares'].to_numpy()[-1] = 0
+                        ex_df['Total'].to_numpy()[-1] = ex_df["Cash"].to_numpy()[-1]
 
                         # prejsni df je posodobljen in delnice so prodane, samo prepisemo Cash v new_df
                         # print("Notri", ex_df.iloc[-1])
@@ -390,31 +371,35 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stockPri
                 plus_one_start_date = (real_start_date + datetime.timedelta(days=1)).strftime("%Y-%m-%d")  # adding one day
                 # modified_date = plus_one_start_date - datetime.timedelta(days=(long_period * 2))  # odstevamo long period da dobimo dovolj podatkov
 
-                if ostaliTicker != "GM":  #and ostaliTicker != "AA"
+                # if ostaliTicker != "GM":  # ostaliTicker != "GM" and ostaliTicker != "AA"
 
-                    totals = portfolio[ostaliTicker]
-                    zadnji_signal = 0
-                    # TODO tuki spet error -> popravljeno
-                    # print('BAC : ', portfolio['BAC'])
-                    # if ostaliTicker != 'AA':
-                    # print('printam debug')
-                    # print(totals[ostaliTicker])
-                    # print(totals['Shares'])
-                    if totals['Shares'].iat[-1] == 0:
-                        zadnji_signal = 1  # nimamo delnic kar pomeni da smo jih prodali in jih moramo zdej kupit
-                    elif totals['Shares'].iat[-1] > 0:  # TODO daj > 0 v pogoj
-                        zadnji_signal = 2  # imamo delnice tako da jih lahko samo prodamo zdej
+                totals = portfolio[ostaliTicker]
+                zadnji_signal = 0
+                # TODO tuki spet error -> popravljeno
+                # print('BAC : ', portfolio['BAC'])
+                # if ostaliTicker != 'AA':
+                # print('printam debug')
+                # print(totals[ostaliTicker])
+                # print(totals['Shares'])
+                if totals['Shares'].to_numpy()[-1] == 0:
+                    zadnji_signal = 1  # nimamo delnic kar pomeni da smo jih prodali in jih moramo zdej kupit
+                elif totals['Shares'].to_numpy()[-1] > 0:
+                    zadnji_signal = 2  # imamo delnice tako da jih lahko samo prodamo zdej
 
-                    print("Trenutni ostali ticker: ", ostaliTicker)
-                    new_data = stockPricesDB.getCompanyStockDataInRange(date_from=plus_one_start_date, date_to=koncnoObdobje, companyTicker=ostaliTicker, )
+                print("Trenutni ostali ticker: ", ostaliTicker)
+                company = ostaliTicker
+                if ostaliTicker == "GM":
+                    company = "HD"  # ce se prav spomnem se uzame HD samo zato, da se dobi ok velik df, ker za GM ne morem
+                new_data = stockPricesDB.getCompanyStockDataInRange(date_from=plus_one_start_date, date_to=koncnoObdobje, companyTicker=company)
+                if ostaliTicker == "GM":
+                    new_data["Close"] = 0
+                new_data = new_data[['Close']].copy()
+                starting_index = len(totals)
 
-                    new_data = new_data[['Close']].copy()
-                    starting_index = len(totals)
+                concat_data = pd.concat([totals, new_data])
 
-                    concat_data = pd.concat([totals, new_data])
-
-                    concat_totals = sma_crossover(sma_period_short, sma_period_long, concat_data, f"new{ostaliTicker}", starting_index, zadnji_signal, False, hold_obdobje)
-                    portfolio[ostaliTicker] = concat_totals  # profit_graph(concat_totals, 0, f"new{ostaliTicker}", round(concat_totals['Total'].iat[-1], 4))
+                concat_totals = sma_crossover(sma_period_short, sma_period_long, concat_data, f"new{ostaliTicker}", starting_index, zadnji_signal, False, hold_obdobje)
+                portfolio[ostaliTicker] = concat_totals
 
     totals = prikaziPodatkePortfolia(portfolio, sezIzlocenih, izloceniTickerji, startIzpis=start, endIzpis=end)
 
@@ -432,31 +417,25 @@ def prikaziPodatkePortfolia(portfolio, sezIzlocenih, izloceniTickerji, startIzpi
 
         tickerTotals = portfolio[ticker]
 
-        tmpIndexCheck = portfolio[ticker][['Total']]
-        print("Podjetje: ", ticker, " velikost DF: ", len(portfolio[ticker].index), " ima unique index: ", tickerTotals.index.is_unique)
-        print("duplikati: ", tmpIndexCheck.index.duplicated())
-        tickerTotals = tickerTotals.loc[~tickerTotals.index.duplicated(), :]
-        print("Popravljeno podjetje: ", ticker, " velikost DF: ", len(tickerTotals), " ima unique index: ", tickerTotals.index.is_unique)
+        # util.preveriPravilnostDatumov(ticker, portfolio)
 
-        allShares[ticker] = tickerTotals['Shares'].iat[-1]
+        allShares[ticker] = tickerTotals['Shares'].to_numpy()[-1]
 
         if count == 0:
             allFunds = tickerTotals[['Total']].copy()
         else:
-            allFunds['Total'] = allFunds['Total'].add(tickerTotals['Total'], fill_value=1000)
+            allFunds['Total'] = allFunds['Total'].add(tickerTotals['Total'])  # , fill_value=1000
 
         count += 1
 
-    # allFunds['Total'].to_csv('allfunds_samo_sestevanje2.csv')
-
-    profit_graph(allFunds, 1, "Portfolio", round(allFunds['Total'].iat[-1], 4))
+    profit_graph(allFunds, 1, "Portfolio", round(allFunds['Total'].to_numpy()[-1], 4))
 
     # se izpis podatkov portfolia
     startFunds = len(portfolio) * util.getMoney()
-    endFunds = allFunds['Total'].iat[-1]
+    endFunds = allFunds['Total'].to_numpy()[-1]
 
     print("Zacetna sredstva: ", startFunds, "$")
-    print("Skupna sredstva portfolia: ", round(allFunds['Total'].iat[-1], 4), "$")
+    print("Skupna sredstva portfolia: ", round(allFunds['Total'].to_numpy()[-1], 4), "$")
     # print("Profit: ", round(allFunds['Total'].iat[-1] - (len(portfolio) * util.getMoney()), 4), "$")
     print("Profit: ", round(endFunds - startFunds, 4), "$")
     print("Kumulativni donos v procentih: ", round((endFunds - startFunds) / startFunds, 4) * 100, "%")
