@@ -54,29 +54,24 @@ def getMoney():
     return startMoney
 
 
+def preveriPravilnostDatumov(ticker, portfolio):
 
+    tickerTotals = portfolio[ticker]
 
-# idx = pd.Index(['Labrador', 'Beagle', 'Labrador', 'Lhasa', 'Husky', 'Beagle'])
-#
-# print(idx)
-#
-# print(idx.duplicated(keep='first'))
+    tmpIndexCheck = portfolio[ticker][['Total']]
+    print("Podjetje: ", ticker, " velikost DF: ", len(portfolio[ticker].index), " ima unique index: ", tickerTotals.index.is_unique)
+    print("duplikati: ", tmpIndexCheck.index.duplicated())
+    tickerTotals = tickerTotals.loc[~tickerTotals.index.duplicated(), :]
+    print("Popravljeno podjetje: ", ticker, " velikost DF: ", len(tickerTotals), " ima unique index: ", tickerTotals.index.is_unique)
 
-
-# range1 = pd.date_range('2021-10-01','2021-10-6')
-# range2 = pd.date_range('2021-10-6','2021-10-11')
-
-# range1 = ["2021-10-01", "2021-10-02", "2021-10-03", "2021-10-04"]
-# range2 = ["2021-10-01", "2021-10-02", "2021-10-03", "2021-10-04", "2021-10-04"]
-#
-#
-# df1 = pd.DataFrame(np.random.rand(len(range1), 1), columns=['value'], index=range1)
-# df2 = pd.DataFrame(np.random.rand(len(range2), 1), columns=['value'], index=range2)
-#
-# print(df1)
-# print(df2)
-#
-# df3 = df1['value'] + df2['value']
-#
-# print('df3')
-# print(df3)
+    for z in range(0, len(tickerTotals)):
+        if z != 0:
+            prejsnji_datum = datetime.datetime.strptime(tickerTotals.index[z - 1], "%Y-%m-%d").date()
+            trenutni_datum = datetime.datetime.strptime(tickerTotals.index[z], "%Y-%m-%d").date()
+            if prejsnji_datum > trenutni_datum:
+                print("Napaka v zaporedju datumov!!")
+                print("Podjetje: ", ticker)
+                print("prejsnji_datum: ", prejsnji_datum)
+                print("trenutni_datum: ", trenutni_datum)
+            else:
+                print("Podjetje: ", ticker, " ima ok datume!")
