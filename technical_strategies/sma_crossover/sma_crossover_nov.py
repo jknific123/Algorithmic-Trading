@@ -50,7 +50,7 @@ def sma_crossover(sPeriod, lPeriod, df, ticker, starting_index, status, odZacetk
             elif x == starting_index and odZacetkaAliNe is False:  # takrat ko je isto podjetje kot prej
                 df['Cash'].to_numpy()[x] = np.nan_to_num(df['Cash'].to_numpy()[x - 1])  # prenesemo prejsnji Cash naprej
 
-            df['Total'].to_numpy()[x] = (df['Cash'].to_numpy()[x] + (df['Shares'].to_numpy()[x] * df['Close'].to_numpy()[x]))  # izracunamo total
+            df['Total'].to_numpy()[x] = (df['Cash'].to_numpy()[x] + util.fees(df['Shares'].to_numpy()[x] * df['Close'].to_numpy()[x]))  # izracunamo total
             df['Ticker'].to_numpy()[x] = ticker
             df['Buy'].to_numpy()[x] = df['Buy'].to_numpy()[x - 1]
             df['Sell'].to_numpy()[x] = df['Sell'].to_numpy()[x - 1]
@@ -61,7 +61,7 @@ def sma_crossover(sPeriod, lPeriod, df, ticker, starting_index, status, odZacetk
         else:  # zacetek tabele -> inicializacija vrednosti
             if df['Cash'].to_numpy()[x] == 0:  # nimamo se denarja
                 df['Cash'].to_numpy()[x] = util.getMoney()
-            df['Total'].to_numpy()[x] = (df['Cash'].to_numpy()[x] + (df['Shares'].to_numpy()[x] * df['Close'].to_numpy()[x]))
+            df['Total'].to_numpy()[x] = (df['Cash'].to_numpy()[x] + util.fees(df['Shares'].to_numpy()[x] * df['Close'].to_numpy()[x]))
             df['Ticker'].to_numpy()[x] = ticker
 
         pretekli_dnevi_buy = 0
@@ -86,7 +86,8 @@ def sma_crossover(sPeriod, lPeriod, df, ticker, starting_index, status, odZacetk
                 df["Buy-date"].to_numpy()[x] = df.index[x]  # zapisem datum nakupa
 
                 df['Cash'].to_numpy()[x] = df['Cash'].to_numpy()[x] - buyPrice  # posodbi cash
-                df['Shares'].to_numpy()[x] = df['Shares'].to_numpy()[x] + stDelnic
+                df['Shares'].to_numpy()[x] = stDelnic
+                df['Total'].to_numpy()[x] = df['Cash'].to_numpy()[x] + buyPrice
 
                 check = 2
 
@@ -96,23 +97,24 @@ def sma_crossover(sPeriod, lPeriod, df, ticker, starting_index, status, odZacetk
             if check != 1 and check != 0:  # zadnji signal ni bil sell in nismo na zacetku
 
                 # prodaj vse delnic izracunaj profit in placaj davek
-                prodano = (df['Shares'].to_numpy()[x] * df['Close'].to_numpy()[x])  # delnice v denar
-                prodanoFees = util.fees(prodano)  # ostanek denarja po fees
-                sellPrice = prodanoFees  # TODO popravi da je povsod to sell price ne prodanoFees
-                df['Sell'].to_numpy()[x] = prodanoFees  # zapisemo sell price
+                sellPrice = util.fees(df['Shares'].to_numpy()[x] * df['Close'].to_numpy()[x])  # delnice v denar, obracunamo fees
+                profitPredDavkom = util.profit(df['Buy'].to_numpy()[x], sellPrice)  # izracunamo profit pred davkom
+
+                # ce je dobicek pred davkom pozitiven zaracunamo davek na dobicek in ga odstejemo od sellPrice, da dobimo ostanek
+                if profitPredDavkom > 0:
+                    sellPrice = sellPrice - util.taxes(profitPredDavkom)  # popravimo sellPrice, tako da obracunamo davek
+
+                df['Sell'].to_numpy()[x] = sellPrice  # zapisemo sell price
                 df['Profit'].to_numpy()[x] = util.profit(df['Buy'].to_numpy()[x], sellPrice)
                 # za graf trgovanja
                 df['Sell-Signal'].to_numpy()[x] = df["Close"].to_numpy()[x]
                 df["Sell-date"].to_numpy()[x] = df.index[x]  # zapisem datum nakupa
 
+
                 df['Buy'].to_numpy()[x] = 0  # zapisemo 0 da oznacimo da je zadnji signal bil sell
                 df['Buy-date'].to_numpy()[x] = ""  # zapisemo "" da oznacimo da je zadnji signal bil sell
 
-                # ce je dobicek pozitiven zaracunamo davek na dobicek in ga odstejemo od prodanoFees da dobimo ostanek
-                if df['Profit'].to_numpy()[x] > 0:
-                    prodanoFees = prodanoFees - util.taxes(df['Profit'].to_numpy()[x])
-
-                df['Cash'].to_numpy()[x] = df['Cash'].to_numpy()[x] + prodanoFees  # posodbi cash
+                df['Cash'].to_numpy()[x] = df['Cash'].to_numpy()[x] + sellPrice  # posodbi cash
                 df['Shares'].to_numpy()[x] = 0
                 # updejtamo total
                 df['Total'].to_numpy()[x] = df['Cash'].to_numpy()[x]
@@ -125,8 +127,6 @@ def sma_crossover(sPeriod, lPeriod, df, ticker, starting_index, status, odZacetk
 def zacetniDf(data):
     # v nadaljevanju uporabljamo samo podatke od takrat, ko je dolgi sma že na voljo, prav tako
     # kreiramo nova stolpca za buy/sell signale
-    # data[f'SMA-{short_period}'] = np.nan
-    # data[f'SMA-{long_period}'] = np.nan
     data['Buy'] = np.nan
     data['Sell'] = np.nan
     data['Cash'] = 0
@@ -138,7 +138,6 @@ def zacetniDf(data):
     data['Sell-Signal'] = np.nan
     data["Buy-date"] = ""
     data["Sell-date"] = ""
-    # data["Pretekli cas"] = 0
 
     return data
 
@@ -278,36 +277,33 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stockPri
 
                     new_df = new_df[['Close']].copy()
                     new_df = zacetniDf(new_df)
-                    # ex_df = index[odstranjenTicker]
                     ex_df = portfolio[odstranjenTicker]
 
-                    # ex_data = ex_df.tail(1)
-                    # print("Shares", ex_data["Shares"][0])
-                    # print("Cash", ex_data["Cash"][0])
-                    # TODO tukaj pride error -> popravljeno
                     if ex_df["Shares"][-1] == 0:  # super samo prepisemo kes
                         new_df["Cash"].at[plus_one_start_date] = ex_df["Cash"][-1]
 
-                    elif ex_df["Shares"][-1] > 0:  # moramo prodat delnice in jih investirat v podjetje ki ga dodajamo
+                    elif ex_df["Shares"][-1] > 0:  # moramo prodat delnice in jih investirat v podjetje, ki ga dodajamo
 
-                        prodano = (ex_df['Shares'].to_numpy()[-1] * ex_df['Close'].to_numpy()[-1])  # delnice v denar
-                        prodanoFees = util.fees(prodano)  # ostanek denarja po fees
-                        sellPrice = prodanoFees
-                        ex_df['Sell'].to_numpy()[-1] = prodanoFees  # zapisemo sell price
+                        # prodaj vse delnic izracunaj profit in placaj davek
+                        sellPrice = util.fees(ex_df['Shares'].to_numpy()[-1] * ex_df['Close'].to_numpy()[-1])  # delnice v denar, obracunamo fees
+                        profitPredDavkom = util.profit(ex_df['Buy'].to_numpy()[-1], sellPrice)  # izracunamo profit pred davkom
+
+                        # ce je dobicek pred davkom pozitiven zaracunamo davek na dobicek in ga odstejemo od sellPrice, da dobimo ostanek
+                        if profitPredDavkom > 0:
+                            sellPrice = sellPrice - util.taxes(profitPredDavkom)  # popravimo sellPrice, tako da obracunamo davek
+
+                        ex_df['Sell'].to_numpy()[-1] = sellPrice  # zapisemo sell price
                         ex_df['Profit'].to_numpy()[-1] = util.profit(ex_df['Buy'].to_numpy()[-1], sellPrice)
-
+                        # za graf trgovanja TODO -> nisem siguren da to sploh rabim tukaj
+                        ex_df['Sell-Signal'].to_numpy()[-1] = ex_df["Close"].to_numpy()[-1]
+                        ex_df["Sell-date"].to_numpy()[-1] = ex_df.index[-1]  # zapisem datum nakupa
                         ex_df['Buy'].to_numpy()[-1] = 0  # zapisemo 0 da oznacimo da je zadnji signal bil sell
+                        ex_df['Buy-date'].to_numpy()[-1] = ""  # zapisemo "" da oznacimo da je zadnji signal bil sell
 
-                        # ce je dobicek pozitiven zaracunamo davek na dobicek in ga odstejemo od prodanoFees da dobimo ostanek
-                        if ex_df['Profit'].to_numpy()[-1] > 0:
-                            prodanoFees = prodanoFees - util.taxes(ex_df['Profit'].to_numpy()[-1])
-
-                        # print("Cash before: ", ex_df['Cash'].iloc[-1])
-                        # print("UpdateCash: ", np.nan_to_num(ex_df['Cash'].iloc[-1]) + prodanoFees)
-                        ex_df['Cash'].to_numpy()[-1] = np.nan_to_num(ex_df['Cash'].to_numpy()[-1]) + prodanoFees  # posodbi cash
-                        # print("RealUpdated Cash ", ex_df['Cash'].iloc[-1])
+                        ex_df['Cash'].to_numpy()[-1] = ex_df['Cash'].to_numpy()[-1] + sellPrice  # posodbi cash
                         ex_df['Shares'].to_numpy()[-1] = 0
-                        ex_df['Total'].to_numpy()[-1] = ex_df["Cash"].to_numpy()[-1]
+                        # updejtamo total
+                        ex_df['Total'].to_numpy()[-1] = ex_df['Cash'].to_numpy()[-1]
 
                         # prejsni df je posodobljen in delnice so prodane, samo prepisemo Cash v new_df
                         # print("Notri", ex_df.iloc[-1])
@@ -326,7 +322,7 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stockPri
                                                 hold_obdobje)  # zadnji argument True ker je razlicen ticker in zacnemo od zacetka trejdat, isti -> False ker samo nadaljujemo trejdanje
 
                     added_returns = new_returns[plus_one_start_date:]  # TODO kaj se tu dogaja??
-                    concat_returns = pd.concat([ex_df, added_returns]) # TODO pri AA in najbrs se pri kaksnih je ex_df prekratek
+                    concat_returns = pd.concat([ex_df, added_returns])  # TODO pri AA in najbrs se pri kaksnih je ex_df prekratek
                     # profit_graph(concat_returns, 1, f"Stolpec {nov_ticker}" , round(concat_returns['Total'].iloc[-1], 4))
                     new_portfolio = {nov_ticker if k == odstranjenTicker else k: v for k, v in portfolio.items()}
                     new_portfolio[nov_ticker] = concat_returns
