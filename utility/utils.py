@@ -22,7 +22,7 @@ def get(tickers, startdate, enddate):
 feePercentage = 1
 
 # vrednost davka na dobiček
-taxRate = 27.5
+taxRate = 25
 
 
 def percentageFee(percent, whole):
@@ -73,5 +73,3 @@ def preveriPravilnostDatumov(ticker, portfolio):
                 print("Podjetje: ", ticker)
                 print("prejsnji_datum: ", prejsnji_datum)
                 print("trenutni_datum: ", trenutni_datum)
-            else:
-                print("Podjetje: ", ticker, " ima ok datume!")
