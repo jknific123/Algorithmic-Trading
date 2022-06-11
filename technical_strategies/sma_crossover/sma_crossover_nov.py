@@ -21,13 +21,12 @@ def days_between(d1, d2):
 
 
 def sma_crossover(sPeriod, lPeriod, df, ticker, starting_index, status, odZacetkaAliNe, holdObdobje):
-
     # naredimo/napolnimo nova stolpca za oba SMA
     df[f'SMA-{sPeriod}'] = df['Close'].rolling(window=sPeriod, min_periods=1, center=False).mean()
     df[f'SMA-{lPeriod}'] = df['Close'].rolling(window=lPeriod, min_periods=1, center=False).mean()
 
     # v nadaljevanju uporabljamo samo podatke od takrat, ko je dolgi sma že na voljo
-    if starting_index == 0:  # before :   odZacetkaAliNe is True
+    if starting_index == 0:  # before -> odZacetkaAliNe is True: TODO pomoje je bolj prav ta z odZacetkaAliNe
         df = df[lPeriod:]
 
     # za racunanje davka na dobiček
@@ -56,7 +55,6 @@ def sma_crossover(sPeriod, lPeriod, df, ticker, starting_index, status, odZacetk
             df['Sell'].to_numpy()[x] = df['Sell'].to_numpy()[x - 1]
             df['Buy-date'].to_numpy()[x] = df['Buy-date'].to_numpy()[x - 1]
             df['Sell-date'].to_numpy()[x] = df['Sell-date'].to_numpy()[x - 1]
-
 
         else:  # zacetek tabele -> inicializacija vrednosti
             if df['Cash'].to_numpy()[x] == 0:  # nimamo se denarja
@@ -109,7 +107,6 @@ def sma_crossover(sPeriod, lPeriod, df, ticker, starting_index, status, odZacetk
                 # za graf trgovanja
                 df['Sell-Signal'].to_numpy()[x] = df["Close"].to_numpy()[x]
                 df["Sell-date"].to_numpy()[x] = df.index[x]  # zapisem datum nakupa
-
 
                 df['Buy'].to_numpy()[x] = 0  # zapisemo 0 da oznacimo da je zadnji signal bil sell
                 df['Buy-date'].to_numpy()[x] = ""  # zapisemo "" da oznacimo da je zadnji signal bil sell
@@ -168,13 +165,7 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stockPri
     obdobja = setObdobja(startObdobja=start, endObdobja=end, dowTickersObdobja=dowTickers)
 
     portfolio = {}
-    izloceniTickerji = []
     starting_companies = []
-    # begining = start  # "2005-11-21"
-    sezIzlocenih = []
-
-    # te imajo probleme pri koncnem obdobju 2008-2-19
-    problematicni = ["MO", "HON"]
 
     for i in range(0, len(obdobja) - 1):  # gremo cez vsa obdobja in jih imamo po parih startDATE -> endDATE
 
@@ -192,47 +183,31 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stockPri
             elif zacetnoObdobje == "2016-05-21":
                 starting_companies = dowTickers["2015-03-19"]["all"]
 
-            izloceniTickerji.append("GM")  # dodamo GM pod izlocene
-
             # trejdamo z all od zacetnegaObdobja
             for x in starting_companies:
                 print("Company: ", x)
-                # if x != "GM" and x != "HWM":
-                # TODO tukaj not se sploh ne pride več ???
-                if x in problematicni and koncnoObdobje == "2008-2-19":  # to podjetje ima izjemo
-                    print("Popravljam problematicne")
-                    real_end_date = datetime.datetime.strptime(koncnoObdobje, "%Y-%m-%d")
-                    plus_one_start_date = (real_end_date + datetime.timedelta(days=1)).strftime("%Y-%m-%d")
 
-                    data = stockPricesDB.getCompanyStockDataInRange(date_from=zacetnoObdobje, date_to=plus_one_start_date, companyTicker=x)
+                # izjema za podjetje GM, za katerega nimam podatkov, zato samo naredim prazen dataframe
+                if x == "GM":
+                    # pridobim df od podjetja HD in zbrišem podatke tako da je potem prazen
+                    prazen = stockPricesDB.getCompanyStockDataInRange(date_from=zacetnoObdobje, date_to=koncnoObdobje, companyTicker="HD")
+                    prazen = prazen[['Close']].copy()
+                    prazen = zacetniDf(prazen)
+                    prazen["Close"] = 0
+                    return_df = sma_crossover(sma_period_short, sma_period_long, prazen, x, 0, 0, True, hold_obdobje)
+                    portfolio[x] = return_df  # prazen
+
+                elif x != "GM":  # and x != 'AA'
+                    data = stockPricesDB.getCompanyStockDataInRange(date_from=zacetnoObdobje, date_to=koncnoObdobje, companyTicker=x)
                     data = data[['Close']].copy()
                     data = zacetniDf(data)  # dodamo stolpce
                     return_df = sma_crossover(sma_period_short, sma_period_long, data, x, 0, 0, True, hold_obdobje)
                     portfolio[x] = return_df
 
-                else:
-                    # izjema za podjetje GM, za katerega nimam podatkov zato samo naredim prazen dataframe
-                    if x == "GM":
-                        # pridobim df od podjetja HD in zbrišem podatke tako da je potem prazen
-                        prazen = stockPricesDB.getCompanyStockDataInRange(date_from=zacetnoObdobje, date_to=koncnoObdobje, companyTicker="HD")
-                        prazen = prazen[['Close']].copy()
-                        prazen = zacetniDf(prazen)
-                        prazen["Close"] = 0
-                        return_df = sma_crossover(sma_period_short, sma_period_long, prazen, x, 0, 0, True, hold_obdobje)
-                        portfolio[x] = return_df  # prazen
-
-                    elif x != "GM":  # and x != 'AA'
-                        data = stockPricesDB.getCompanyStockDataInRange(date_from=zacetnoObdobje, date_to=koncnoObdobje, companyTicker=x)
-                        data = data[['Close']].copy()
-                        data = zacetniDf(data)  # dodamo stolpce
-                        return_df = sma_crossover(sma_period_short, sma_period_long, data, x, 0, 0, True, hold_obdobje)
-                        portfolio[x] = return_df
-
             print(portfolio.keys())
             print(starting_companies)
             print(dowTickers["2005-11-21"]["all"])
             print("LEN: ", len(portfolio))
-
 
         # ce nismo na zacetku gremo cez removed in added in naredimo menjave ter trejdamo za naslednje obdobje
         elif zacetnoObdobje != start:
@@ -242,35 +217,17 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stockPri
             for odstranjenTicker in dowTickers[zacetnoObdobje]["removed"]:
 
                 starting_companies = portfolio.keys()
-                """
-                if odstranjenTicker in izloceniTickerji: # odstranjenTicker je v izlocenihTickerjih -> ga odstranim iz izlocenih in dodam gor isto lezecega addedTicker
-
-                    print("Izlocujem: ")
-                    print("Odstranjeni: ", odstranjenTicker)
-                    added_ticker = dowTickers[zacetnoObdobje]["added"][dowTickers[zacetnoObdobje]["removed"].index(odstranjenTicker)]
-                    izloceniTickerji.append(added_ticker)
-                    # izloceniTickerji.remove(odstranjenTicker)
-                    sezIzlocenih.append(added_ticker)
-                    print("Added: ", added_ticker)
-                """
-                # if odstranjenTicker == "GM": # tuki se GM zamenja z TRV
 
                 if odstranjenTicker in starting_companies:  # odstranjenTicker je v trenutnem portfoliu -> ga zamenjamo z isto ležečim tickerjem iz added
 
-                    # with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
-                    # print()
-                    # print(index[x].tail(1))
-                    # print()
-                    # print(index[x].tail(1)["Shares"])
-                    # print(index[x].tail(1)["Cash"])
-                    # print(x, "->", dodaj["added"][odstrani["removed"].index(x)])
-                    # nov_ticker = dodaj["added"][odstrani["removed"].index(x)]
+                    # zamenjamo odstranjenTicker z isto ležečim tickerjem iz added
                     nov_ticker = dowTickers[zacetnoObdobje]["added"][dowTickers[zacetnoObdobje]["removed"].index(odstranjenTicker)]
                     print(odstranjenTicker, "->", nov_ticker)
-                    real_start_date = datetime.datetime.strptime(zacetnoObdobje, "%Y-%m-%d")  # TODO mogoce tu preverit ce je sploh treba dodajat 1 dan (sepravi se poreveri v prejsnjem dfju ce je zadji dan isti)
+                    # TODO mogoce tu preverit ce je sploh treba dodajat 1 dan (sepravi se poreveri v prejsnjem dfju ce je zadji dan isti)
+                    real_start_date = datetime.datetime.strptime(zacetnoObdobje, "%Y-%m-%d")
                     plus_one_start_date = (real_start_date + datetime.timedelta(days=1)).strftime("%Y-%m-%d")  # adding one day
                     modified_date = (datetime.datetime.strptime(plus_one_start_date, "%Y-%m-%d") - datetime.timedelta(days=(sma_period_long * 2))).strftime(
-                        "%Y-%m-%d")  # odstevamo long period da dobimo dovolj podatkov
+                        "%Y-%m-%d")  # odstevamo long period, da dobimo dovolj podatkov
                     print('plus_one_start_date', plus_one_start_date)
                     print('modified_date', modified_date)
                     new_df = stockPricesDB.getCompanyStockDataInRange(date_from=modified_date, date_to=koncnoObdobje, companyTicker=nov_ticker)
@@ -306,27 +263,21 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stockPri
                         ex_df['Total'].to_numpy()[-1] = ex_df['Cash'].to_numpy()[-1]
 
                         # prejsni df je posodobljen in delnice so prodane, samo prepisemo Cash v new_df
-                        # print("Notri", ex_df.iloc[-1])
                         new_df["Cash"].at[plus_one_start_date] = ex_df["Cash"][-1]
                         new_df["Total"].at[plus_one_start_date] = ex_df["Cash"][-1]
 
                     odvec = new_df[:plus_one_start_date]
                     starting_index = len(odvec) - 1
-                    # concat_new = pd.concat([ex_df, new_df])
-                    # starting_index = len(ex_df)
-                    # concat_new["Ticker"].iloc[starting_index] = dodaj["added"][odstrani["removed"].index(x)] # zapisemo nov ticker
-                    # concat_new["Total"].iloc[starting_index] = concat_new["Cash"].iloc[starting_index]
 
                     # startamo trading algo
-                    new_returns = sma_crossover(sma_period_short, sma_period_long, new_df, nov_ticker, starting_index, 0, True,
-                                                hold_obdobje)  # zadnji argument True ker je razlicen ticker in zacnemo od zacetka trejdat, isti -> False ker samo nadaljujemo trejdanje
+                    # zadnji argument True ker je razlicen ticker in zacnemo od zacetka trejdat, isti -> False ker samo nadaljujemo trejdanje
+                    new_returns = sma_crossover(sma_period_short, sma_period_long, new_df, nov_ticker, starting_index, 0, True, hold_obdobje)
 
-                    added_returns = new_returns[plus_one_start_date:]  # TODO kaj se tu dogaja??
-                    concat_returns = pd.concat([ex_df, added_returns])  # TODO pri AA in najbrs se pri kaksnih je ex_df prekratek
-                    # profit_graph(concat_returns, 1, f"Stolpec {nov_ticker}" , round(concat_returns['Total'].iloc[-1], 4))
+                    added_returns = new_returns[plus_one_start_date:]  # iz new_returns vzamemo del dataframa od plus_one_start_date do konca in ga nato prilepimo v df iz portfolia
+                    concat_returns = pd.concat([ex_df, added_returns])
+                    # naredimo nov slovar-portfolio iz prejsnjega s tem, da je key trenutnega df nov_ticker namesto odstranjenTicker
                     new_portfolio = {nov_ticker if k == odstranjenTicker else k: v for k, v in portfolio.items()}
-                    new_portfolio[nov_ticker] = concat_returns
-                    # isOk = new_portfolio[nov_ticker]
+                    new_portfolio[nov_ticker] = concat_returns  # shranimo nov podaljšan dataframe v nov portfolio
                     portfolio = new_portfolio
                     dodani.append(nov_ticker)
                     print("Po izlocanju: ", odstranjenTicker)
@@ -341,21 +292,12 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stockPri
 
                 real_start_date = datetime.datetime.strptime(zacetnoObdobje, "%Y-%m-%d")
                 plus_one_start_date = (real_start_date + datetime.timedelta(days=1)).strftime("%Y-%m-%d")  # adding one day
-                # modified_date = plus_one_start_date - datetime.timedelta(days=(long_period * 2))  # odstevamo long period da dobimo dovolj podatkov
 
-                # if ostaliTicker != "GM":  # ostaliTicker != "GM" and ostaliTicker != "AA"
-
-                totals = portfolio[ostaliTicker]
+                ostaliTickerDataframe = portfolio[ostaliTicker]
                 zadnji_signal = 0
-                # TODO tuki spet error -> popravljeno
-                # print('BAC : ', portfolio['BAC'])
-                # if ostaliTicker != 'AA':
-                # print('printam debug')
-                # print(totals[ostaliTicker])
-                # print(totals['Shares'])
-                if totals['Shares'].to_numpy()[-1] == 0:
+                if ostaliTickerDataframe['Shares'].to_numpy()[-1] == 0:
                     zadnji_signal = 1  # nimamo delnic kar pomeni da smo jih prodali in jih moramo zdej kupit
-                elif totals['Shares'].to_numpy()[-1] > 0:
+                elif ostaliTickerDataframe['Shares'].to_numpy()[-1] > 0:
                     zadnji_signal = 2  # imamo delnice tako da jih lahko samo prodamo zdej
 
                 print("Trenutni ostali ticker: ", ostaliTicker)
@@ -366,19 +308,19 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stockPri
                 if ostaliTicker == "GM":
                     new_data["Close"] = 0
                 new_data = new_data[['Close']].copy()
-                starting_index = len(totals)
+                starting_index = len(ostaliTickerDataframe)
 
-                concat_data = pd.concat([totals, new_data])
+                concat_data = pd.concat([ostaliTickerDataframe, new_data])
 
-                concat_totals = sma_crossover(sma_period_short, sma_period_long, concat_data, f"new{ostaliTicker}", starting_index, zadnji_signal, False, hold_obdobje)
-                portfolio[ostaliTicker] = concat_totals
+                new_ostaliTickerDataframe = sma_crossover(sma_period_short, sma_period_long, concat_data, f"new{ostaliTicker}", starting_index, zadnji_signal, False, hold_obdobje)
+                portfolio[ostaliTicker] = new_ostaliTickerDataframe
 
-    totals = prikaziPodatkePortfolia(portfolio, sezIzlocenih, izloceniTickerji, startIzpis=start, endIzpis=end)
+    totals = prikaziPodatkePortfolia(portfolio, startIzpis=start, endIzpis=end)
 
     return totals
 
 
-def prikaziPodatkePortfolia(portfolio, sezIzlocenih, izloceniTickerji, startIzpis, endIzpis):
+def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis):
     # gremo cez cel portfolio in sestejemo Totals ter potem plotamo graf
 
     allFunds = pd.DataFrame
@@ -400,15 +342,14 @@ def prikaziPodatkePortfolia(portfolio, sezIzlocenih, izloceniTickerji, startIzpi
 
         count += 1
 
-    profit_graph(allFunds, 1, "Portfolio", round(allFunds['Total'].to_numpy()[-1], 4))
-
     # se izpis podatkov portfolia
     startFunds = len(portfolio) * util.getMoney()
     endFunds = allFunds['Total'].to_numpy()[-1]
 
+    profit_graph(allFunds, 1, "Portfolio", round(endFunds, 4))
+
     print("Zacetna sredstva: ", startFunds, "$")
-    print("Skupna sredstva portfolia: ", round(allFunds['Total'].to_numpy()[-1], 4), "$")
-    # print("Profit: ", round(allFunds['Total'].iat[-1] - (len(portfolio) * util.getMoney()), 4), "$")
+    print("Skupna sredstva portfolia: ", round(endFunds, 4), "$")
     print("Profit: ", round(endFunds - startFunds, 4), "$")
     print("Kumulativni donos v procentih: ", round((endFunds - startFunds) / startFunds, 4) * 100, "%")
 
@@ -416,12 +357,7 @@ def prikaziPodatkePortfolia(portfolio, sezIzlocenih, izloceniTickerji, startIzpi
     for key, value in allShares.items():
         print(key, " : ", value)
 
-    print("Izloceni")
-    print(sezIzlocenih)
-    print(izloceniTickerji)
-
     return allFunds
-
 
 # 70% = 11-21-2005 do 21-5-2016 UCNA
 
@@ -431,50 +367,3 @@ def prikaziPodatkePortfolia(portfolio, sezIzlocenih, izloceniTickerji, startIzpi
 # datetmie = leto, mesec, dan
 # short_period = 85 #80
 # long_period = 200 #180
-
-# testing date time
-# start = "2005-11-21"
-# # start = "2016-5-21"
-# # end = "2008-4-1"
-# # end = "2020-10-1"
-# # end = "2008-2-19"
-# end = "2016-5-21"
-# end = "2020-11-12"
-# end = "2021-1-1"
-# holdObdobje = 1
-
-# begin_time = datetime.datetime.now()
-
-# backtest(start, end, short_period, long_period, dowTickers, stockPricesDB, holdObdobje)
-
-
-# print(datetime.datetime.now() - begin_time)
-
-
-"""
-
-vsi_tickerji = ['AAPL', 'AIG', 'AMGN', 'AXP', 'BA', 'BAC', 'C', 'CAT', 'CRM', 'CSCO', 'CVX', 'DD', 'DOW', 'DIS',  'GE', #'GM',
-                'GS', 'HD', 'HON', 'HPQ', 'HWM', 'IBM', 'INTC', 'JNJ', 'JPM', 'KO', 'MCD', 'MDLZ', 'MMM', 'MO', 'MRK', 'MSFT',
-                'NKE', 'PFE', 'PG', 'RTX', 'T', 'TRV', 'UNH', 'V', 'VZ', 'WBA', 'WMT', 'XOM']
-
-for x in vsi_tickerji:
-    print("Testiram: ", x)
-    test_data = yf.download(x, start=start, end=end, progress=False)
-    test_data = test_data[['Close']].copy()
-    test_data = zacetniDf(test_data)  # dodamo stolpce
-    return_df = sma_crossover(short_period, long_period, test_data, x, 0, 0, True)
-
-print(datetime.datetime.now() - begin_time)
-
-
-test_ticker = "HD"
-test_data = yf.download(test_ticker, start=start, end=end, progress=False)
-test_data = test_data[['Close']].copy()
-test_data = zacetniDf(test_data)  # dodamo stolpce
-return_df = sma_crossover(short_period, long_period, test_data, test_ticker, 0, 0, True)
-
-#SMA_trading_graph(short_period, long_period, return_df, test_ticker)
-#profit_graph(return_df, 0, test_ticker, return_df["Total"].iloc[-1])
-
-print(datetime.datetime.now() - begin_time)
-"""
