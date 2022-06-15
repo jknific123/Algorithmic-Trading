@@ -26,8 +26,10 @@ def sma_crossover(sPeriod, lPeriod, df, ticker, starting_index, status, odZacetk
     df[f'SMA-{lPeriod}'] = df['Close'].rolling(window=lPeriod, min_periods=1, center=False).mean()
 
     # v nadaljevanju uporabljamo samo podatke od takrat, ko je dolgi sma že na voljo
-    if starting_index == 0:  # before -> odZacetkaAliNe is True: TODO pomoje je bolj prav ta z odZacetkaAliNe
+    if odZacetkaAliNe is True:
         df = df[lPeriod:]
+        if starting_index != 0:
+            starting_index = starting_index - lPeriod  # treba je posodobiti tudi starting_index, ko se reze df
 
     # za racunanje davka na dobiček
     sellPrice = 0
@@ -195,9 +197,9 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stockPri
                     prazen = zacetniDf(prazen)
                     prazen["Close"] = 0
                     return_df = sma_crossover(sma_period_short, sma_period_long, prazen, x, 0, 0, True, hold_obdobje)
-                    portfolio[x] = return_df  # prazen
+                    portfolio[x] = return_df
 
-                elif x != "GM":  # and x != 'AA'
+                elif x != "GM":
                     data = stockPricesDB.getCompanyStockDataInRange(date_from=zacetnoObdobje, date_to=koncnoObdobje, companyTicker=x)
                     data = data[['Close']].copy()
                     data = zacetniDf(data)  # dodamo stolpce
@@ -223,7 +225,6 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stockPri
                     # zamenjamo odstranjenTicker z isto ležečim tickerjem iz added
                     nov_ticker = dowTickers[zacetnoObdobje]["added"][dowTickers[zacetnoObdobje]["removed"].index(odstranjenTicker)]
                     print(odstranjenTicker, "->", nov_ticker)
-                    # TODO mogoce tu preverit ce je sploh treba dodajat 1 dan (sepravi se poreveri v prejsnjem dfju ce je zadji dan isti)
                     real_start_date = datetime.datetime.strptime(zacetnoObdobje, "%Y-%m-%d")
                     plus_one_start_date = (real_start_date + datetime.timedelta(days=1)).strftime("%Y-%m-%d")  # adding one day
                     modified_date = (datetime.datetime.strptime(plus_one_start_date, "%Y-%m-%d") - datetime.timedelta(days=(sma_period_long * 2))).strftime(
