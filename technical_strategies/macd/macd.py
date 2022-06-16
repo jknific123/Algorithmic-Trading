@@ -25,7 +25,6 @@ def macd(sPeriod, lPeriod,signal_period, df, ticker, starting_index, status, odZ
     df["MACD"] = df[f'EMA-{sPeriod}'] - df[f'EMA-{lPeriod}']
     df[f"Signal-{signal_period}"] = df["MACD"].ewm(span=signal_period, adjust=False).mean()
 
-
     # v nadaljevanju uporabljamo samo podatke od takrat, ko je dolgi EMA že na voljo
     if starting_index == 0:
         df = df[lPeriod:]
@@ -125,88 +124,12 @@ def macd(sPeriod, lPeriod,signal_period, df, ticker, starting_index, status, odZ
 
                 check = 1
 
-    # print(df)
-    # plotShares(df, ticker)
-    # MACD_trading_graph(sPeriod, lPeriod, df, ticker)
-    # profit_graph(df, 0, ticker)
-
-
-    # with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
-    # print(df)
-    # newDf = df[['Close', 'Buy', 'Sell', 'Cash', 'Shares', 'Total']].copy()
-    # print(newDf)
     return df
 
-
-def MACD_trading_graph(sPeriod, lPeriod, signal_period, df, company):
-    # prikaz grafa gibanja cene in kupovanja ter prodajanja delnice
-
-    fig = plt.figure(figsize=(8, 6), dpi=200)
-    fig.suptitle(f"{company}, trgovalni signali")
-    ax1 = fig.add_subplot(111, ylabel='Cena v $')
-
-    fig2 = plt.figure(figsize=(8, 6), dpi=200)
-    fig2.suptitle(f"{company}: MACD in signalna črta")
-    ax2 = fig2.add_subplot(111, ylabel='Vrednost MACD in Signalne črte')
-    # cena
-    df['Close'].plot(ax=ax1, color='black', label="Cena", alpha=0.5)
-
-    # MACD in signal line
-    df[["MACD", f'Signal-{signal_period}']].plot(ax=ax2, linestyle="--")
-    #df[["MACD", f'Signal-{signal_period}']].plot(ax=ax1, linestyle="--", secondary_y=True)
-    #df['Close'].plot(ax=ax2, alpha=0.25, secondary_y=True)
-
-
-    # buy/sell signali
-    ax1.plot(df['Buy-Signal'], '^', markersize=6, color='green', label='Buy signal', lw=2)
-    ax1.plot(df['Sell-Signal'], 'v', markersize=6, color='red', label='Sell signal', lw=2)
-    legend = plt.legend(loc="upper left", edgecolor="black")
-    legend.get_frame().set_alpha(None)
-    legend.get_frame().set_facecolor((0, 0, 1, 0.1))
-    plt.show()
-
-
-def profit_graph(df, mode, company, cash):
-    # prikaz grafa sredstev
-    # mode = 0 -> prikaz podjetja
-    # mode = 1 -> prikaz portfolia
-
-    fig = plt.figure(figsize=(8, 6), dpi=200)
-    if (mode == 0):
-        fig.suptitle(f'Končna vrednost podjetja {company}: {cash} $')
-        ax1 = fig.add_subplot(111, ylabel='Vrednost sredstev v $')
-        df['Total'].plot(ax=ax1, label="Vrednost sredstev", color='black', alpha=0.5)
-    elif (mode == 1):
-        fig.suptitle(f'Končna vrednost portfolia: {cash} $')
-        ax1 = fig.add_subplot(111, ylabel='Vrednost portfolia v $')
-        df['Total'].plot(ax=ax1, label="Vrednost portfolia", color='black', alpha=0.5)
-
-    legend = plt.legend(loc="upper left", edgecolor="black")
-    legend.get_frame().set_alpha(None)
-    legend.get_frame().set_facecolor((0, 0, 1, 0.1))
-    plt.show()
-
-
-def plotShares(df, company):
-    fig = plt.figure(figsize=(8, 6), dpi=200)
-    fig.suptitle(company)
-    ax1 = fig.add_subplot(111, ylabel='Num of shares')
-    df['Shares'].plot(ax=ax1, color='black', alpha=0.5)
-    legend = plt.legend(loc="upper left", edgecolor="black")
-    legend.get_frame().set_alpha(None)
-    legend.get_frame().set_facecolor((0, 0, 1, 0.1))
-    plt.show()
-
-    #with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
-    #    print(df['Shares'])
 
 def zacetniDf(data):
 
     # kreiramo nova stolpca za buy/sell signale
-    data[f'EMA-{short_period}'] = np.nan
-    data[f'EMA-{long_period}'] = np.nan
-    data["MACD"] = np.nan
-    data[f"Signal-{signal_period}"] = np.nan
     data['Buy'] = np.nan
     data['Sell'] = np.nan
     data['Cash'] = 0
@@ -235,10 +158,7 @@ def backtest(start, end, short_period, long_period, signal_period, dowTickers, s
     if end > zadnjeObdobje:
         obdobja.append(end)  # appendamo end date ker skoraj nikoli ne bo čisto točno eno obdobje iz dowTickers
 
-    #print("Obdobja: ", obdobja)
-
-
-
+    print("Obdobja: ", obdobja)
 
     portfolio = {}
     izloceniTickerji = []
@@ -463,66 +383,6 @@ def prikaziPodatkePortfolia(portfolio, izloceniTickerji):
     return allFunds
 
 
-def najdiOptimalneParametreNaPotrfoliu(start_period, end_period, dowTickers, stock_data, hold_obdobje):
-    print("Testiram na ucni mnozici")
-    ucni_rezultati = {}
-    counter = 0
-    ema1_vrednosti = [10, 12, 15, 18, 20]
-    ema2_vrednosti = [20, 24, 30, 35, 40]
-    signal_vrednosti = [3, 6, 9]
-
-    for ema1 in ema1_vrednosti:
-        # print("Trenutna Long vrednost: ", long)
-
-        for ema2 in ema2_vrednosti:
-
-            for signal in signal_vrednosti:
-
-                if ema1 != ema2:
-                    ucni_rezultati[f"[{ema1},{ema2},{signal}]"] = {}
-                    print(f"Kombinacija: Ema1 = {ema1} , Ema2 = {ema2} , Signal = {signal}")
-                    # print debug
-                    #print("Before: " ,ucni_rezultati[f"[{short},{long}]"])
-                    temp = backtest(start_period, end_period, ema1, ema2, signal, dowTickers, stock_data, hold_obdobje)
-                    #print("Data: ", temp)
-                    ucni_rezultati[f"[{ema1},{ema2},{signal}]"] = temp
-                    # print("Trenutna Short vrednost: ", short)
-                    print()
-                counter += 1
-
-    #print("Counter: ", counter)
-
-    return ucni_rezultati
-
-
-def testirajNaPortfoliu(dowTickers, stock_data, hold_obdobje):
-
-    rez_ucni = najdiOptimalneParametreNaPotrfoliu("2005-11-21", "2016-5-21", dowTickers, stock_data, hold_obdobje)
-    print("Koncal testiranej na ucni: ", datetime.datetime.now() - begin_time)
-
-    rez_total_ucni = {}
-    for x in rez_ucni:
-        rez_total_ucni[x] = {}
-        # print debug
-        print("Kombinacija : ", x)
-        #print("Before in rez_total_ucni: ", rez_total_ucni[x])
-        #print("Before in rez_total_ucni type: ", type(rez_total_ucni[x]))
-        #print("Before in rez_ucni[x][Total].iat[-1]: ", rez_total_ucni[x])
-        #print("Before in rez_ucni[x][Total].iat[-1] type: ", type(rez_total_ucni[x]))
-        rez_total_ucni[x] = rez_ucni[x]['Total'].iat[-1]
-        #print("After: ", rez_total_ucni[x])
-        print()
-
-    print()
-    print("Sorted ucni!")
-    print()
-
-    sorted_rez_total_ucni = {k: v for k, v in sorted(rez_total_ucni.items(), key=lambda item: item[1])}
-
-    for x in sorted_rez_total_ucni:
-        print(x, ": ", sorted_rez_total_ucni[x])
-
-
 
 # MACD crossover strategy
 # datetmie = leto, mesec, dan
@@ -556,15 +416,3 @@ stock_data = getStocks.getAllStockData(start_date=start, end_date=end)
 testirajNaPortfoliu(dowTickers, stock_data, holdObdobje)
 
 print(datetime.datetime.now() - begin_time)
-
-
-"""
-test_ticker = "HD"
-test_data = yf.download(test_ticker, start=start, end=end, progress=False)
-test_data = test_data[['Close']].copy()
-test_data = zacetniDf(test_data)  # dodamo stolpce
-return_df = macd(short_period, long_period, signal_period, test_data, test_ticker, 0, 0, True)
-
-MACD_trading_graph(short_period, long_period, signal_period, return_df, test_ticker)
-profit_graph(return_df, 0, test_ticker, return_df["Total"].iat[-1])
-"""
