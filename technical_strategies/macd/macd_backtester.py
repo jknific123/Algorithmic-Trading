@@ -1,15 +1,15 @@
 import pandas as pd
 import datetime as datetime
 import numpy as np
+
+from technical_strategies.macd.macd import macd
+from technical_strategies.macd.macd_grafi import profit_graph
 from utility import utils as util
-from stock_ohlc_data import get_stock_data as getStocks
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
 
-
 def zacetniDf(data):
-
     # kreiramo nova stolpca za buy/sell signale
     data['Buy'] = np.nan
     data['Sell'] = np.nan
@@ -26,83 +26,77 @@ def zacetniDf(data):
     return data
 
 
-def backtest(start, end, short_period, long_period, signal_period, dowTickers, stock_data, holdObdoje):
-
+def setObdobja(startObdobja, endObdobja, dowTickersObdobja):
+    # hardcodam za testno mnozico
     obdobja = []
-    for x in dowTickers:
 
-        if x < end:
+    if startObdobja == "2016-05-21":
+        obdobja.append(startObdobja)
+
+    for x in dowTickersObdobja:
+
+        if startObdobja <= x < endObdobja:  # zna bit da je tuki treba se = dat
             obdobja.append(x)
 
-
     zadnjeObdobje = obdobja[len(obdobja) - 1]
-    if end > zadnjeObdobje:
-        obdobja.append(end)  # appendamo end date ker skoraj nikoli ne bo čisto točno eno obdobje iz dowTickers
+    if endObdobja > zadnjeObdobje:
+        obdobja.append(endObdobja)  # appendamo end date ker skoraj nikoli ne bo čisto točno eno obdobje iz dowTickers
 
     print("Obdobja: ", obdobja)
+    return obdobja
+
+
+def backtest(start, end, sma_period_short, sma_period_long, signal_period, dowTickers, stockPricesDB, hold_obdobje):
+    # nastavimo obdobja
+    obdobja = setObdobja(startObdobja=start, endObdobja=end, dowTickersObdobja=dowTickers)
 
     portfolio = {}
-    izloceniTickerji = []
     starting_companies = []
-    begining = "2005-11-21"
 
-    # te imajo probleme pri koncnem obdobju 2008-2-19
-    problematicni = ["MO", "HON"]
-
-    for i in range(0, len(obdobja) - 1): # gremo cez vsa obdobja in jih imamo po parih startDATE -> endDATE
+    for i in range(0, len(obdobja) - 1):  # gremo cez vsa obdobja in jih imamo po parih startDATE -> endDATE
 
         zacetnoObdobje = obdobja[i]
         koncnoObdobje = obdobja[i + 1]
-        # print(i, zacetnoObdobje, "+", koncnoObdobje)
+        print(i, zacetnoObdobje, "+", koncnoObdobje)
 
         # zacetek
-        if zacetnoObdobje == begining:
-            starting_companies = dowTickers[zacetnoObdobje]["all"]
-            # starting_companies.remove("GM") # odstranimo časnovno linijo GM ker nimamo podatkov
-            izloceniTickerji.append("GM") # dodamo GM pod izlocene
+        if zacetnoObdobje == start:
+            # hardcodam za zacetno od ucne in testne mnozice
+            print("V zacetnem")
 
+            if zacetnoObdobje == "2005-11-21":
+                starting_companies = dowTickers[zacetnoObdobje]["all"]
+            elif zacetnoObdobje == "2016-05-21":
+                starting_companies = dowTickers["2015-03-19"]["all"]
+
+            # trejdamo z all od zacetnegaObdobja
             for x in starting_companies:
-                # print("Company: ", x)
+                print("Company: ", x)
 
-                if x in problematicni and koncnoObdobje == "2008-2-19": # to podjetje ima izjemo
-                    # print("Popravljam problematicne")
-                    real_end_date = datetime.datetime.strptime(koncnoObdobje, "%Y-%m-%d")
-                    plus_one_start_date = real_end_date + datetime.timedelta(days=1)
-
-                    data = getStocks.getCompanyStockDataInRange(date_from=zacetnoObdobje, date_to=plus_one_start_date, companyTicker=x, allStockData=stock_data) # yf.download(x, start=zacetnoObdobje, end=plus_one_start_date, progress=False)
-                    data = data[['Close']].copy()
-                    data = zacetniDf(data)  # dodamo stolpce
-                    return_df = macd(short_period, long_period, signal_period, data, x, 0, 0, True, holdObdobje)
+                # izjema za podjetje GM, za katerega nimam podatkov, zato samo naredim prazen dataframe
+                if x == "GM":
+                    # pridobim df od podjetja HD in zbrišem podatke tako da je potem prazen
+                    prazen = stockPricesDB.getCompanyStockDataInRange(date_from=zacetnoObdobje, date_to=koncnoObdobje, companyTicker="HD")
+                    prazen = prazen[['Close']].copy()
+                    prazen = zacetniDf(prazen)
+                    prazen["Close"] = 0
+                    return_df = macd(sma_period_short, sma_period_long, signal_period, prazen, x, 0, 0, True, hold_obdobje)
                     portfolio[x] = return_df
 
-                else:
+                elif x != "GM":
+                    data = stockPricesDB.getCompanyStockDataInRange(date_from=zacetnoObdobje, date_to=koncnoObdobje, companyTicker=x)
+                    data = data[['Close']].copy()
+                    data = zacetniDf(data)  # dodamo stolpce
+                    return_df = macd(sma_period_short, sma_period_long, signal_period, data, x, 0, 0, True, hold_obdobje)
+                    portfolio[x] = return_df
 
-                    # izjema za podjetje GM, za katerega nimam podatkov zato samo naredim prazen dataframe
-                    if x == "GM":
-                        index = pd.date_range(zacetnoObdobje, "2009-6-8", freq='D')
-                        columns = ["Close"]
-                        prazen = pd.DataFrame(index=index, columns=columns)
-                        prazen = zacetniDf(prazen)
-                        prazen["Cash"] = prazen["Cash"].add(util.getMoney())
-                        prazen["Total"] = prazen["Cash"]
-                        portfolio[x] = prazen
-
-                    elif x != "GM":
-                        data = getStocks.getCompanyStockDataInRange(date_from=zacetnoObdobje, date_to=koncnoObdobje, companyTicker=x, allStockData=stock_data) # yf.download(x, start=zacetnoObdobje, end=koncnoObdobje, progress=False)
-                        data = data[['Close']].copy()
-                        data = zacetniDf(data)  # dodamo stolpce
-                        return_df = macd(short_period, long_period, signal_period, data, x, 0, 0, True, holdObdobje)
-                        portfolio[x] = return_df
-
-
-            # print(portfolio.keys())
-            # print(starting_companies)
-            # print(dowTickers["2005-11-21"]["all"])
-            # print("LEN: ", len(portfolio))
-
+            print(portfolio.keys())
+            print(starting_companies)
+            print(dowTickers["2005-11-21"]["all"])
+            print("LEN: ", len(portfolio))
 
         # ce nismo na zacetku gremo cez removed in added in naredimo menjave ter trejdamo za naslednje obdobje
-        elif zacetnoObdobje != begining:
+        elif zacetnoObdobje != start:
 
             dodani = []
             # gremo najprej cez removed in opravimo zamenjave
@@ -110,147 +104,137 @@ def backtest(start, end, short_period, long_period, signal_period, dowTickers, s
 
                 starting_companies = portfolio.keys()
 
-                if odstranjenTicker in starting_companies: # odstranjenTicker je v trenutnem portfoliu -> ga zamenjamo z isto ležečim tickerjem iz added
+                if odstranjenTicker in starting_companies:  # odstranjenTicker je v trenutnem portfoliu -> ga zamenjamo z isto ležečim tickerjem iz added
 
-
+                    # zamenjamo odstranjenTicker z isto ležečim tickerjem iz added
                     nov_ticker = dowTickers[zacetnoObdobje]["added"][dowTickers[zacetnoObdobje]["removed"].index(odstranjenTicker)]
-                    # print(odstranjenTicker, "->", nov_ticker)
-                    # naslednje_obdobje = '2008, 2, 19'
+                    print(odstranjenTicker, "->", nov_ticker)
                     real_start_date = datetime.datetime.strptime(zacetnoObdobje, "%Y-%m-%d")
-                    plus_one_start_date = real_start_date + datetime.timedelta(days=1)  # adding one day
-                    modified_date = plus_one_start_date - datetime.timedelta(
-                        days=(long_period * 2))  # odstevamo long period da dobimo dovolj podatkov
-                    new_df = getStocks.getCompanyStockDataInRange(date_from=modified_date, date_to=koncnoObdobje, companyTicker=nov_ticker, allStockData=stock_data) # yf.download(nov_ticker, start=modified_date, end=koncnoObdobje, progress=False)
+                    plus_one_start_date = (real_start_date + datetime.timedelta(days=1)).strftime("%Y-%m-%d")  # adding one day
+                    modified_date = (datetime.datetime.strptime(plus_one_start_date, "%Y-%m-%d") - datetime.timedelta(days=(sma_period_long * 2))).strftime(
+                        "%Y-%m-%d")  # odstevamo long period, da dobimo dovolj podatkov
+                    print('plus_one_start_date', plus_one_start_date)
+                    print('modified_date', modified_date)
+                    new_df = stockPricesDB.getCompanyStockDataInRange(date_from=modified_date, date_to=koncnoObdobje, companyTicker=nov_ticker)
 
                     new_df = new_df[['Close']].copy()
                     new_df = zacetniDf(new_df)
                     ex_df = portfolio[odstranjenTicker]
-                    ex_data = ex_df.tail(1)
-
 
                     if ex_df["Shares"][-1] == 0:  # super samo prepisemo kes
-                        new_df["Cash"].loc[plus_one_start_date] = ex_df["Cash"][-1]
+                        new_df["Cash"].at[plus_one_start_date] = ex_df["Cash"][-1]
+                        new_df["Total"].at[plus_one_start_date] = ex_df["Cash"][-1]
 
-                    elif ex_df["Shares"][-1] > 0:  # moramo prodat delnice in jih investirat v podjetje ki ga dodajamo
+                    elif ex_df["Shares"][-1] > 0:  # moramo prodat delnice in jih investirat v podjetje, ki ga dodajamo
 
-                        prodano = (ex_df['Shares'].iat[-1] * ex_df['Close'].iat[-1])  # delnice v denar
-                        prodanoFees = util.fees(prodano)  # ostanek denarja po fees
-                        sellPrice = prodanoFees
-                        ex_df['Sell'].iat[-1] = prodanoFees  # zapisemo sell price
-                        ex_df['Profit'].iat[-1] = util.profit(ex_df['Buy'].iat[-1], sellPrice)
+                        # prodaj vse delnic izracunaj profit in placaj davek
+                        sellPrice = util.fees(ex_df['Shares'].to_numpy()[-1] * ex_df['Close'].to_numpy()[-1])  # delnice v denar, obracunamo fees
+                        profitPredDavkom = util.profit(ex_df['Buy'].to_numpy()[-1], sellPrice)  # izracunamo profit pred davkom
 
-                        ex_df['Buy'].iat[-1] = 0  # zapisemo 0 da oznacimo da je zadnji signal bil sell
+                        # ce je dobicek pred davkom pozitiven zaracunamo davek na dobicek in ga odstejemo od sellPrice, da dobimo ostanek
+                        if profitPredDavkom > 0:
+                            sellPrice = sellPrice - util.taxes(profitPredDavkom)  # popravimo sellPrice, tako da obracunamo davek
 
-                        # ce je dobicek pozitiven zaracunamo davek na dobicek in ga odstejemo od prodanoFees da dobimo ostanek
-                        if (ex_df['Profit'].iat[-1] > 0):
-                            prodanoFees = prodanoFees - util.taxes(ex_df['Profit'].iat[-1])
+                        ex_df['Sell'].to_numpy()[-1] = sellPrice  # zapisemo sell price
+                        ex_df['Profit'].to_numpy()[-1] = util.profit(ex_df['Buy'].to_numpy()[-1], sellPrice)
+                        # za graf trgovanja TODO -> nisem siguren da to sploh rabim tukaj
+                        ex_df['Sell-Signal'].to_numpy()[-1] = ex_df["Close"].to_numpy()[-1]
+                        ex_df["Sell-date"].to_numpy()[-1] = ex_df.index[-1]  # zapisem datum nakupa
+                        ex_df['Buy'].to_numpy()[-1] = 0  # zapisemo 0 da oznacimo da je zadnji signal bil sell
+                        ex_df['Buy-date'].to_numpy()[-1] = ""  # zapisemo "" da oznacimo da je zadnji signal bil sell
 
-                        ex_df['Cash'].iat[-1] = np.nan_to_num(ex_df['Cash'].iat[-1]) + prodanoFees  # posodbi cash
-                        ex_df['Shares'].iat[-1] = 0
-                        ex_df['Total'].iat[-1] = ex_df["Cash"].iat[-1]
+                        ex_df['Cash'].to_numpy()[-1] = ex_df['Cash'].to_numpy()[-1] + sellPrice  # posodbi cash
+                        ex_df['Shares'].to_numpy()[-1] = 0
+                        # updejtamo total
+                        ex_df['Total'].to_numpy()[-1] = ex_df['Cash'].to_numpy()[-1]
 
                         # prejsni df je posodobljen in delnice so prodane, samo prepisemo Cash v new_df
-                        new_df["Cash"].loc[plus_one_start_date] = ex_df["Cash"][-1]
-                        new_df["Total"].loc[plus_one_start_date] = ex_df["Cash"][-1]
+                        new_df["Cash"].at[plus_one_start_date] = ex_df["Cash"][-1]
+                        new_df["Total"].at[plus_one_start_date] = ex_df["Cash"][-1]
 
                     odvec = new_df[:plus_one_start_date]
                     starting_index = len(odvec) - 1
-
                     # startamo trading algo
-                    new_returns = macd(short_period, long_period, signal_period, new_df, nov_ticker, starting_index, 0,
-                                                True, holdObdobje)  # zadnji argument True ker je razlicen ticker in zacnemo od zacetka trejdat, isti -> False ker samo nadaljujemo trejdanje
+                    # zadnji argument True ker je razlicen ticker in zacnemo od zacetka trejdat, isti -> False ker samo nadaljujemo trejdanje
+                    new_returns = macd(sma_period_short, sma_period_long, signal_period, new_df, nov_ticker, starting_index, 0, True, hold_obdobje)
 
-                    added_returns = new_returns[plus_one_start_date:]
+                    added_returns = new_returns[plus_one_start_date:]  # iz new_returns vzamemo del dataframa od plus_one_start_date do konca in ga nato prilepimo v df iz portfolia
                     concat_returns = pd.concat([ex_df, added_returns])
+                    # naredimo nov slovar-portfolio iz prejsnjega s tem, da je key trenutnega df nov_ticker namesto odstranjenTicker
                     new_portfolio = {nov_ticker if k == odstranjenTicker else k: v for k, v in portfolio.items()}
-                    new_portfolio[nov_ticker] = concat_returns
+                    new_portfolio[nov_ticker] = concat_returns  # shranimo nov podaljšan dataframe v nov portfolio
                     portfolio = new_portfolio
                     dodani.append(nov_ticker)
-                    # print("Po izlocanju: ", odstranjenTicker)
-                    # print(sorted(portfolio.keys()))
+                    print("Po izlocanju: ", odstranjenTicker)
+                    print(sorted(portfolio.keys()))
 
             # smo updejtali vse removed, zdej pa samo nadaljujemo trejdanej z usemi ostalimi
 
             ostali = set(portfolio.keys()) - set(dodani)
             ostali = sorted(list(ostali))
-            # print("Ostali tickerji: ", sorted(ostali))
+            print("Ostali tickerji: ", sorted(ostali))
             for ostaliTicker in ostali:
 
                 real_start_date = datetime.datetime.strptime(zacetnoObdobje, "%Y-%m-%d")
-                plus_one_start_date = real_start_date + datetime.timedelta(days=1)  # adding one day
-                # modified_date = plus_one_start_date - datetime.timedelta(days=(long_period * 2))  # odstevamo long period da dobimo dovolj podatkov
+                plus_one_start_date = (real_start_date + datetime.timedelta(days=1)).strftime("%Y-%m-%d")  # adding one day
 
-                if ostaliTicker != "GM":
+                ostaliTickerDataframe = portfolio[ostaliTicker]
+                zadnji_signal = 0
+                if ostaliTickerDataframe['Shares'].to_numpy()[-1] == 0:
+                    zadnji_signal = 1  # nimamo delnic kar pomeni da smo jih prodali in jih moramo zdej kupit
+                elif ostaliTickerDataframe['Shares'].to_numpy()[-1] > 0:
+                    zadnji_signal = 2  # imamo delnice tako da jih lahko samo prodamo zdej
 
-                    totals = portfolio[ostaliTicker]
-                    zadnji_signal = 0
+                print("Trenutni ostali ticker: ", ostaliTicker)
+                company = ostaliTicker
+                if ostaliTicker == "GM":
+                    company = "HD"  # ce se prav spomnem se uzame HD samo zato, da se dobi ok velik df, ker za GM ne morem
+                new_data = stockPricesDB.getCompanyStockDataInRange(date_from=plus_one_start_date, date_to=koncnoObdobje, companyTicker=company)
+                if ostaliTicker == "GM":
+                    new_data["Close"] = 0
+                new_data = new_data[['Close']].copy()
+                starting_index = len(ostaliTickerDataframe)
 
-                    #print("Podjetje: ", ostaliTicker)
-                    #print("df: ", totals)
-                    #print()
-                    if totals['Shares'].iat[-1] == 0:
-                        zadnji_signal = 1  # nimamo delnic kar pomeni da smo jih prodali in jih moramo zdej kupit
-                    elif totals['Shares'].iat[-1] != 0:
-                        zadnji_signal = 2  # imamo delnice tako da jih lahko samo prodamo zdej
+                concat_data = pd.concat([ostaliTickerDataframe, new_data])
 
-                    # print("Trenutni ostali ticker: ", ostaliTicker)
-                    new_data = getStocks.getCompanyStockDataInRange(date_from=plus_one_start_date, date_to=koncnoObdobje, companyTicker=ostaliTicker, allStockData=stock_data) # yf.download(ostaliTicker, start=plus_one_start_date, end=koncnoObdobje, progress=False)
+                new_ostaliTickerDataframe = macd(sma_period_short, sma_period_long, signal_period, concat_data, f"new{ostaliTicker}", starting_index, zadnji_signal, False, hold_obdobje)
+                portfolio[ostaliTicker] = new_ostaliTickerDataframe
 
-                    new_data = new_data[['Close']].copy()
-                    starting_index = len(totals)
-
-                    concat_data = pd.concat([totals, new_data])
-
-                    concat_totals = macd(short_period, long_period, signal_period, concat_data, f"new{ostaliTicker}", starting_index,
-                                                  zadnji_signal, False, holdObdobje)
-                    portfolio[ostaliTicker] = concat_totals
-
-    totals = prikaziPodatkePortfolia(portfolio, izloceniTickerji)
+    totals = prikaziPodatkePortfolia(portfolio, startIzpis=start, endIzpis=end)
 
     return totals
 
-def prikaziPodatkePortfolia(portfolio, izloceniTickerji):
+
+def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis):
     # gremo cez cel portfolio in sestejemo Totals ter potem plotamo graf
 
     allFunds = pd.DataFrame
     allShares = {}
     count = 0
-    # print("Pred totals: ", portfolio.keys())
+    print("Pred totals: ", portfolio.keys())
     for ticker in portfolio:
 
-        # print(ticker)
         tickerTotals = portfolio[ticker]
-        allShares[ticker] = tickerTotals['Shares'].iat[-1]
 
-        # nan = tickerTotals["Total"].loc["2008-2-19"]
-        # print(nan)
+        # util.preveriPravilnostDatumov(ticker, portfolio)
 
-        ## mogoce avg = tickerTotals["Total"].mean() in pol add(allFunds['Total'],tickerTotals['Total'], avg)
+        allShares[ticker] = tickerTotals['Shares'].to_numpy()[-1]
 
-        if (count == 0):
-            # tickerTotals["Total"] = tickerTotals["Total"].dropna()
-            # tickerTotals = tickerTotals.dropna()
+        if count == 0:
             allFunds = tickerTotals[['Total']].copy()
         else:
-            # print(tickerTotals['Total'][tickerTotals['Total'].index.duplicated()])
-            tickerTotals = tickerTotals[~tickerTotals.index.duplicated(keep='first')]
-            # print(tickerTotals['Total'][tickerTotals['Total'].index.duplicated()])
-
-            # tickerTotals = tickerTotals.dropna()
-            allFunds['Total'] = allFunds['Total'] + tickerTotals['Total']
+            allFunds['Total'] = allFunds['Total'].add(tickerTotals['Total'])  # , fill_value=1000
 
         count += 1
 
-    # print(allFunds)
-    # profit_graph(allFunds, 1, "Portfolio", round(allFunds['Total'].iat[-1], 4))
-
     # se izpis podatkov portfolia
     startFunds = len(portfolio) * util.getMoney()
-    endFunds = allFunds['Total'].iat[-1]
+    endFunds = allFunds['Total'].to_numpy()[-1]
+
+    profit_graph(allFunds, 1, "Portfolio", round(endFunds, 4))
 
     print("Zacetna sredstva: ", startFunds, "$")
-    print("Skupna sredstva portfolia: ", round(allFunds['Total'].iat[-1], 4), "$")
-    # print("Profit: ", round(allFunds['Total'].iat[-1] - (len(portfolio) * util.getMoney()), 4), "$")
+    print("Skupna sredstva portfolia: ", round(endFunds, 4), "$")
     print("Profit: ", round(endFunds - startFunds, 4), "$")
     print("Kumulativni donos v procentih: ", round((endFunds - startFunds) / startFunds, 4) * 100, "%")
 
@@ -258,12 +242,7 @@ def prikaziPodatkePortfolia(portfolio, izloceniTickerji):
     for key, value in allShares.items():
         print(key, " : ", value)
 
-    print("Izloceni")
-    print(izloceniTickerji)
-
     return allFunds
-
-
 
 # MACD crossover strategy
 # datetmie = leto, mesec, dan
