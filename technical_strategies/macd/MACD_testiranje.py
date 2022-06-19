@@ -1,6 +1,8 @@
 import datetime as datetime
 
-from technical_strategies.macd.macd import backtest
+from dow_index_data import dow_jones_index_data_csv as dowIndexData
+from stock_ohlc_data import get_stock_data as getStocks
+from technical_strategies.macd.macd_backtester import zacetniDf, backtest
 
 
 def najdiOptimalneParametreNaPotrfoliu(start_period, end_period, dowTickers, stock_data, hold_obdobje):
