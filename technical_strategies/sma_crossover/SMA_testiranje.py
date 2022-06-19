@@ -1,10 +1,12 @@
 import datetime as datetime
 
-from technical_strategies.sma_crossover.sma_crossover_nov import sma_crossover, zacetniDf, backtest
+from technical_strategies.sma_crossover.sma_backtester import zacetniDf, backtest
+from technical_strategies.sma_crossover.sma_crossover_nov import sma_crossover
 # from dow_index_data import dow_jones_companies as dow
 from dow_index_data import dow_jones_index_data_csv as dowIndexData
 from stock_ohlc_data import get_stock_data as getStocks
 from technical_strategies.sma_crossover.sma_grafi import SMA_trading_graph, profit_graph
+
 
 # probal primerjat moje backteste s trejdanjem na DOW indexu...
 def trejdajNaEnemPodjetju(hold_obdobje):
@@ -147,11 +149,11 @@ print('sma strategy po klicu inicializacije objekta')
 # testirajNaPortfoliu(dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
 
 # ucna mnozica
-testirajNaPortfoliuEnoKombinacijo(start_date="2005-11-21", end_date="2016-05-21", short_sma=85, long_sma=200, dowTickers=dowJonesIndexData,
-                                  stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
+# testirajNaPortfoliuEnoKombinacijo(start_date="2005-11-21", end_date="2016-05-21", short_sma=85, long_sma=200, dowTickers=dowJonesIndexData,
+#                                   stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
 
 # testna mnozica
-# testirajNaPortfoliuEnoKombinacijo(start_date="2016-05-21", end_date="2021-01-01", short_sma=85, long_sma=200, dowTickers=dowJonesIndexData,
-#                                   stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
+testirajNaPortfoliuEnoKombinacijo(start_date="2016-05-21", end_date="2021-01-01", short_sma=85, long_sma=200, dowTickers=dowJonesIndexData,
+                                  stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
 
 print('KONEC!!! ', datetime.datetime.now() - begin_time)
