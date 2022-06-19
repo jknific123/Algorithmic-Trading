@@ -8,6 +8,7 @@ from utility import utils as util
 from dow_index_data import dow_jones_companies_api as dow
 from stock_ohlc_data import get_stock_data as getStocks
 
+pd.options.mode.chained_assignment = None  # default='warn'
 
 def days_between(d1, d2):
 
@@ -391,28 +392,28 @@ def prikaziPodatkePortfolia(portfolio, izloceniTickerji):
 # signal_period = 9#9
 
 
-# testing date time
-start = "2005-11-21"
-#end = "2012-10-25"
-#end = "2008-4-1"
-# end = "2020-10-1"
-# end = "2008-2-19"
-
-#start = "2020-1-1"
-#end = "2021-12-30"
-
-end = "2016-5-21"
-
-holdObdobje = 365
-
-# end = "2020-11-12"
-
-begin_time = datetime.datetime.now()
-
-dowTickers = dow.endTickers # podatki o sezona sprememb dow jones indexa
-stock_data = getStocks.getAllStockData(start_date=start, end_date=end)
-# backtest(start, end, short_period, long_period, signal_period, dowTickers, stock_data, holdObdobje)
-
-testirajNaPortfoliu(dowTickers, stock_data, holdObdobje)
-
-print(datetime.datetime.now() - begin_time)
+# # testing date time
+# start = "2005-11-21"
+# #end = "2012-10-25"
+# #end = "2008-4-1"
+# # end = "2020-10-1"
+# # end = "2008-2-19"
+#
+# #start = "2020-1-1"
+# #end = "2021-12-30"
+#
+# end = "2016-5-21"
+#
+# holdObdobje = 365
+#
+# # end = "2020-11-12"
+#
+# begin_time = datetime.datetime.now()
+#
+# dowTickers = dow.endTickers # podatki o sezona sprememb dow jones indexa
+# stock_data = getStocks.getAllStockData(start_date=start, end_date=end)
+# # backtest(start, end, short_period, long_period, signal_period, dowTickers, stock_data, holdObdobje)
+#
+# testirajNaPortfoliu(dowTickers, stock_data, holdObdobje)
+#
+# print(datetime.datetime.now() - begin_time)
