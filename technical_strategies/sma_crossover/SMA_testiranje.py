@@ -27,17 +27,12 @@ def najdiOptimalneParametreNaEnem(data, ticker, hold_obdobje):
     testni_rezultati = {}
     counter = 0
     for long in long_values:
-        # print("Trenutna Long vrednost: ", long)
 
         for short in short_values:
             testni_rezultati[f"[{short},{long}]"] = {}
-            # print(f"Kombinacija: Short = {short} , Long = {long}")
             testni_rezultati[f"[{short},{long}]"] = sma_crossover(short, long, data, ticker, 0, 0, True, hold_obdobje)
-            # print("Trenutna Short vrednost: ", short)
-            # print()
             counter += 1
 
-    # print("Counter: ", counter)
     print('Zaključil testiranje na enem')
 
     return testni_rezultati
@@ -76,19 +71,14 @@ def najdiOptimalneParametreNaPotrfoliu(start_period, end_period, dowTickers, sto
     short_values = [40, 54, 70, 85, 100]
 
     for long in long_values:  # 210 range(100, 210, 10)
-        # print("Trenutna Long vrednost: ", long)
 
         for short in short_values:  # 110 range(40, 110 , 10)
 
             if short != long:
                 ucni_rezultati[f"[{short},{long}]"] = {}
                 print(f"Kombinacija: Short = {short} , Long = {long}")
-                # print debug
-                # print("Before: " ,ucni_rezultati[f"[{short},{long}]"])
                 temp = backtest(start_period, end_period, short, long, dowTickers, stock_prices_db, hold_obdobje)
-                # print("Data: ", temp)
                 ucni_rezultati[f"[{short},{long}]"] = temp
-                # print("Trenutna Short vrednost: ", short)
                 print()
             counter += 1
 
@@ -105,14 +95,8 @@ def testirajNaPortfoliu(dowTickers, stock_prices_db, hold_obdobje):
     rez_total_ucni = {}
     for x in rez_ucni:
         rez_total_ucni[x] = {}
-        # print debug
         print("Kombinacija : ", x)
-        # print("Before in rez_total_ucni: ", rez_total_ucni[x])
-        # print("Before in rez_total_ucni type: ", type(rez_total_ucni[x]))
-        # print("Before in rez_ucni[x][Total].iat[-1]: ", rez_total_ucni[x])
-        # print("Before in rez_ucni[x][Total].iat[-1] type: ", type(rez_total_ucni[x]))
         rez_total_ucni[x] = rez_ucni[x]['Total'].iat[-1]
-        # print("After: ", rez_total_ucni[x])
         print()
 
     print()
