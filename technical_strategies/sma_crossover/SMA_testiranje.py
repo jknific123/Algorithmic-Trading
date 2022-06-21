@@ -40,7 +40,7 @@ def najdiOptimalneParametreNaEnem(data, ticker, hold_obdobje):
 
 def testirajNaEnemPodjetju(hold_obdobje):
     test_ticker = "HD"
-    test_data_ucna = stockPricesDB.getCompanyStockDataInRange(date_from="2005-11-21", date_to="2016-5-21", companyTicker=test_ticker)
+    test_data_ucna = stockPricesDB.getCompanyStockDataInRange(date_from="2005-11-21", date_to="2016-05-21", companyTicker=test_ticker)
 
     test_data_ucna = test_data_ucna[['Close']].copy()
     test_data_ucna = zacetniDf(data=test_data_ucna)  # dodamo stolpce
@@ -129,7 +129,7 @@ dowJonesIndexData = dowIndexData.dowJonesIndexData
 stockPricesDB = getStocks.StockOHLCData()
 print('sma strategy po klicu inicializacije objekta')
 
-# testirajNaEnemPodjetju(hold_obdobje=holdObdobje)
+testirajNaEnemPodjetju(hold_obdobje=holdObdobje)
 # testirajNaPortfoliu(dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
 
 # ucna mnozica
