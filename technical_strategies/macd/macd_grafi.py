@@ -1,6 +1,7 @@
 from matplotlib import pyplot as plt
 import pandas as pd
 
+
 def MACD_trading_graph(sPeriod, lPeriod, signal_period, df, company):
     # prikaz grafa gibanja cene in kupovanja ter prodajanja delnice
 
