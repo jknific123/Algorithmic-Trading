@@ -3,10 +3,13 @@ import datetime as datetime
 import requests
 from dateutil.relativedelta import relativedelta
 
+import pandas as pd
+
+
 testni_all = ['AIG', 'AXP', 'BA', 'C', 'CAT', 'DD', 'DIS', 'GE', 'HD', 'HON', 'HPQ', 'HWM', 'IBM', 'INTC', 'JNJ', 'JPM', #'GM',
               'KO', 'MCD', 'MMM', 'MO', 'MRK', 'MSFT', 'PFE', 'PG', 'RTX', 'T', 'VZ', 'WMT', 'XOM']
 
-vsi_tickerji = ['AAPL', 'AIG', 'AMGN', 'AXP', 'BA', 'BAC', 'C', 'CAT', 'CRM', 'CSCO', 'CVX', 'DD', 'DOW', 'DIS',  'GE', #'GM',
+vsi_tickerji = ['AAPL', 'AIG', 'AMGN', 'AXP', 'BA', 'BAC', 'C', 'CAT', 'CRM', 'CSCO', 'CVX', 'DD', 'DOW', 'DIS',  'GE', 'GM',
                 'GS', 'HD', 'HON', 'HPQ', 'HWM', 'IBM', 'INTC', 'JNJ', 'JPM', 'KO', 'MCD', 'MDLZ', 'MMM', 'MO', 'MRK', 'MSFT',
                 'NKE', 'PFE', 'PG', 'RTX', 'T', 'TRV', 'UNH', 'V', 'VZ', 'WBA', 'WMT', 'XOM']
 
@@ -19,7 +22,7 @@ years = 30
 
 # vrne naslednji delovni datum ce trenutni datum ni delovni dan, uazme date time in vrne datum v string formatu
 def to_week_day(date):
-    if date.isoweekday() in set((6, 7)):
+    if date.isoweekday() in {6, 7}:
         date += datetime.timedelta(days=-date.isoweekday() + 8)
     return date.strftime("%Y-%m-%d")
 
@@ -521,7 +524,7 @@ def getDataCompanySamoDividende(company, start_date, end_date, fundamentals):
     start_years_ago = datetime.datetime.strptime(start_date, "%Y-%m-%d") - relativedelta(years=5) # start_date spremenimo tako da mu odstejemo 5 let
     #print("Zacetni datum - 4 leta: ", start_years_ago)
 
-    start_years_ago = datetime.datetime.strftime(start_years_ago, "%Y-%m-%d") # nato ga spremenimo nazaj v string
+    start_years_ago = datetime.datetime.strftime(start_years_ago, "%Y-%m-%d")  # nato ga spremenimo nazaj v string
     before_data = {}
     if company != "DOW":
         before_data = getBeforeData(company, start_years_ago, start_date, fundamentals)
@@ -559,7 +562,7 @@ def getDataCompanySamoDividende(company, start_date, end_date, fundamentals):
 
         if x in financial_data: # gledamo samo datume, za katere racunamo speravi od start date naprej
 
-            financial_data[x]["dividendPayoutGrowth"] = 0 # default vrednost
+            financial_data[x]["dividendPayoutGrowth"] = 0  # default vrednost
             five_ago = datetime.datetime.strptime(x, "%Y-%m-%d") - relativedelta(years=5)
             #print("racunam stiri za nazaj", five_ago)
             #print("Zacel racunat za: ", x)
@@ -636,6 +639,10 @@ def getDataCompanySamoPEinPB(company, start_date, end_date, fundamentals):
 
 def getDataCompany(company, start_date, end_date, fundamentals, prilagodiDatum):
 
+    if company == 'AA':
+        company = 'HWM'
+    elif company == 'GM':
+        company = 'HD'
     data = balance_sheet(company, start_date, end_date, fundamentals)
 
     data_keys = data.keys()
@@ -727,6 +734,7 @@ def getDataAllEverDividende(allCompanies):
 
     return data
 
+
 def getDataAllEver(allCompanies):
 
     data = {}
@@ -747,6 +755,7 @@ def printAll(list, start_date, end_date):
         company_data = getDataCompany(company, start_date, end_date)
         printData(company_data)
         print()
+
 
 # za pridobit vse fundamentalne podatke vseh 44 podjetji
 def getAllFundamentals(seznam_tickerjev):

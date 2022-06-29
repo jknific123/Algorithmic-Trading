@@ -2,8 +2,9 @@ import pandas as pd
 import datetime as datetime
 import numpy as np
 
-from technical_strategies.sthohastic_oscilator.stohastic_oscilator import stohastic_oscilator
-from technical_strategies.sthohastic_oscilator.stohastic_oscilator_grafi import profit_graph
+from fundamental_strategies.value_investing.value_investing import value_investing_strategy
+from fundamental_strategies.value_investing.value_investing_grafi import profit_graph
+from stock_fundamental_data import fundamental_indicators as fundamentals
 from utility import utils as util
 
 
@@ -11,7 +12,7 @@ pd.options.mode.chained_assignment = None  # default='warn'
 
 
 def zacetniDf(data):
-    # v nadaljevanju uporabljamo samo podatke od takrat, ko je dolgi sma že na voljo, prav tako
+
     # kreiramo nova stolpca za buy/sell signale
     data['Buy'] = np.nan
     data['Sell'] = np.nan
@@ -48,7 +49,7 @@ def setObdobja(startObdobja, endObdobja, dowTickersObdobja):
     return obdobja
 
 
-def backtest(start, end, high_low_period, d_sma_period, dowTickers, stockPricesDB, hold_obdobje):
+def backtest(start, end, dowTickers, stockPricesDB, fundamental_data):
     # nastavimo obdobja
     obdobja = setObdobja(startObdobja=start, endObdobja=end, dowTickersObdobja=dowTickers)
 
@@ -60,6 +61,10 @@ def backtest(start, end, high_low_period, d_sma_period, dowTickers, stockPricesD
         zacetnoObdobje = obdobja[i]
         koncnoObdobje = obdobja[i + 1]
         print(i, zacetnoObdobje, "+", koncnoObdobje)
+
+        avg_data = fundamentals.avgAllFundamentalsObdobja(zacetnoObdobje, koncnoObdobje, fundamental_data, dowTickers[zacetnoObdobje]["all"])
+        print("PRINTAM AVG FUNDAMENTALS")
+        fundamentals.printData(avg_data)
 
         # zacetek
         if zacetnoObdobje == start:
@@ -82,14 +87,16 @@ def backtest(start, end, high_low_period, d_sma_period, dowTickers, stockPricesD
                     prazen = prazen[['Close', 'High', 'Low']].copy()
                     prazen = zacetniDf(prazen)
                     prazen["Close"] = 0
-                    return_df = stohastic_oscilator(high_low_period, d_sma_period, prazen, x, 0, 0, True, hold_obdobje)
+                    return_df = value_investing_strategy(start_date=zacetnoObdobje, end_date=koncnoObdobje, df=prazen, ticker=x, starting_index=0, status=0, odZacetkaAliNe=True,
+                                                         fundamental_data=fundamental_data, avg_fundamentals=avg_data)
                     portfolio[x] = return_df
 
                 elif x != "GM":
                     data = stockPricesDB.getCompanyStockDataInRange(date_from=zacetnoObdobje, date_to=koncnoObdobje, companyTicker=x)
                     data = data[['Close', 'High', 'Low']].copy()
                     data = zacetniDf(data)  # dodamo stolpce
-                    return_df = stohastic_oscilator(high_low_period, d_sma_period, data, x, 0, 0, True, hold_obdobje)
+                    return_df = value_investing_strategy(start_date=zacetnoObdobje, end_date=koncnoObdobje, df=data, ticker=x, starting_index=0, status=0, odZacetkaAliNe=True,
+                                                         fundamental_data=fundamental_data, avg_fundamentals=avg_data)
                     portfolio[x] = return_df
 
             print(portfolio.keys())
@@ -113,11 +120,11 @@ def backtest(start, end, high_low_period, d_sma_period, dowTickers, stockPricesD
                     print(odstranjenTicker, "->", nov_ticker)
                     real_start_date = datetime.datetime.strptime(zacetnoObdobje, "%Y-%m-%d")
                     plus_one_start_date = (real_start_date + datetime.timedelta(days=1)).strftime("%Y-%m-%d")  # adding one day
-                    modified_date = (datetime.datetime.strptime(plus_one_start_date, "%Y-%m-%d") - datetime.timedelta(days=(high_low_period * 2))).strftime(
-                        "%Y-%m-%d")  # odstevamo long period, da dobimo dovolj podatkov
+                    # modified_date = (datetime.datetime.strptime(plus_one_start_date, "%Y-%m-%d") - datetime.timedelta(days=(high_low_period * 2))).strftime(
+                    #     "%Y-%m-%d")  # odstevamo long period, da dobimo dovolj podatkov
                     print('plus_one_start_date', plus_one_start_date)
-                    print('modified_date', modified_date)
-                    new_df = stockPricesDB.getCompanyStockDataInRange(date_from=modified_date, date_to=koncnoObdobje, companyTicker=nov_ticker)
+                    # print('modified_date', modified_date)
+                    new_df = stockPricesDB.getCompanyStockDataInRange(date_from=plus_one_start_date, date_to=koncnoObdobje, companyTicker=nov_ticker)
 
                     new_df = new_df[['Close', 'High', 'Low']].copy()
                     new_df = zacetniDf(new_df)
@@ -159,7 +166,8 @@ def backtest(start, end, high_low_period, d_sma_period, dowTickers, stockPricesD
 
                     # startamo trading algo
                     # zadnji argument True ker je razlicen ticker in zacnemo od zacetka trejdat, isti -> False ker samo nadaljujemo trejdanje
-                    new_returns = stohastic_oscilator(high_low_period, d_sma_period, new_df, nov_ticker, starting_index, 0, True, hold_obdobje)
+                    new_returns = value_investing_strategy(start_date=zacetnoObdobje, end_date=koncnoObdobje, df=new_df, ticker=nov_ticker, starting_index=starting_index, status=0,
+                                                           odZacetkaAliNe=True, fundamental_data=fundamental_data, avg_fundamentals=avg_data)
 
                     added_returns = new_returns[plus_one_start_date:]  # iz new_returns vzamemo del dataframa od plus_one_start_date do konca in ga nato prilepimo v df iz portfolia
                     concat_returns = pd.concat([ex_df, added_returns])
@@ -200,7 +208,8 @@ def backtest(start, end, high_low_period, d_sma_period, dowTickers, stockPricesD
 
                 concat_data = pd.concat([ostaliTickerDataframe, new_data])
 
-                new_ostaliTickerDataframe = stohastic_oscilator(high_low_period, d_sma_period, concat_data, f"new{ostaliTicker}", starting_index, zadnji_signal, False, hold_obdobje)
+                new_ostaliTickerDataframe = value_investing_strategy(start_date=zacetnoObdobje, end_date=koncnoObdobje, df=concat_data, ticker=ostaliTicker, starting_index=starting_index,
+                                                                     status=zadnji_signal, odZacetkaAliNe=False, fundamental_data=fundamental_data, avg_fundamentals=avg_data)
                 portfolio[ostaliTicker] = new_ostaliTickerDataframe
 
     totals = prikaziPodatkePortfolia(portfolio, startIzpis=start, endIzpis=end)
@@ -247,11 +256,35 @@ def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis):
 
     return allFunds
 
-
-# Stohastic oscilator strategy
+# Value investing strategy
 # datetmie = leto, mesec, dan
 
-# high_low_period = 14
-# d_sma_period = 3
+
+# # testing date time
+# start = "2005-11-21"
+# #end = "2012-10-25"
+# #end = "2008-4-1"
+# #end = "2020-10-1"
+# end = "2020-11-21"
+# # end = "2008-2-19"
+#
+# # end = "2011-11-21"
+#
+# begin_time = datetime.datetime.now()
+#
+# dowTickers = dow.endTickers # podatki o sezona sprememb dow jones indexa
+# fundamental_data = fundamentals.getAllFundamentals(fundamentals.vsi_tickerji)
+# backtest(start, end, dowTickers, fundamental_data)
+# print(datetime.datetime.now() - begin_time)
+
+"""
+test_ticker = "DIS"
+test_data = yf.download(test_ticker, start=start, end=end, progress=False)
+test_data = test_data[['Adj Close']].copy()
+test_data = zacetniDf(test_data)  # dodamo stolpce
+return_df = mixed_fundamentals_strategy(start, end, test_data, test_ticker, 0, 0, True)
+
+mojaFundamentalna_trading_graph(return_df, test_ticker)
+"""
 
 
