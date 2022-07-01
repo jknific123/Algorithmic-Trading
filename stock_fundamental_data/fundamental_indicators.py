@@ -703,12 +703,14 @@ def getDataCompany(company, start_date, end_date, fundamentals, prilagodiDatum):
     else:
         return data
 
+
 def printData(data):
 
     for x in data:
         print(x)
         print(data[x])
         print()
+
 
 def getDataAllEverPEinPB(allCompanies):
 
@@ -721,6 +723,7 @@ def getDataAllEverPEinPB(allCompanies):
         print(f"DOWNLOADED data for {x}. {count}/{len(allCompanies)}")
 
     return data
+
 
 def getDataAllEverDividende(allCompanies):
 
