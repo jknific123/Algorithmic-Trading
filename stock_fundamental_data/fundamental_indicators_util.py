@@ -1,9 +1,14 @@
 from datetime import datetime
 from datetime import timedelta
-from dateutil.relativedelta import relativedelta
+from dow_index_data import dow_jones_index_data_csv as dowIndexData
 
 
-# vrne naslednji delovni datum ce trenutni datum ni delovni dan, vzame date time in vrne datum v string formatu
+vsa_leta = [1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
+            2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021]
+
+avg_leta = [[2005, 2006, 2007], [2008], [2009, 2010, 2011], [2012], [2013], [2014, 2015], [2016, 2017, 2018], [2019], [2020, 2021]]
+
+# vrne naslednji delovni datum ce trenutni datum ni delovni dan, vzame date time in vrne datum v string formatu  TODO preverit ce dal ok
 def to_week_day(date):
     if date.isoweekday() in {6, 7}:
         tmp_date = date + timedelta(days=-date.isoweekday() + 8)
@@ -12,6 +17,23 @@ def to_week_day(date):
             tmp_date = date - timedelta(days=-date.isoweekday() + 8)
         return tmp_date.strftime("%Y-%m-%d")
     return date.strftime("%Y-%m-%d")
+
+
+def pridobiDatumeVsehLet(dictData):
+    dictOfDates = {}
+    for dokument in dictData:  # najprej poberem vsa leta iz dictData
+        if dokument != 'company_profile':
+            for zapis in dictData[dokument]:
+                dictOfDates[zapis] = {}
+
+    leta_keys = [datetime.strptime(leto, "%Y-%m-%d").year for leto in dictOfDates.keys()]
+    for manjkajoce_leto in vsa_leta:
+        if manjkajoce_leto not in leta_keys:
+            new_leto_key = str(manjkajoce_leto) + '-12-28'
+            dictOfDates[new_leto_key] = {}
+
+    dictOfDates = dict(sorted(dictOfDates.items()))
+    return dictOfDates
 
 
 # preveri ce si datumi sledijo pravilno po vrsti po letih brez lukenj
@@ -58,7 +80,6 @@ def nastaviVseVrednostiNaNic(dataDict):
 
 
 def zmanjsajObsegPodatkovCsv(data):
-
     return_data = []
     for x in data:  # vzamem samo tiste zapise ki so mlajši od 1997
         if datetime.strptime(x["date"], "%Y-%m-%d").year >= datetime.strptime("1997-10-10", "%Y-%m-%d").year:
@@ -91,8 +112,8 @@ def obdelaj_podatke_csv(data, company, porocilo):
                 print('dva zapisa letnih porocil v istem letu za porocilo: ', porocilo, ' , prilagajam za company: ', company, ' trenutni: ', trenutni, ' naslednji: ', naslednji)
                 preskoci_indeks = i  # taprvega preskocimo ker je manjsi datum
 
-            if i != preskoci_indeks:
-                return_data.append(data[i])
+        if i != preskoci_indeks:
+            return_data.append(data[i])
 
     return return_data
 
@@ -225,6 +246,40 @@ def urediPodatkeLetnegaPorocilaZaPodjetjeJNJ(data):
             x["date"] = new_date
 
 
+
+def getObdobjaInPodjetja():
+    dowJonesIndexData = dowIndexData.dowJonesIndexData
+    vsa_leta_podjetja_avg = {}
+
+    vsa_leta_podjetja_avg[1997] = dowJonesIndexData['2005-11-21']['all']
+    vsa_leta_podjetja_avg[1998] = dowJonesIndexData['2005-11-21']['all']
+    vsa_leta_podjetja_avg[1999] = dowJonesIndexData['2005-11-21']['all']
+    vsa_leta_podjetja_avg[2000] = dowJonesIndexData['2005-11-21']['all']
+    vsa_leta_podjetja_avg[2001] = dowJonesIndexData['2005-11-21']['all']
+    vsa_leta_podjetja_avg[2002] = dowJonesIndexData['2005-11-21']['all']
+    vsa_leta_podjetja_avg[2003] = dowJonesIndexData['2005-11-21']['all']
+    vsa_leta_podjetja_avg[2004] = dowJonesIndexData['2005-11-21']['all']
+    vsa_leta_podjetja_avg[2005] = dowJonesIndexData['2005-11-21']['all']
+    vsa_leta_podjetja_avg[2006] = dowJonesIndexData['2005-11-21']['all']
+    vsa_leta_podjetja_avg[2007] = dowJonesIndexData['2005-11-21']['all']
+    vsa_leta_podjetja_avg[2008] = dowJonesIndexData['2008-02-19']['all']
+    vsa_leta_podjetja_avg[2009] = dowJonesIndexData['2009-06-08']['all']
+    vsa_leta_podjetja_avg[2010] = dowJonesIndexData['2009-06-08']['all']
+    vsa_leta_podjetja_avg[2011] = dowJonesIndexData['2009-06-08']['all']
+    vsa_leta_podjetja_avg[2012] = dowJonesIndexData['2012-09-24']['all']
+    vsa_leta_podjetja_avg[2013] = dowJonesIndexData['2013-09-23']['all']
+    vsa_leta_podjetja_avg[2014] = dowJonesIndexData['2013-09-23']['all']
+    vsa_leta_podjetja_avg[2015] = dowJonesIndexData['2015-03-19']['all']
+    vsa_leta_podjetja_avg[2016] = dowJonesIndexData['2015-03-19']['all']
+    vsa_leta_podjetja_avg[2017] = dowJonesIndexData['2015-03-19']['all']
+    vsa_leta_podjetja_avg[2018] = dowJonesIndexData['2018-06-26']['all']
+    vsa_leta_podjetja_avg[2019] = dowJonesIndexData['2019-04-02']['all']
+    vsa_leta_podjetja_avg[2020] = dowJonesIndexData['2020-08-31']['all']
+    vsa_leta_podjetja_avg[2021] = dowJonesIndexData['2020-08-31']['all']
+
+    return vsa_leta_podjetja_avg
+
+
 def pridobiPomembneFinancial(data):
     dictOfFinancials = {}
     for x in data:
@@ -275,53 +330,52 @@ def get_financials_csv(financial_ratios_vrednosti, x):
         if x["profitabilityIndicatorRatios"]["netProfitMargin"] == "":
             financial_ratios_vrednosti[x["date"]]["profitMargin"] = 0
         else:
-            financial_ratios_vrednosti[x["date"]]["profitMargin"] = float(x["profitabilityIndicatorRatios"]["netProfitMargin"])
+            financial_ratios_vrednosti[x["date"]]["profitMargin"] = round(float(x["profitabilityIndicatorRatios"]["netProfitMargin"]), 4)
 
     if x["investmentValuationRatios"]["priceEarningsRatio"] is not None:
 
         if x["investmentValuationRatios"]["priceEarningsRatio"] == "":
             financial_ratios_vrednosti[x["date"]]["P/E"] = 0
         else:
-            financial_ratios_vrednosti[x["date"]]["P/E"] = float(x["investmentValuationRatios"]["priceEarningsRatio"])
+            financial_ratios_vrednosti[x["date"]]["P/E"] = round(float(x["investmentValuationRatios"]["priceEarningsRatio"]), 4)
 
     if x["investmentValuationRatios"]["priceToBookRatio"] is not None:
-        financial_ratios_vrednosti[x["date"]]["P/B"] = float(x["investmentValuationRatios"]["priceToBookRatio"])
+        financial_ratios_vrednosti[x["date"]]["P/B"] = round(float(x["investmentValuationRatios"]["priceToBookRatio"]), 4)
 
     if x["debtRatios"]["debtEquityRatio"] is not None:
 
         if x["debtRatios"]["debtEquityRatio"] == "":
             financial_ratios_vrednosti[x["date"]]["D/E"] = 0
         else:
-            financial_ratios_vrednosti[x["date"]]["D/E"] = float(x["debtRatios"]["debtEquityRatio"])
+            financial_ratios_vrednosti[x["date"]]["D/E"] = round(float(x["debtRatios"]["debtEquityRatio"]), 4)
 
     if x["profitabilityIndicatorRatios"]["returnOnEquity"] is not None:
 
         if x["profitabilityIndicatorRatios"]["returnOnEquity"] == "":
             financial_ratios_vrednosti[x["date"]]["ROE"] = 0
         else:
-            financial_ratios_vrednosti[x["date"]]["ROE"] = float(x["profitabilityIndicatorRatios"]["returnOnEquity"])
+            financial_ratios_vrednosti[x["date"]]["ROE"] = round(float(x["profitabilityIndicatorRatios"]["returnOnEquity"]), 4)
 
     if x["investmentValuationRatios"]["dividendYield"] is not None:
 
         if x["investmentValuationRatios"]["dividendYield"] == "":
             financial_ratios_vrednosti[x["date"]]["dividendYield"] = 0
         else:
-            financial_ratios_vrednosti[x["date"]]["dividendYield"] = float(x["investmentValuationRatios"]["dividendYield"])
+            financial_ratios_vrednosti[x["date"]]["dividendYield"] = round(float(x["investmentValuationRatios"]["dividendYield"]), 4)
 
     if x["cashFlowIndicatorRatios"]["dividendPayoutRatio"] is not None:
 
         if x["cashFlowIndicatorRatios"]["dividendPayoutRatio"] == "":
             financial_ratios_vrednosti[x["date"]]["dividendPayoutRatio"] = 0
         else:
-            financial_ratios_vrednosti[x["date"]]["dividendPayoutRatio"] = float(x["cashFlowIndicatorRatios"][
-                "dividendPayoutRatio"])
+            financial_ratios_vrednosti[x["date"]]["dividendPayoutRatio"] = round(float(x["cashFlowIndicatorRatios"]["dividendPayoutRatio"]), 4)
 
     return financial_ratios_vrednosti
 
 
 def get_balance_sheet_csv(balance_sheet_vrednosti, x):
     balance_sheet_vrednosti[x["date"]] = {}
-    balance_sheet_vrednosti[x["date"]]["goodwill"] = float(x["goodwill"])
+    balance_sheet_vrednosti[x["date"]]["goodwill"] = round(float(x["goodwill"]), 4)
     return balance_sheet_vrednosti
 
 
@@ -332,8 +386,8 @@ def get_dfc_csv(discounted_cash_flow_vrednosti, x):
             discounted_cash_flow_vrednosti[x["date"]]["dcf"] = 0
             discounted_cash_flow_vrednosti[x["date"]]["price"] = 0
         else:
-            discounted_cash_flow_vrednosti[x["date"]]["dcf"] = float(x["dcf"])
-            discounted_cash_flow_vrednosti[x["date"]]["price"] = float(x["price"])
+            discounted_cash_flow_vrednosti[x["date"]]["dcf"] = round(float(x["dcf"]), 4)
+            discounted_cash_flow_vrednosti[x["date"]]["price"] = round(float(x["price"]), 4)
 
     return discounted_cash_flow_vrednosti
 
@@ -346,15 +400,15 @@ def get_company_profile_csv(company_profile_values, x):
 
 def get_enterprise_value_csv(enterprise_value_vrednosti, x):
     enterprise_value_vrednosti[x["date"]] = {}
-    enterprise_value_vrednosti[x["date"]]["stockPrice"] = float(x["stockPrice"])
-    enterprise_value_vrednosti[x["date"]]["numberOfShares"] = float(x["numberOfShares"])
-    enterprise_value_vrednosti[x["date"]]["marketCapitalization"] = float(x["marketCapitalization"])
+    enterprise_value_vrednosti[x["date"]]["stockPrice"] = round(float(x["stockPrice"]), 4)
+    enterprise_value_vrednosti[x["date"]]["numberOfShares"] = round(float(x["numberOfShares"]), 4)
+    enterprise_value_vrednosti[x["date"]]["marketCapitalization"] = round(float(x["marketCapitalization"]), 4)
     return enterprise_value_vrednosti
 
 
 def get_income_statement_csv(income_statement_vrednosti, x):
     income_statement_vrednosti[x["date"]] = {}
-    income_statement_vrednosti[x["date"]]["revenue"] = float(x["revenue"])
+    income_statement_vrednosti[x["date"]]["revenue"] = round(float(x["revenue"]), 4)
     return income_statement_vrednosti
 
 

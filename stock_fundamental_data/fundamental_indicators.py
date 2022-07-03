@@ -516,6 +516,7 @@ def getBeforeData(company, start_date, end_date, fundamentals):
 
     return financial_data
 
+
 # podatki samo o dividendah
 def getDataCompanySamoDividende(company, start_date, end_date, fundamentals):
 
@@ -571,6 +572,7 @@ def getDataCompanySamoDividende(company, start_date, end_date, fundamentals):
             keys = list(updated_before.keys())
             payoutGrowth = 0
             for i in range(len(updated_before)):
+
 
                 if check == 1: # sestevamo vse eno letne rasti
 
@@ -766,6 +768,7 @@ def getAllFundamentals(seznam_tickerjev):
     fundamental_data = getDataAllEver(seznam_tickerjev)
 
     return fundamental_data
+
 
 def avgAllFundamentalsObdobja(zacento_obdobje, koncno_obdobje, fundamentals, company_list):
 

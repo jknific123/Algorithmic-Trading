@@ -155,7 +155,6 @@ def value_investing_strategy(start_date, end_date, df, ticker, starting_index, s
             df["Revenue"] = company_data[prvi_datum_v_company_data]["revenue"]
             df["DCF"] = company_data[prvi_datum_v_company_data]["dcf"]
 
-
         if trenutni_datum in vsi_datumi:
             print("JE V SLOVAR KEYS")
             df["ROE"] = company_data[trenutni_datum]["ROE"]

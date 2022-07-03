@@ -3,18 +3,17 @@ from datetime import datetime
 import pandas as pd
 import requests
 from stock_fundamental_data import fundamental_indicators_util as fUtil
+from stock_fundamental_data import average_data_calculation as avgUtil
+from stock_fundamental_data import dividend_calculation as dividendUtil
 
+
+# AA ni tu not ker fundamentalen api za njega nima podatkov zato se uporablja HWM ticker
 vsi_tickerji = ['AAPL', 'AIG', 'AMGN', 'AXP', 'BA', 'BAC', 'C', 'CAT', 'CRM', 'CSCO', 'CVX', 'DD', 'DOW', 'DIS',  'GE', 'GM',
                 'GS', 'HD', 'HON', 'HPQ', 'HWM', 'IBM', 'INTC', 'JNJ', 'JPM', 'KO', 'MCD', 'MDLZ', 'MMM', 'MO', 'MRK', 'MSFT',
                 'NKE', 'PFE', 'PG', 'RTX', 'T', 'TRV', 'UNH', 'V', 'VZ', 'WBA', 'WMT', 'XOM']
 
-vsa_leta = [1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-            2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021]
-
 api_key = "950c6e208107d01d9616681a4cf99685"
 years = 30
-
-# TODO data za dividend yield investing
 
 
 # vrne slovar kjer so vsi podatki za neko podjetje
@@ -78,32 +77,17 @@ def doAllAPIcallsForCsv(company):
     return slovar_podjetja
 
 
-def pridobiDatumeVsehLet(dictData):
-    dictOfDates = {}
-    for dokument in dictData:  # najprej poberem vsa leta iz dictData
-        if dokument != 'company_profile':
-            for zapis in dictData[dokument]:
-                dictOfDates[zapis] = {}
-
-    leta_keys = [datetime.strptime(leto, "%Y-%m-%d").year for leto in dictOfDates.keys()]
-    for manjkajoce_leto in vsa_leta:
-        if manjkajoce_leto not in leta_keys:
-            new_leto_key = str(manjkajoce_leto) + '-12-28'
-            dictOfDates[new_leto_key] = {}
-
-    dictOfDates = dict(sorted(dictOfDates.items()))
-    return dictOfDates
-
-
 def mergeFundamentalDataCsv(data):
-
-    mergedFundamentalDict = pridobiDatumeVsehLet(data)
+    mergedFundamentalDict = fUtil.pridobiDatumeVsehLet(data)
     for x in mergedFundamentalDict:
         mergedFundamentalDict[x].update(data['financial_ratios'][fUtil.pridobiZapisIstegaLeta(x, data['financial_ratios'])])
         mergedFundamentalDict[x].update(data['balance_sheet'][fUtil.pridobiZapisIstegaLeta(x, data['balance_sheet'])])
         mergedFundamentalDict[x].update(data['discounted_cash_flow'][fUtil.pridobiZapisIstegaLeta(x, data['discounted_cash_flow'])])
         mergedFundamentalDict[x].update(data['enterprise_value'][fUtil.pridobiZapisIstegaLeta(x, data['enterprise_value'])])
         mergedFundamentalDict[x].update(data['income_statement'][fUtil.pridobiZapisIstegaLeta(x, data['income_statement'])])
+        mergedFundamentalDict[x]['dividendPerShare'] = round(mergedFundamentalDict[x]['dividendYield'] * mergedFundamentalDict[x]['price'], 4)
+        mergedFundamentalDict[x]['dividendPaid'] = round(mergedFundamentalDict[x]['dividendYield'] *
+                                                         mergedFundamentalDict[x]['price'] * mergedFundamentalDict[x]['numberOfShares'], 4)
         age = datetime.strptime(x, "%Y-%m-%d").year - datetime.strptime(data['company_profile']["ipoDate"], "%Y-%m-%d").year
         if age > 0:
             mergedFundamentalDict[x]["company_age"] = age
@@ -111,6 +95,7 @@ def mergeFundamentalDataCsv(data):
             mergedFundamentalDict[x]["company_age"] = 0
         mergedFundamentalDict[x]["sector"] = data['company_profile']["sector"]
 
+    mergedFundamentalDict = dividendUtil.izracunajSePodatkeZaDividende(mergedFundamentalDict)
     return_data = {}
     modified_date_data = {}
     # pretvorimo se v datume, ki predstavljajo delovne dni, za normalen klic, za izracun avg pa ne
@@ -124,9 +109,10 @@ def mergeFundamentalDataCsv(data):
     return return_data
 
 
-def dictToDfToCsvFile(dictToModify, company_name, directoryName, optionalString):
+def dictToDfToCsvFile(dictToModify, company_name, directoryName, optionalString, preveriPravilnost):
     df = pd.DataFrame.from_dict(dictToModify, orient='index')
-    fUtil.preveriPravilnostZaporedjaDatumov(df)
+    if preveriPravilnost:
+        fUtil.preveriPravilnostZaporedjaDatumov(df)
     df.reset_index(inplace=True)
     df.rename(columns={'index': 'Date'}, inplace=True)
     df.to_csv(f'D:\Faks\Algorithmic-Trading\stock_fundamental_data\{directoryName}/fundametnal_data_{company_name}{optionalString}.csv', index=False)
@@ -134,25 +120,39 @@ def dictToDfToCsvFile(dictToModify, company_name, directoryName, optionalString)
 
 def getDataAllEverForCsv(allCompanies):
     count = 0
+    allCompiesData = {}
     for x in allCompanies:
-        dfToCsvFile = mergeFundamentalDataCsv(doAllAPIcallsForCsv(x))
+        dictToDf = mergeFundamentalDataCsv(doAllAPIcallsForCsv(x))
+        if x == 'HWM':
+            x = 'AA'  # uredim za izjemo
+        allCompiesData[x] = dictToDf['modified']
         # najprej shranimo original v csv
         print('original to csv')
-        dictToDfToCsvFile(dfToCsvFile['original'], x, "raw_fundamental_data_original", "_original")
+        dictToDfToCsvFile(dictToDf['original'], x, "raw_fundamental_data_original", "_original", True)
         print('modified to csv')
-        dictToDfToCsvFile(dfToCsvFile['modified'], x, "raw_fundamental_data_modified", "")
+        dictToDfToCsvFile(dictToDf['modified'], x, "raw_fundamental_data_modified", "", True)
         count += 1
         print(f"DOWNLOADED data for {x}. {count}/{len(allCompanies)}")
+
+    fundamentalAvgDict = avgUtil.getAllFundamentalAvgData(allCompiesData)
+    print('delam AVG CSV')
+    dictToDfToCsvFile(fundamentalAvgDict, 'AVERAGE', 'raw_fundamental_average_data', '', False)
+    print('KONEC getDataAllEverForCsv')
 
 
 begin_time = datetime.now()
 getDataAllEverForCsv(vsi_tickerji)
-tmp_ticker = 'JNJ'
+print('KONEC!!! ', datetime.now() - begin_time)
+
+"""
+Tu je za testirat delovanje
+"""
+# tmp_ticker = 'AIG'
 # dfToCsvFile = mergeFundamentalDataCsv(doAllAPIcallsForCsv(tmp_ticker))
 # # najprej shranimo original v csv
 # print('original to csv')
-# dictToDfToCsvFile(dfToCsvFile['original'], tmp_ticker, "raw_fundamental_data_original", "_original3")
+# dictToDfToCsvFile(dfToCsvFile['original'], tmp_ticker, "raw_fundamental_data_original", "_original3", True)
 # print('modified to csv')
-# dictToDfToCsvFile(dfToCsvFile['modified'], tmp_ticker, "raw_fundamental_data_modified", "_3")
+# dictToDfToCsvFile(dfToCsvFile['modified'], tmp_ticker, "raw_fundamental_data_modified", "_3", True)
 # print('KONEC!!! ', datetime.now() - begin_time)
 
