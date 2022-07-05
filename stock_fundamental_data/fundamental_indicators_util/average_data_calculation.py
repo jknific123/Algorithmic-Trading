@@ -1,4 +1,4 @@
-from stock_fundamental_data import fundamental_indicators_util as fUtil
+from stock_fundamental_data.fundamental_indicators_util import fundamental_indicators_util as fUtil
 from datetime import datetime
 
 
@@ -30,7 +30,7 @@ def izracunajAvgZaPodjetjaVLetu(all_podjetja, leto, podjetja_data):
         leto_avg_data["avgGoodwill"] += podjetje_data["goodwill"]
         leto_avg_data["avgRevenue"] += podjetje_data["revenue"]
 
-    # delimo z 30 za povprečje
+    # delimo z 30 za povprečje TODO povprečenje uredit še za, ko manjka GM
     leto_avg_data["avgROE"] = round(leto_avg_data["avgROE"] / 30, 4)
     leto_avg_data["avgProfitMargin"] = round(leto_avg_data["avgProfitMargin"] / 30, 4)
     leto_avg_data["avgGoodwill"] = round(leto_avg_data["avgGoodwill"], 4)

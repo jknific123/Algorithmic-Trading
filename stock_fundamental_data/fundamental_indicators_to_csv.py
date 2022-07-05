@@ -2,10 +2,8 @@ from datetime import datetime
 
 import pandas as pd
 import requests
-from stock_fundamental_data import fundamental_indicators_util as fUtil
-from stock_fundamental_data import average_data_calculation as avgUtil
-from stock_fundamental_data import dividend_calculation as dividendUtil
-
+from stock_fundamental_data.fundamental_indicators_util import fundamental_indicators_util as fUtil
+from stock_fundamental_data.fundamental_indicators_util import average_data_calculation as avgUtil, dividend_calculation as dividendUtil
 
 # AA ni tu not ker fundamentalen api za njega nima podatkov zato se uporablja HWM ticker
 vsi_tickerji = ['AAPL', 'AIG', 'AMGN', 'AXP', 'BA', 'BAC', 'C', 'CAT', 'CRM', 'CSCO', 'CVX', 'DD', 'DOW', 'DIS',  'GE', 'GM',
@@ -115,7 +113,7 @@ def dictToDfToCsvFile(dictToModify, company_name, directoryName, optionalString,
         fUtil.preveriPravilnostZaporedjaDatumov(df)
     df.reset_index(inplace=True)
     df.rename(columns={'index': 'Date'}, inplace=True)
-    df.to_csv(f'D:\Faks\Algorithmic-Trading\stock_fundamental_data\{directoryName}/fundametnal_data_{company_name}{optionalString}.csv', index=False)
+    df.to_csv(f'D:\Faks\Algorithmic-Trading\stock_fundamental_data\{directoryName}/fundamental_data_{company_name}{optionalString}.csv', index=False)
 
 
 def getDataAllEverForCsv(allCompanies):

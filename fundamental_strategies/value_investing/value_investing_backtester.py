@@ -4,7 +4,6 @@ import numpy as np
 
 from fundamental_strategies.value_investing.value_investing import value_investing_strategy
 from fundamental_strategies.value_investing.value_investing_grafi import profit_graph
-from stock_fundamental_data import fundamental_indicators as fundamentals
 from utility import utils as util
 
 
@@ -12,6 +11,15 @@ pd.options.mode.chained_assignment = None  # default='warn'
 
 
 def zacetniDf(data):
+
+    data["ROE"] = np.nan
+    data["D/E ratio"] = np.nan
+    data["P/B ratio"] = np.nan
+    data["ProfitMargin"] = np.nan
+    data["Age"] = np.nan
+    data["Goodwill"] = np.nan
+    data["Revenue"] = np.nan
+    data["DCF"] = np.nan
 
     # kreiramo nova stolpca za buy/sell signale
     data['Buy'] = np.nan
@@ -62,10 +70,6 @@ def backtest(start, end, dowTickers, stockPricesDB, fundamental_data):
         koncnoObdobje = obdobja[i + 1]
         print(i, zacetnoObdobje, "+", koncnoObdobje)
 
-        avg_data = fundamentals.avgAllFundamentalsObdobja(zacetnoObdobje, koncnoObdobje, fundamental_data, dowTickers[zacetnoObdobje]["all"])
-        print("PRINTAM AVG FUNDAMENTALS")
-        fundamentals.printData(avg_data)
-
         # zacetek
         if zacetnoObdobje == start:
             # hardcodam za zacetno od ucne in testne mnozice
@@ -87,16 +91,16 @@ def backtest(start, end, dowTickers, stockPricesDB, fundamental_data):
                     prazen = prazen[['Close', 'High', 'Low']].copy()
                     prazen = zacetniDf(prazen)
                     prazen["Close"] = 0
-                    return_df = value_investing_strategy(start_date=zacetnoObdobje, end_date=koncnoObdobje, df=prazen, ticker=x, starting_index=0, status=0, odZacetkaAliNe=True,
-                                                         fundamental_data=fundamental_data, avg_fundamentals=avg_data)
+                    return_df = value_investing_strategy(df=prazen, ticker=x, starting_index=0, status=0, odZacetkaAliNe=True,
+                                                         fundamental_data=fundamental_data)
                     portfolio[x] = return_df
 
                 elif x != "GM":
                     data = stockPricesDB.getCompanyStockDataInRange(date_from=zacetnoObdobje, date_to=koncnoObdobje, companyTicker=x)
                     data = data[['Close', 'High', 'Low']].copy()
                     data = zacetniDf(data)  # dodamo stolpce
-                    return_df = value_investing_strategy(start_date=zacetnoObdobje, end_date=koncnoObdobje, df=data, ticker=x, starting_index=0, status=0, odZacetkaAliNe=True,
-                                                         fundamental_data=fundamental_data, avg_fundamentals=avg_data)
+                    return_df = value_investing_strategy(df=data, ticker=x, starting_index=0, status=0, odZacetkaAliNe=True,
+                                                         fundamental_data=fundamental_data)
                     portfolio[x] = return_df
 
             print(portfolio.keys())
@@ -120,10 +124,7 @@ def backtest(start, end, dowTickers, stockPricesDB, fundamental_data):
                     print(odstranjenTicker, "->", nov_ticker)
                     real_start_date = datetime.datetime.strptime(zacetnoObdobje, "%Y-%m-%d")
                     plus_one_start_date = (real_start_date + datetime.timedelta(days=1)).strftime("%Y-%m-%d")  # adding one day
-                    # modified_date = (datetime.datetime.strptime(plus_one_start_date, "%Y-%m-%d") - datetime.timedelta(days=(high_low_period * 2))).strftime(
-                    #     "%Y-%m-%d")  # odstevamo long period, da dobimo dovolj podatkov
                     print('plus_one_start_date', plus_one_start_date)
-                    # print('modified_date', modified_date)
                     new_df = stockPricesDB.getCompanyStockDataInRange(date_from=plus_one_start_date, date_to=koncnoObdobje, companyTicker=nov_ticker)
 
                     new_df = new_df[['Close', 'High', 'Low']].copy()
@@ -166,8 +167,8 @@ def backtest(start, end, dowTickers, stockPricesDB, fundamental_data):
 
                     # startamo trading algo
                     # zadnji argument True ker je razlicen ticker in zacnemo od zacetka trejdat, isti -> False ker samo nadaljujemo trejdanje
-                    new_returns = value_investing_strategy(start_date=zacetnoObdobje, end_date=koncnoObdobje, df=new_df, ticker=nov_ticker, starting_index=starting_index, status=0,
-                                                           odZacetkaAliNe=True, fundamental_data=fundamental_data, avg_fundamentals=avg_data)
+                    new_returns = value_investing_strategy(df=new_df, ticker=nov_ticker, starting_index=starting_index, status=0,
+                                                           odZacetkaAliNe=True, fundamental_data=fundamental_data)
 
                     added_returns = new_returns[plus_one_start_date:]  # iz new_returns vzamemo del dataframa od plus_one_start_date do konca in ga nato prilepimo v df iz portfolia
                     concat_returns = pd.concat([ex_df, added_returns])
@@ -208,8 +209,8 @@ def backtest(start, end, dowTickers, stockPricesDB, fundamental_data):
 
                 concat_data = pd.concat([ostaliTickerDataframe, new_data])
 
-                new_ostaliTickerDataframe = value_investing_strategy(start_date=zacetnoObdobje, end_date=koncnoObdobje, df=concat_data, ticker=ostaliTicker, starting_index=starting_index,
-                                                                     status=zadnji_signal, odZacetkaAliNe=False, fundamental_data=fundamental_data, avg_fundamentals=avg_data)
+                new_ostaliTickerDataframe = value_investing_strategy(df=concat_data, ticker=ostaliTicker, starting_index=starting_index,
+                                                                     status=zadnji_signal, odZacetkaAliNe=False, fundamental_data=fundamental_data)
                 portfolio[ostaliTicker] = new_ostaliTickerDataframe
 
     totals = prikaziPodatkePortfolia(portfolio, startIzpis=start, endIzpis=end)
@@ -228,7 +229,7 @@ def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis):
 
         tickerTotals = portfolio[ticker]
 
-        # util.preveriPravilnostDatumov(ticker, portfolio)
+        util.preveriPravilnostDatumov(ticker, portfolio)
 
         allShares[ticker] = tickerTotals['Shares'].to_numpy()[-1]
 
@@ -258,33 +259,4 @@ def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis):
 
 # Value investing strategy
 # datetmie = leto, mesec, dan
-
-
-# # testing date time
-# start = "2005-11-21"
-# #end = "2012-10-25"
-# #end = "2008-4-1"
-# #end = "2020-10-1"
-# end = "2020-11-21"
-# # end = "2008-2-19"
-#
-# # end = "2011-11-21"
-#
-# begin_time = datetime.datetime.now()
-#
-# dowTickers = dow.endTickers # podatki o sezona sprememb dow jones indexa
-# fundamental_data = fundamentals.getAllFundamentals(fundamentals.vsi_tickerji)
-# backtest(start, end, dowTickers, fundamental_data)
-# print(datetime.datetime.now() - begin_time)
-
-"""
-test_ticker = "DIS"
-test_data = yf.download(test_ticker, start=start, end=end, progress=False)
-test_data = test_data[['Adj Close']].copy()
-test_data = zacetniDf(test_data)  # dodamo stolpce
-return_df = mixed_fundamentals_strategy(start, end, test_data, test_ticker, 0, 0, True)
-
-mojaFundamentalna_trading_graph(return_df, test_ticker)
-"""
-
 
