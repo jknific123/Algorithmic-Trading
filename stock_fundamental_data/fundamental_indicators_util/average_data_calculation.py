@@ -33,7 +33,7 @@ def izracunajAvgZaPodjetjaVLetu(all_podjetja, leto, podjetja_data):
     # delimo z 30 za povprečje TODO povprečenje uredit še za, ko manjka GM
     leto_avg_data["avgROE"] = round(leto_avg_data["avgROE"] / 30, 4)
     leto_avg_data["avgProfitMargin"] = round(leto_avg_data["avgProfitMargin"] / 30, 4)
-    leto_avg_data["avgGoodwill"] = round(leto_avg_data["avgGoodwill"], 4)
+    leto_avg_data["avgGoodwill"] = round(leto_avg_data["avgGoodwill"] / 30, 4)
     leto_avg_data["avgRevenue"] = round(leto_avg_data["avgRevenue"] / 30, 4)
 
     return leto_avg_data
