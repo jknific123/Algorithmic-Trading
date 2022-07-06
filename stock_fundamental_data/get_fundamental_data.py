@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 import pandas as pd
 from datetime import datetime
+from stock_fundamental_data import fundamental_indicators_to_csv as fundamentalToCsv
 
 
 class StockFundamentalData:
@@ -15,7 +16,7 @@ class StockFundamentalData:
 
     def __init__(self):
         print('Inicializacija objekta StockFundamentalData')
-        # StockFundamentalData.downloadAllStockDataToCsv(self) # rabimo samo v primeru ko je treba downloadat cene delnic -> to bi lahko popravil
+        # fundamentalToCsv.getAllFundamentalDAtaFromAPIsToCsv()  # rabimo samo v primeru ko je treba downloadat fundamentalne indikatorje
         StockFundamentalData.readFundamentalDataCsvToDictOfDicts(self)
         StockFundamentalData.readAvgFundamentalDataCsvToDict(self)
         print('Inicializacija končana!')

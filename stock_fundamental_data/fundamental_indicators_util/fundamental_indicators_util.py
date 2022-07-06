@@ -11,7 +11,7 @@ vsa_leta = [1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 20
 avg_leta = [[2005, 2006, 2007], [2008], [2009, 2010, 2011], [2012], [2013], [2014, 2015], [2016, 2017, 2018], [2019], [2020, 2021]]
 
 
-# vrne naslednji delovni datum ce trenutni datum ni delovni dan, vzame date time in vrne datum v string formatu  TODO preverit ce dal ok
+# vrne naslednji delovni datum ce trenutni datum ni delovni dan, vzame date time in vrne datum v string formatu
 def to_week_day(date):
     if date.isoweekday() in {6, 7}:
         next_week_day_datum = date + BDay(1)  # pridobimo naslednji delovni dan

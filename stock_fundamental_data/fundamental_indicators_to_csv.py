@@ -138,14 +138,16 @@ def getDataAllEverForCsv(allCompanies):
     print('KONEC getDataAllEverForCsv')
 
 
-begin_time = datetime.now()
-getDataAllEverForCsv(vsi_tickerji)
-print('KONEC!!! ', datetime.now() - begin_time)
+def getAllFundamentalDAtaFromAPIsToCsv():
+    begin_time = datetime.now()
+    getDataAllEverForCsv(vsi_tickerji)
+    print('KONEC!!! ', datetime.now() - begin_time)
+
 
 """
 Tu je za testirat delovanje
 """
-# tmp_ticker = 'AIG'
+# tmp_ticker = 'HWM'
 # dfToCsvFile = mergeFundamentalDataCsv(doAllAPIcallsForCsv(tmp_ticker))
 # # najprej shranimo original v csv
 # print('original to csv')
