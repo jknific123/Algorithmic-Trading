@@ -1,5 +1,7 @@
 from datetime import datetime
 from datetime import timedelta
+import pandas as pd
+from pandas.tseries.offsets import BDay  # BDay je bussines day
 from dow_index_data import dow_jones_index_data_csv as dowIndexData
 
 
@@ -8,14 +10,17 @@ vsa_leta = [1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 20
 
 avg_leta = [[2005, 2006, 2007], [2008], [2009, 2010, 2011], [2012], [2013], [2014, 2015], [2016, 2017, 2018], [2019], [2020, 2021]]
 
+
 # vrne naslednji delovni datum ce trenutni datum ni delovni dan, vzame date time in vrne datum v string formatu  TODO preverit ce dal ok
 def to_week_day(date):
     if date.isoweekday() in {6, 7}:
-        tmp_date = date + timedelta(days=-date.isoweekday() + 8)
+        next_week_day_datum = date + BDay(1)  # pridobimo naslednji delovni dan
         # preverimo, da se slucajno nov delovni dan ni v naslednjem letu, ce je tako iscemo delavni dan za nazaj
-        if tmp_date.year > date.year:
-            tmp_date = date - timedelta(days=-date.isoweekday() + 8)
-        return tmp_date.strftime("%Y-%m-%d")
+        if next_week_day_datum.year > date.year:
+            previous_week_day = date - BDay(1)
+            return previous_week_day.strftime("%Y-%m-%d")
+        else:
+            return next_week_day_datum.strftime("%Y-%m-%d")
     return date.strftime("%Y-%m-%d")
 
 
