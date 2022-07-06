@@ -2,7 +2,6 @@ import math
 import pandas as pd
 from datetime import datetime
 import numpy as np
-from functools import cache
 from utility import utils as util
 
 api_key = "950c6e208107d01d9616681a4cf99685"
