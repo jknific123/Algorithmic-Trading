@@ -10,6 +10,7 @@ pd.options.mode.chained_assignment = None  # default='warn'
 
 
 def zacetniDf(data):
+
     # kreiramo nova stolpca za buy/sell signale
     data["P/B"] = np.nan
     data['Buy'] = np.nan
