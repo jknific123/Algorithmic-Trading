@@ -15,10 +15,11 @@ def value_investing_strategy(start_date, end_date, df, ticker, starting_index, s
     print('Zacetek strategije za podjetje: ', ticker, 'obdobje: ', start_date, ' - ', end_date)
     # za fundamentalne indikatorje in njihovo povprecje v letu
     lista_datumov_porocil = fundamental_data.getListOfDatesOfCompanyDataDict(ticker)
-    company_report = fundamental_data.getCompanyFundamentalDataForDate(ticker, df.index[starting_index])  # pridobim zacetno letno porocilo in njegovo leto3
+    company_report = fundamental_data.getCompanyFundamentalDataForDate(ticker, df.index[starting_index])  # pridobim zacetno letno porocilo in njegovo leto
     print('pridobivanje prvega letnega porocila za podjetje: ', ticker, 'datum novega porocila: ', company_report['datum'])
     company_data = company_report['porocilo']
     year_avg_data = fundamental_data.getAvgFundamentalDataForYear(datetime.strptime(company_report['datum'], '%Y-%m-%d').year)  # pridobim povprecne indikatorje za zacetno leto
+    prvo_porocilo = True
     # za racunanje davka na dobiček
     sellPrice = 0
     # check -> zato da nimamo dveh zapovrstnih buy/sell signalov: 2 = buy, 1 = sell
@@ -57,6 +58,8 @@ def value_investing_strategy(start_date, end_date, df, ticker, starting_index, s
             print('zamenjava letnega porocila za podjetje: ', ticker, 'datum novega porocila: ', company_report['datum'])
             company_data = company_report['porocilo']
             year_avg_data = fundamental_data.getAvgFundamentalDataForYear(datetime.strptime(company_report['datum'], '%Y-%m-%d').year)
+            if prvo_porocilo:  # ko se zamenja porocilo popravim to vrendost
+                prvo_porocilo = False
 
         df["ROE"].to_numpy()[x] = company_data["ROE"]
         df["D/E ratio"].to_numpy()[x] = company_data["D/E"]
@@ -68,7 +71,7 @@ def value_investing_strategy(start_date, end_date, df, ticker, starting_index, s
         df["DCF"].to_numpy()[x] = company_data["dcf"]
 
         # manjka -> BUY signal
-        if trenutni_datum == company_report['datum'] and pogojBuy(currCompany_data=company_data, avgData=year_avg_data) and df["Close"].to_numpy()[x] != 0:
+        if (prvo_porocilo or trenutni_datum == company_report['datum']) and pogojBuy(currCompany_data=company_data, avgData=year_avg_data) and df["Close"].to_numpy()[x] != 0:
             print('SEM V BUY IN PROBAM KUPITI, datum: ', df.index[x])
             # preverimo ceno ene delnice in ce imamo dovolj denarja, da lahko kupimo delnice
             cena_ene_delnice = df['Close'].to_numpy()[x] + util.percentageFee(util.feePercentage, df['Close'].to_numpy()[x])
@@ -92,7 +95,7 @@ def value_investing_strategy(start_date, end_date, df, ticker, starting_index, s
                 check = 2
 
         # manjka -> Sell signal
-        elif trenutni_datum == company_report['datum'] and pogojSell(currCompany_data=company_data, avgData=year_avg_data):
+        elif (prvo_porocilo or trenutni_datum == company_report['datum']) and pogojSell(currCompany_data=company_data, avgData=year_avg_data):
 
             if check != 1 and check != 0:  # zadnji signal ni bil sell in nismo na zacetku
                 print("SEM V SELL IN BOM PORODAL", df.index[x])
@@ -166,7 +169,7 @@ def pogojSell(currCompany_data, avgData):
     # sell_flags["company_age"] = True if currCompany_data["company_age"] < 10 else False
     # sell_flags["goodwill"] = True if currCompany_data["goodwill"] < avgData["avgGoodwill"] else False
     # sell_flags["revenue"] = True if currCompany_data["revenue"] < avgData["avgRevenue"] else False
-    sell_flags["dcf"] = True if currCompany_data["dcf"] > currCompany_data["price"] else False
+    # sell_flags["dcf"] = True if currCompany_data["dcf"] > currCompany_data["price"] else False
 
     should_sell = True
     napacni_flagi = ''
