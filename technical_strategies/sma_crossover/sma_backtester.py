@@ -235,7 +235,7 @@ def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis):
     startFunds = len(portfolio) * util.getMoney()
     endFunds = allFunds['Total'].to_numpy()[-1]
 
-    profit_graph(allFunds, 1, "Portfolio", round(endFunds, 4))
+    # profit_graph(allFunds, 1, "Portfolio", round(endFunds, 4))
 
     print("Zacetna sredstva: ", startFunds, "$")
     print("Skupna sredstva portfolia: ", round(endFunds, 4), "$")

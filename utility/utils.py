@@ -73,3 +73,14 @@ def preveriPravilnostDatumov(ticker, portfolio):
                 print("Podjetje: ", ticker)
                 print("prejsnji_datum: ", prejsnji_datum)
                 print("trenutni_datum: ", trenutni_datum)
+
+
+def getStringForHoldObdobje(hold_obdobje):
+    if hold_obdobje == 1:
+        return 'dnevni'
+    elif hold_obdobje == 7:
+        return 'tedenski'
+    elif hold_obdobje == 31:
+        return 'mesecni'
+    elif hold_obdobje == 365:
+        return 'letni'
