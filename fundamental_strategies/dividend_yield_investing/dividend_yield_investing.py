@@ -14,9 +14,10 @@ def dividend_investing_strategy(start_date, end_date, df, ticker, starting_index
     print('Zacetek strategije za podjetje: ', ticker, 'obdobje: ', start_date, ' - ', end_date)
     # za fundamentalne indikatorje in njihovo povprecje v letu
     lista_datumov_porocil = fundamental_data.getListOfDatesOfCompanyDataDict(ticker)
-    company_report = fundamental_data.getCompanyFundamentalDataForDate(ticker, df.index[starting_index])  # pridobim zacetno letno porocilo in njegovo leto3
+    company_report = fundamental_data.getCompanyFundamentalDataForDate(ticker, df.index[starting_index])  # pridobim zacetno letno porocilo in njegovo leto
     print('pridobivanje prvega letnega porocila za podjetje: ', ticker, 'datum novega porocila: ', company_report['datum'])
     company_data = company_report['porocilo']
+    prvo_porocilo = True
     # za racunanje davka na dobiček
     sellPrice = 0
     # check -> zato da nimamo dveh zapovrstnih buy/sell signalov: 2 = buy, 1 = sell
@@ -54,13 +55,15 @@ def dividend_investing_strategy(start_date, end_date, df, ticker, starting_index
             company_report = fundamental_data.getCompanyFundamentalDataForDate(ticker, trenutni_datum)
             print('zamenjava letnega porocila za podjetje: ', ticker, 'datum novega porocila: ', company_report['datum'])
             company_data = company_report['porocilo']
+            if prvo_porocilo:  # ko se zamenja porocilo popravim to vrendost
+                prvo_porocilo = False
 
         df["dividendYield"].to_numpy()[x] = company_data["dividendYield"]
         df["fiveYearDividendGrowthRate"].to_numpy()[x] = company_data["fiveYearDividendGrowthRate"]
         df["dividendPayoutRatio"].to_numpy()[x] = company_data["dividendPayoutRatio"]
 
         # manjka -> BUY signal
-        if trenutni_datum == company_report['datum'] and pogojBuy(currCompany_data=company_data) and df["Close"].to_numpy()[x] != 0:
+        if (prvo_porocilo or trenutni_datum == company_report['datum']) and pogojBuy(currCompany_data=company_data) and df["Close"].to_numpy()[x] != 0:
             print('SEM V BUY IN PROBAM KUPITI, datum: ', df.index[x])
             # preverimo ceno ene delnice in ce imamo dovolj denarja, da lahko kupimo delnice
             cena_ene_delnice = df['Close'].to_numpy()[x] + util.percentageFee(util.feePercentage, df['Close'].to_numpy()[x])
@@ -84,7 +87,7 @@ def dividend_investing_strategy(start_date, end_date, df, ticker, starting_index
                 check = 2
 
         # manjka -> Sell signal
-        elif trenutni_datum == company_report['datum'] and pogojSell(currCompany_data=company_data):
+        elif (prvo_porocilo or trenutni_datum == company_report['datum']) and pogojSell(currCompany_data=company_data):
 
             if check != 1 and check != 0:  # zadnji signal ni bil sell in nismo na zacetku
                 print("SEM V SELL IN BOM PORODAL", df.index[x])
