@@ -6,7 +6,7 @@ import datetime as datetime
 
 
 class StockOHLCData:
-    vsi_tickerji = ['AAPL', 'AIG', 'AMGN', 'AXP', 'BA', 'BAC', 'C', 'CAT', 'CRM', 'CSCO', 'CVX', 'DD', 'DOW', 'DIS', 'GE',  # 'GM',
+    vsi_tickerji = ['AAPL', 'AIG', 'AMGN', 'AXP', 'BA', 'BAC', 'C', 'CAT', 'CRM', 'CSCO', 'CVX', 'DD', 'DOW', 'DIS', 'GE', 'GM',
                     'GS', 'HD', 'HON', 'HPQ', "AA", 'IBM', 'INTC', 'JNJ', 'JPM', 'KO', 'MCD', 'MDLZ', 'MMM', 'MO', 'MRK', 'MSFT',  # 'HWM' -> "AA" ->
                     'NKE', 'PFE', 'PG', 'RTX', 'T', 'TRV', 'UNH', 'V', 'VZ', 'WBA', 'WMT', 'XOM']
 
@@ -14,7 +14,7 @@ class StockOHLCData:
 
     def __init__(self):
         print('Inicializacija objekta StockOHLCData')
-        # StockOHLCData.downloadAllStockDataToCsv(self) # rabimo samo v primeru ko je treba downloadat cene delnic
+        # StockOHLCData.downloadAllStockDataToCsv(self)  # rabimo samo v primeru ko je treba downloadat cene delnic
         StockOHLCData.readCsvToDataFrame(self)
         print('Inicializacija končana!')
 
@@ -65,7 +65,7 @@ class StockOHLCData:
         return return_dataframe
 
     # Metoda za downloadanje cen delnic iz yfinance API-ja, ki se nato shranijo lokalno v .csv datotekah
-    def downloadAllStockDataToCsv(self, start_date="2005-11-21", end_date="2022-01-01"):
+    def downloadAllStockDataToCsv(self, start_date="2005-02-07", end_date="2022-01-01"):  # start date se spremeni na 2005-02-07, to je 201 delovnih dni pred 2005-11-21
         count = 0
         for ticker in StockOHLCData.vsi_tickerji:
             data = yf.download(ticker, start=start_date, end=end_date, progress=False)
@@ -114,3 +114,4 @@ class StockOHLCData:
     
     print("finito")
     """
+
