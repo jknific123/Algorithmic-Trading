@@ -139,15 +139,15 @@ stockPricesDB = getStocks.StockOHLCData()
 print('sma strategy po klicu inicializacije objekta')
 
 # testirajNaEnemPodjetju(hold_obdobje=holdObdobje)
-for hold_obdobje in list_hold_obdobja:
-    testirajNaPortfoliu(dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, hold_cas=hold_obdobje)
+# for hold_obdobje in list_hold_obdobja:
+#     testirajNaPortfoliu(dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, hold_cas=hold_obdobje)
 
 # ucna mnozica
 # testirajNaPortfoliuEnoKombinacijo(start_date="2005-11-21", end_date="2016-05-21", short_sma=85, long_sma=200, dowTickers=dowJonesIndexData,
-#                                   stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
+#                                   stock_prices_db=stockPricesDB, hold_obdobje=1)
 
 # testna mnozica
 # testirajNaPortfoliuEnoKombinacijo(start_date="2016-05-21", end_date="2021-01-01", short_sma=85, long_sma=200, dowTickers=dowJonesIndexData,
-#                                   stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
+#                                   stock_prices_db=stockPricesDB, hold_obdobje=1)
 
 print('KONEC!!! ', datetime.datetime.now() - begin_time)

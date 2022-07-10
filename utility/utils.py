@@ -84,3 +84,14 @@ def getStringForHoldObdobje(hold_obdobje):
         return 'mesecni'
     elif hold_obdobje == 365:
         return 'letni'
+
+
+def poisciIndexZaRezanjeDf(df):
+    # poiscem index zacetnega datuma 2005-11-21
+    # for i in range(len(df)):
+    #     if df.index[i] == '2005-11-21':
+    #         print('nasel index za 2005-11-21: ', i)
+    #         return i
+    # print('NAPAKA nisem nasel indexa za 2005-11-21, vracam long_sma_period')
+    return 200  # ker vemo da je 200 dni viska na zacetku za najdaljsi long sma
+

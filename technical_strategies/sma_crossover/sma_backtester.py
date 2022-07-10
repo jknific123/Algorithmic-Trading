@@ -67,10 +67,13 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stockPri
             # hardcodam za zacetno od ucne in testne mnozice
             print("V zacetnem")
 
+            ohlc_download_start_date = ''
             if zacetnoObdobje == "2005-11-21":
                 starting_companies = dowTickers[zacetnoObdobje]["all"]
+                ohlc_download_start_date = '2005-02-07'  # za max long sma na ucni mnozici
             elif zacetnoObdobje == "2016-05-21":
                 starting_companies = dowTickers["2015-03-19"]["all"]
+                ohlc_download_start_date = '2015-08-06'  # za max sma na testni mnozci
 
             # trejdamo z all od zacetnegaObdobja
             for x in starting_companies:
@@ -79,18 +82,18 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stockPri
                 # izjema za podjetje GM, za katerega nimam podatkov, zato samo naredim prazen dataframe
                 if x == "GM":
                     # pridobim df od podjetja HD in zbrišem podatke tako da je potem prazen
-                    prazen = stockPricesDB.getCompanyStockDataInRange(date_from=zacetnoObdobje, date_to=koncnoObdobje, companyTicker="HD")
+                    prazen = stockPricesDB.getCompanyStockDataInRange(date_from=ohlc_download_start_date, date_to=koncnoObdobje, companyTicker="HD")
                     prazen = prazen[['Close']].copy()
                     prazen = zacetniDf(prazen)
                     prazen["Close"] = 0
-                    return_df = sma_crossover(sma_period_short, sma_period_long, prazen, x, 0, 0, True, hold_obdobje)
+                    return_df = sma_crossover(sma_period_short, sma_period_long, prazen, x, 0, 0, True, hold_obdobje, True)  # moremo rezat glede na datum na zacetku
                     portfolio[x] = return_df
 
                 elif x != "GM":
-                    data = stockPricesDB.getCompanyStockDataInRange(date_from=zacetnoObdobje, date_to=koncnoObdobje, companyTicker=x)
+                    data = stockPricesDB.getCompanyStockDataInRange(date_from=ohlc_download_start_date, date_to=koncnoObdobje, companyTicker=x)
                     data = data[['Close']].copy()
                     data = zacetniDf(data)  # dodamo stolpce
-                    return_df = sma_crossover(sma_period_short, sma_period_long, data, x, 0, 0, True, hold_obdobje)
+                    return_df = sma_crossover(sma_period_short, sma_period_long, data, x, 0, 0, True, hold_obdobje, True)  # moremo rezat glede na datum na zacetku
                     portfolio[x] = return_df
 
             print(portfolio.keys())
@@ -160,7 +163,7 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stockPri
 
                     # startamo trading algo
                     # zadnji argument True ker je razlicen ticker in zacnemo od zacetka trejdat, isti -> False ker samo nadaljujemo trejdanje
-                    new_returns = sma_crossover(sma_period_short, sma_period_long, new_df, nov_ticker, starting_index, 0, True, hold_obdobje)
+                    new_returns = sma_crossover(sma_period_short, sma_period_long, new_df, nov_ticker, starting_index, 0, True, hold_obdobje, False)
 
                     added_returns = new_returns[plus_one_start_date:]  # iz new_returns vzamemo del dataframa od plus_one_start_date do konca in ga nato prilepimo v df iz portfolia
                     concat_returns = pd.concat([ex_df, added_returns])
@@ -201,7 +204,8 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stockPri
 
                 concat_data = pd.concat([ostaliTickerDataframe, new_data])
 
-                new_ostaliTickerDataframe = sma_crossover(sma_period_short, sma_period_long, concat_data, f"new{ostaliTicker}", starting_index, zadnji_signal, False, hold_obdobje)
+                new_ostaliTickerDataframe = sma_crossover(sma_period_short, sma_period_long, concat_data, f"new{ostaliTicker}", starting_index,
+                                                          zadnji_signal, False, hold_obdobje, False)
                 portfolio[ostaliTicker] = new_ostaliTickerDataframe
 
     totals = prikaziPodatkePortfolia(portfolio, startIzpis=start, endIzpis=end)

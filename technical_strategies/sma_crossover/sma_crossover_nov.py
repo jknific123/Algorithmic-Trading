@@ -19,14 +19,18 @@ def days_between(d1, d2):
     return abs((d2 - d1).days)
 
 
-def sma_crossover(sPeriod, lPeriod, df, ticker, starting_index, status, odZacetkaAliNe, holdObdobje):
+def sma_crossover(sPeriod, lPeriod, df, ticker, starting_index, status, odZacetkaAliNe, holdObdobje, potrebnoRezatiGledeNaDatum):
     # naredimo/napolnimo nova stolpca za oba SMA
     df[f'SMA-{sPeriod}'] = df['Close'].rolling(window=sPeriod, min_periods=1, center=False).mean()
     df[f'SMA-{lPeriod}'] = df['Close'].rolling(window=lPeriod, min_periods=1, center=False).mean()
 
     # v nadaljevanju uporabljamo samo podatke od takrat, ko je dolgi sma že na voljo
     if odZacetkaAliNe is True and ticker != 'DOW':
-        df = df[lPeriod:]
+        if potrebnoRezatiGledeNaDatum:
+            indx_rezanja = util.poisciIndexZaRezanjeDf(df)
+            df = df[indx_rezanja:]
+        else:
+            df = df[lPeriod:]
         if starting_index != 0:
             starting_index = starting_index - lPeriod  # treba je posodobiti tudi starting_index, ko se reze df
 
