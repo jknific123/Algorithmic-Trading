@@ -3,6 +3,7 @@ from pathlib import Path
 import pandas as pd
 import yfinance as yf
 import datetime as datetime
+pd.options.mode.chained_assignment = None  # default='warn'
 
 
 class StockOHLCData:
@@ -86,7 +87,12 @@ class StockOHLCData:
             tmpFileName = os.path.basename(file)
             tmpSplitArgs = tmpFileName.split('_')
             tmpSplitDotArgs = tmpSplitArgs[2].split('.')
-            StockOHLCData.stock_prices_data[tmpSplitDotArgs[0]] = pd.read_csv(file, index_col=[0])
+            if tmpSplitDotArgs[0] in ['DOW', 'GM', 'V']:
+                data = pd.read_csv(file, index_col=[0])
+                data = self.dopolniDataZaPodjetje(tmpSplitDotArgs[0], data)
+                StockOHLCData.stock_prices_data[tmpSplitDotArgs[0]] = data
+            else:
+                StockOHLCData.stock_prices_data[tmpSplitDotArgs[0]] = pd.read_csv(file, index_col=[0])
 
     # Metoda za branje podatkov iz .csv datotek v dataframe, ki so shranjeni v slovarju objekta - datum je del tabele, index je int
     def readCsvToDataFrameTabela(self):
@@ -101,6 +107,45 @@ class StockOHLCData:
             tmpSplitArgs = tmpFileName.split('_')
             tmpSplitDotArgs = tmpSplitArgs[2].split('.')
             StockOHLCData.stock_prices_data[tmpSplitDotArgs[0]] = pd.read_csv(file)  # index_col=[0]
+
+    def dopolniDataZaPodjetje(self, ticker, data):
+        if ticker == 'V':
+            prazen_df_V = self.getCompanyStockDataInRange('2005-02-07', '2008-03-18', 'AAPL')
+            self.dajVrednostStolpcevVDfNaNic(prazen_df_V)
+            return pd.concat([prazen_df_V, data])
+        elif ticker == 'GM':
+            prazen_df_GM = self.getCompanyStockDataInRange('2005-02-07', '2010-11-17', 'AAPL')
+            self.dajVrednostStolpcevVDfNaNic(prazen_df_GM)
+            return pd.concat([prazen_df_GM, data])
+        elif ticker == 'DOW':
+            prazen_df_DOW = self.getCompanyStockDataInRange('2005-02-07', '2019-03-19', 'AAPL')
+            self.dajVrednostStolpcevVDfNaNic(prazen_df_DOW)
+            return pd.concat([prazen_df_DOW, data])
+
+    def dajVrednostStolpcevVDfNaNic(self, df):
+        df['Open'] = 0
+        df['High'] = 0
+        df['Low'] = 0
+        df['Close'] = 0
+        df['Adj Close'] = 0
+        df['Volume'] = 0
+
+
+    def preveriKateraPodjetjajePotrebnoDostukati(self):
+        for company in self.stock_prices_data:
+            company_df = self.stock_prices_data[company]
+            if company_df.index[0] != '2005-02-07':
+                print('Copmany to correct', company)
+                print('first date is: ', company_df.index[0])
+
+
+    def preveriKateraPodjetjajePotrebnoDostukati2(self):
+        for company in self.stock_prices_data:
+            company_df = self.stock_prices_data[company]
+            if '2005-11-21' not in company_df.index:
+                print('Copmany to correct', company)
+                print('first date is: ', company_df.index[0])
+
 
     """
     test_ticker = "HD"
