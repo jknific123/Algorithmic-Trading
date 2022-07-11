@@ -236,7 +236,7 @@ def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis):
         count += 1
 
     # se izpis podatkov portfolia
-    startFunds = len(portfolio) * util.getMoney()
+    startFunds = len(portfolio) * util.getMoney('')
     endFunds = allFunds['Total'].to_numpy()[-1]
 
     # profit_graph(allFunds, 1, "Portfolio", round(endFunds, 4))
