@@ -48,10 +48,13 @@ def profit(buyPrice, sellPrice):
     return sellPrice - buyPrice
 
 
-def getMoney():
-    startMoney = 1000
-
-    return startMoney
+def getMoney(company_ticker):
+    if company_ticker != '^DJI':
+        startMoney = 1000
+        return startMoney
+    elif company_ticker == '^DJI':
+        startMoney = 30000
+        return startMoney
 
 
 def preveriPravilnostDatumov(ticker, portfolio):
