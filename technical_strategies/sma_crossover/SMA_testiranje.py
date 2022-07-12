@@ -89,7 +89,7 @@ def najdiOptimalneParametreNaPotrfoliu(start_period, end_period, dowTickers, sto
 
 def testirajNaPortfoliu(dowTickers, stock_prices_db, hold_cas):
     zacetni_cas = datetime.datetime.now()
-    rez_ucni = najdiOptimalneParametreNaPotrfoliu(start_period="2005-11-21", end_period="2016-05-21", dowTickers=dowTickers,
+    rez_ucni = najdiOptimalneParametreNaPotrfoliu(start_period="2005-11-21", end_period="2016-06-20", dowTickers=dowTickers,
                                                   stock_prices_db=stock_prices_db, hold_obdobje=hold_cas)
     print("Koncal testiranej na ucni: ", datetime.datetime.now() - begin_time)
 
@@ -147,7 +147,7 @@ print('sma strategy po klicu inicializacije objekta')
 #                                   stock_prices_db=stockPricesDB, hold_obdobje=1)
 
 # testna mnozica
-# testirajNaPortfoliuEnoKombinacijo(start_date="2016-05-21", end_date="2021-01-01", short_sma=85, long_sma=200, dowTickers=dowJonesIndexData,
+# testirajNaPortfoliuEnoKombinacijo(start_date="2016-06-20", end_date="2021-01-01", short_sma=85, long_sma=200, dowTickers=dowJonesIndexData,
 #                                   stock_prices_db=stockPricesDB, hold_obdobje=1)
 
 print('KONEC!!! ', datetime.datetime.now() - begin_time)

@@ -3,7 +3,7 @@ TODOs for diplomska
 
 # 70% = 2005-11-21 do 2016-05-21 UCNA
 
-# 30% = 2016-05-21 do 2021-01-01 TESTNA
+# 30% = 2016-06-20 do 2021-01-01 TESTNA
 
 fundamental data api rewiev
 

@@ -43,7 +43,7 @@ def setObdobja(startObdobja, endObdobja, dowTickersObdobja):
     # hardcodam za testno mnozico
     obdobja = []
 
-    if startObdobja == "2016-05-21":
+    if startObdobja == "2016-06-20":
         obdobja.append(startObdobja)
 
     for x in dowTickersObdobja:
@@ -77,7 +77,7 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stockPri
             # hardcodam za zacetno od ucne in testne mnozice
             if zacetnoObdobje == "2005-11-21":
                 starting_companies = dowTickers[zacetnoObdobje]["all"]
-            elif zacetnoObdobje == "2016-05-21":
+            elif zacetnoObdobje == "2016-06-20":
                 starting_companies = dowTickers["2015-03-19"]["all"]
 
             # trejdamo z all od zacetnegaObdobja
