@@ -1,7 +1,7 @@
 
 TODOs for diplomska
 
-# 70% = 2005-11-21 do 2016-05-21 UCNA
+# 70% = 2005-11-21 do 2016-06-20 UCNA # prej -> to je narobe do 2016-05-21 TODO treba popravit -> popravljeno
 
 # 30% = 2016-06-20 do 2021-01-01 TESTNA
 
