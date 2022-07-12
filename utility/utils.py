@@ -98,3 +98,13 @@ def poisciIndexZaRezanjeDf(df):
     # print('NAPAKA nisem nasel indexa za 2005-11-21, vracam long_sma_period')
     return 200  # ker vemo da je 200 dni viska na zacetku za najdaljsi long sma
 
+
+# compound annual growth rate - povprecna letna obrestna mera
+def povprecnaLetnaObrestnaMera(zacetniZnesek, koncniZnesek, preteklaLeta):
+    # print("Initial value of money: ", zacetniZnesek)
+    # print('Final value of money: ', koncniZnesek)
+    # print("Time in years: ", preteklaLeta)
+    t_inv = 1/preteklaLeta
+    cagr_rate = round((((koncniZnesek/zacetniZnesek)**t_inv) - 1) * 100, 2)
+    print("Compound Annual Growth Rate (CAGR): ", cagr_rate)
+    return cagr_rate
