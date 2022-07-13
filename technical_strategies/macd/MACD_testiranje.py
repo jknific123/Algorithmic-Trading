@@ -98,7 +98,7 @@ print('MACD strategy po klicu inicializacije objekta')
 #                                   stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
 
 # testna mnozica
-testirajNaPortfoliuEnoKombinacijo(start_date="2017-02-02", end_date="2021-01-01", short_sma=20, long_sma=40, signal_line=9, dowTickers=dowJonesIndexData,
+testirajNaPortfoliuEnoKombinacijo(start_date="2017-02-02", end_date="2021-11-21", short_sma=20, long_sma=40, signal_line=9, dowTickers=dowJonesIndexData,
                                   stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
 
 print('KONEC!!! ', datetime.datetime.now() - begin_time)

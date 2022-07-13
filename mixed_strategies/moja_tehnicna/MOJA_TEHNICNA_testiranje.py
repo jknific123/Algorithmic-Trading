@@ -127,7 +127,7 @@ testirajNaPortfoliuEnoKombinacijo(start_date="2005-11-21", end_date="2017-02-02"
                                   dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
 
 # testna mnozica
-# testirajNaPortfoliuEnoKombinacijo(start_date="2017-02-02", end_date="2021-01-01", short_period=12, long_period=26, signal_period=9,
+# testirajNaPortfoliuEnoKombinacijo(start_date="2017-02-02", end_date="2021-11-21", short_period=12, long_period=26, signal_period=9,
 #                                   high_low_period=14, d_sma_period=3,
 #                                   sma_period=20, bands_multiplayer=2,
 #                                   dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)

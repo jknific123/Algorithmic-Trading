@@ -77,7 +77,7 @@ print('stohastic oscilator strategy po klicu inicializacije objekta')
 #                                   stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
 
 # testna mnozica
-testirajNaPortfoliuEnoKombinacijo(start_date="2017-02-02", end_date="2021-01-01", sma=5, d_sma=9, dowTickers=dowJonesIndexData,
+testirajNaPortfoliuEnoKombinacijo(start_date="2017-02-02", end_date="2021-11-21", sma=5, d_sma=9, dowTickers=dowJonesIndexData,
                                   stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
 
 print('KONEC!!! ', datetime.datetime.now() - begin_time)

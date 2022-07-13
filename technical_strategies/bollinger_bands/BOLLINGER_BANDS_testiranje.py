@@ -82,7 +82,7 @@ print('sma strategy po klicu inicializacije objekta')
 #                                   stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
 
 # testna mnozica
-testirajNaPortfoliuEnoKombinacijo(start_date="2017-02-02", end_date="2021-01-01", sma_period=50, bands_multiplayer=2.1, dowTickers=dowJonesIndexData,
+testirajNaPortfoliuEnoKombinacijo(start_date="2017-02-02", end_date="2021-11-21", sma_period=50, bands_multiplayer=2.1, dowTickers=dowJonesIndexData,
                                   stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
 
 print('KONEC!!! ', datetime.datetime.now() - begin_time)
