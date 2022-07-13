@@ -19,7 +19,7 @@ def days_between(d1, d2):
     return abs((d2 - d1).days)
 
 
-def bollingerBands(sma_period, bands_multiplayer, df, ticker, starting_index, status, odZacetkaAliNe, holdObdobje):
+def bollingerBands(sma_period, bands_multiplayer, df, ticker, starting_index, status, odZacetkaAliNe, holdObdobje, potrebnoRezatiGledeNaDatum):
     # naredimo nove stolpce za EMA-e, MACD in signal line
     """
     df[f'SMA-{sma_period}'] = df['Close'].rolling(window=sma_period, min_periods=1, center=False).mean()
@@ -31,12 +31,17 @@ def bollingerBands(sma_period, bands_multiplayer, df, ticker, starting_index, st
     df["Typical price"] = (df["High"] + df["Low"] + df["Close"]) / 3
     df["STD"] = df["Typical price"].rolling(window=sma_period, min_periods=1, center=False).std(ddof=0)
     df[f"TP SMA"] = df["Typical price"].rolling(sma_period).mean()
-    df['Upper band'] = df[f"TP SMA"] + bands_multiplayer * df["STD"]
-    df['Lower band'] = df[f"TP SMA"] - bands_multiplayer * df["STD"]
+    df['Upper band'] = df[f"TP SMA"] + (bands_multiplayer * df["STD"])
+    df['Lower band'] = df[f"TP SMA"] - (bands_multiplayer * df["STD"])
+    df['Close2'] = df['Close']
 
     # v nadaljevanju uporabljamo samo podatke od takrat, ko je dolgi sma že na voljo
     if odZacetkaAliNe is True and ticker != 'DOW':
-        df = df[sma_period:]
+        if potrebnoRezatiGledeNaDatum:
+            indx_rezanja = util.poisciIndexZaRezanjeDf(df)
+            df = df[indx_rezanja:]
+        else:
+            df = df[sma_period:]
         if starting_index != 0:
             starting_index = starting_index - sma_period  # treba je posodobiti tudi starting_index, ko se reze df
 
@@ -69,7 +74,7 @@ def bollingerBands(sma_period, bands_multiplayer, df, ticker, starting_index, st
 
         else:  # zacetek tabele -> inicializacija vrednosti
             if df['Cash'].to_numpy()[x] == 0:  # nimamo se denarja
-                df['Cash'].to_numpy()[x] = util.getMoney()
+                df['Cash'].to_numpy()[x] = util.getMoney(ticker)
             df['Total'].to_numpy()[x] = (df['Cash'].to_numpy()[x] + util.fees(df['Shares'].to_numpy()[x] * df['Close'].to_numpy()[x]))
             df['Ticker'].to_numpy()[x] = ticker
 
@@ -112,7 +117,6 @@ def bollingerBands(sma_period, bands_multiplayer, df, ticker, starting_index, st
 
                 # ce je dobicek pred davkom pozitiven zaracunamo davek na dobicek in ga odstejemo od sellPrice, da dobimo ostanek
                 if profitPredDavkom > 0:
-
                     sellPrice = sellPrice - util.taxes(profitPredDavkom)  # popravimo sellPrice, tako da obracunamo davek
 
                 df['Sell'].to_numpy()[x] = sellPrice  # zapisemo sell price

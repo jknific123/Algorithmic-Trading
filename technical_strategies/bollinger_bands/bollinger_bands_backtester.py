@@ -66,10 +66,13 @@ def backtest(start, end, sma_period, bands_multiplayer, dowTickers, stockPricesD
             # hardcodam za zacetno od ucne in testne mnozice
             print("V zacetnem")
 
+            ohlc_download_start_date = ''
             if zacetnoObdobje == "2005-11-21":
                 starting_companies = dowTickers[zacetnoObdobje]["all"]
+                ohlc_download_start_date = '2005-02-07'  # za max long sma na ucni mnozici
             elif zacetnoObdobje == "2017-02-02":
                 starting_companies = dowTickers["2015-03-19"]["all"]
+                ohlc_download_start_date = '2016-04-19'  # prej '2015-09-02'  # za max sma na testni mnozci # prej '2015-08-06'
 
             # trejdamo z all od zacetnegaObdobja
             for x in starting_companies:
@@ -78,18 +81,18 @@ def backtest(start, end, sma_period, bands_multiplayer, dowTickers, stockPricesD
                 # izjema za podjetje GM, za katerega nimam podatkov, zato samo naredim prazen dataframe
                 if x == "GM":
                     # pridobim df od podjetja HD in zbrišem podatke tako da je potem prazen
-                    prazen = stockPricesDB.getCompanyStockDataInRange(date_from=zacetnoObdobje, date_to=koncnoObdobje, companyTicker="HD")
+                    prazen = stockPricesDB.getCompanyStockDataInRange(date_from=ohlc_download_start_date, date_to=koncnoObdobje, companyTicker="HD")
                     prazen = prazen[['Close', 'High', 'Low']].copy()
                     prazen = zacetniDf(prazen)
                     prazen["Close"] = 0
-                    return_df = bollingerBands(sma_period, bands_multiplayer, prazen, x, 0, 0, True, hold_obdobje)
+                    return_df = bollingerBands(sma_period, bands_multiplayer, prazen, x, 0, 0, True, hold_obdobje, True)
                     portfolio[x] = return_df
 
                 elif x != "GM":
-                    data = stockPricesDB.getCompanyStockDataInRange(date_from=zacetnoObdobje, date_to=koncnoObdobje, companyTicker=x)
+                    data = stockPricesDB.getCompanyStockDataInRange(date_from=ohlc_download_start_date, date_to=koncnoObdobje, companyTicker=x)
                     data = data[['Close', 'High', 'Low']].copy()
                     data = zacetniDf(data)  # dodamo stolpce
-                    return_df = bollingerBands(sma_period, bands_multiplayer, data, x, 0, 0, True, hold_obdobje)
+                    return_df = bollingerBands(sma_period, bands_multiplayer, data, x, 0, 0, True, hold_obdobje, True)
                     portfolio[x] = return_df
 
             print(portfolio.keys())
@@ -159,7 +162,7 @@ def backtest(start, end, sma_period, bands_multiplayer, dowTickers, stockPricesD
 
                     # startamo trading algo
                     # zadnji argument True ker je razlicen ticker in zacnemo od zacetka trejdat, isti -> False ker samo nadaljujemo trejdanje
-                    new_returns = bollingerBands(sma_period, bands_multiplayer, new_df, nov_ticker, starting_index, 0, True, hold_obdobje)
+                    new_returns = bollingerBands(sma_period, bands_multiplayer, new_df, nov_ticker, starting_index, 0, True, hold_obdobje, False)
 
                     added_returns = new_returns[plus_one_start_date:]  # iz new_returns vzamemo del dataframa od plus_one_start_date do konca in ga nato prilepimo v df iz portfolia
                     concat_returns = pd.concat([ex_df, added_returns])
@@ -200,7 +203,8 @@ def backtest(start, end, sma_period, bands_multiplayer, dowTickers, stockPricesD
 
                 concat_data = pd.concat([ostaliTickerDataframe, new_data])
 
-                new_ostaliTickerDataframe = bollingerBands(sma_period, bands_multiplayer, concat_data, f"new{ostaliTicker}", starting_index, zadnji_signal, False, hold_obdobje)
+                new_ostaliTickerDataframe = bollingerBands(sma_period, bands_multiplayer, concat_data, f"new{ostaliTicker}", starting_index,
+                                                           zadnji_signal, False, hold_obdobje, False)
                 portfolio[ostaliTicker] = new_ostaliTickerDataframe
 
     totals = prikaziPodatkePortfolia(portfolio, startIzpis=start, endIzpis=end)
@@ -231,8 +235,10 @@ def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis):
         count += 1
 
     # se izpis podatkov portfolia
-    startFunds = len(portfolio) * util.getMoney()
+    startFunds = len(portfolio) * util.getMoney('')
     endFunds = allFunds['Total'].to_numpy()[-1]
+    pretekla_leta = datetime.datetime.strptime(allFunds.index[-1], '%Y-%m-%d').year - datetime.datetime.strptime(allFunds.index[0], '%Y-%m-%d').year
+    povprecna_letna_obrestna_mera = util.povprecnaLetnaObrestnaMera(startFunds, endFunds, pretekla_leta)
 
     profit_graph(allFunds, 1, "Portfolio", round(endFunds, 4))
 
@@ -240,6 +246,8 @@ def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis):
     print("Skupna sredstva portfolia: ", round(endFunds, 4), "$")
     print("Profit: ", round(endFunds - startFunds, 4), "$")
     print("Kumulativni donos v procentih: ", round((endFunds - startFunds) / startFunds, 4) * 100, "%")
+    print("Povprecna letna obrestna mera: ", povprecna_letna_obrestna_mera)
+
 
     print("Delnice, ki jih še imamo v portfoliu:")
     for key, value in allShares.items():
