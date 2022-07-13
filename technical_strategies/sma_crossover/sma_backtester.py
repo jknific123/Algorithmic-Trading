@@ -73,7 +73,7 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stockPri
                 ohlc_download_start_date = '2005-02-07'  # za max long sma na ucni mnozici
             elif zacetnoObdobje == "2017-02-02":
                 starting_companies = dowTickers["2015-03-19"]["all"]
-                ohlc_download_start_date = '2016-04-85'  # prej '2015-09-02'  # za max sma na testni mnozci # prej '2015-08-06'
+                ohlc_download_start_date = '2016-04-19'  # prej '2015-09-02'  # za max sma na testni mnozci # prej '2015-08-06'
 
             # trejdamo z all od zacetnegaObdobja
             for x in starting_companies:
