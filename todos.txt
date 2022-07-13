@@ -1,9 +1,17 @@
 
 TODOs for diplomska
 
+ČAS = 16 let podatkov
+
 # 70% = 2005-11-21 do 2016-06-20 UCNA # prej -> to je narobe do 2016-05-21 TODO treba popravit -> popravljeno
 
-# 30% = 2016-06-20 do 2021-01-01 TESTNA
+# 30% = 2016-06-20 do 2021-11-21 TESTNA # prej 2021-01-01 TODO popravi ->
+
+NOVO UCNA IN TESTNA DELITEV  TODO potrebno implementirat
+
+# UCNA MNOZICA 70% = 2005-11-21 do 2017-02-02
+
+# TESTNA MNOZICA 30% = 2017-02-02 do 2021-11-21
 
 fundamental data api rewiev
 

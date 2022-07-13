@@ -9,7 +9,7 @@ from technical_strategies.macd.macd_backtester import zacetniDf, backtest
 # probal primerjat moje backteste s trejdanjem na DOW indexu...
 def trejdajNaEnemPodjetju(hold_obdobje):
     test_ticker = "^DJI"
-    test_data = stockPricesDB.getCompanyStockDataInRange(date_from="2016-06-20", date_to="2020-01-01", companyTicker=test_ticker)
+    test_data = stockPricesDB.getCompanyStockDataInRange(date_from="2017-02-02", date_to="2020-01-01", companyTicker=test_ticker)
     test_data = test_data[['Close']].copy()
     test_data = zacetniDf(test_data)  # dodamo stolpce
     return_df = macd(12, 26, 9, test_data, test_ticker, 0, 0, True, hold_obdobje)
@@ -44,7 +44,7 @@ def najdiOptimalneParametreNaPotrfoliu(start_period, end_period, dowTickers, sto
 
 
 def testirajNaPortfoliu(dowTickers, stock_prices_db, hold_obdobje):
-    rez_ucni = najdiOptimalneParametreNaPotrfoliu("2005-11-21", "2016-06-20", dowTickers, stock_prices_db, hold_obdobje)
+    rez_ucni = najdiOptimalneParametreNaPotrfoliu("2005-11-21", "2017-02-02", dowTickers, stock_prices_db, hold_obdobje)
     print("Koncal testiranej na ucni: ", datetime.datetime.now() - begin_time)
 
     rez_total_ucni = {}
@@ -94,11 +94,11 @@ print('MACD strategy po klicu inicializacije objekta')
 # testirajNaPortfoliu(dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
 
 # ucna mnozica
-# testirajNaPortfoliuEnoKombinacijo(start_date="2005-11-21", end_date="2016-06-20", short_sma=12, long_sma=26, signal_line=9, dowTickers=dowJonesIndexData,
+# testirajNaPortfoliuEnoKombinacijo(start_date="2005-11-21", end_date="2017-02-02", short_sma=12, long_sma=26, signal_line=9, dowTickers=dowJonesIndexData,
 #                                   stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
 
 # testna mnozica
-testirajNaPortfoliuEnoKombinacijo(start_date="2016-06-20", end_date="2021-01-01", short_sma=20, long_sma=40, signal_line=9, dowTickers=dowJonesIndexData,
+testirajNaPortfoliuEnoKombinacijo(start_date="2017-02-02", end_date="2021-01-01", short_sma=20, long_sma=40, signal_line=9, dowTickers=dowJonesIndexData,
                                   stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
 
 print('KONEC!!! ', datetime.datetime.now() - begin_time)

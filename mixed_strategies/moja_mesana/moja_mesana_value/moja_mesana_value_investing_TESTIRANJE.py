@@ -24,11 +24,11 @@ print('value investing strategy po klicu inicializacije objekta')
 # fundamental_data = fundamentals.getAllFundamentals(fundamentals.vsi_tickerji)
 
 # ucna mnozica
-testirajNaPortfoliu(start_date="2005-11-21", end_date="2016-06-20", short_sma=85, long_sma=200,
+testirajNaPortfoliu(start_date="2005-11-21", end_date="2017-02-02", short_sma=85, long_sma=200,
                     dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, fundamental_indicators=fundamentalIndicatorsDB)
 
 # testna mnozica
-testirajNaPortfoliu(start_date="2016-06-20", end_date="2021-01-01",  short_sma=85, long_sma=200,
+testirajNaPortfoliu(start_date="2017-02-02", end_date="2021-01-01",  short_sma=85, long_sma=200,
                     dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, fundamental_indicators=fundamentalIndicatorsDB)
 
 print('KONEC!!! ', datetime.datetime.now() - begin_time)

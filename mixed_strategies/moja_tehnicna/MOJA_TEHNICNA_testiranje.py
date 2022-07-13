@@ -57,7 +57,7 @@ def najdiOptimalneParametreNaPotrfoliu(start_period, end_period, dowTickers, sto
 
 def testirajNaPortfoliu(dowTickers, stock_prices_db, hold_obdobje):
 
-    rez_ucni = najdiOptimalneParametreNaPotrfoliu("2005-11-21", "2016-06-20", dowTickers, stock_prices_db, hold_obdobje)
+    rez_ucni = najdiOptimalneParametreNaPotrfoliu("2005-11-21", "2017-02-02", dowTickers, stock_prices_db, hold_obdobje)
     print("Koncal testiranej na ucni: ", datetime.datetime.now() - begin_time)
 
     rez_total_ucni = {}
@@ -121,13 +121,13 @@ print('stohastic oscilator strategy po klicu inicializacije objekta')
 
 
 # ucna mnozica
-testirajNaPortfoliuEnoKombinacijo(start_date="2005-11-21", end_date="2016-06-20", short_period=12, long_period=26, signal_period=9,
+testirajNaPortfoliuEnoKombinacijo(start_date="2005-11-21", end_date="2017-02-02", short_period=12, long_period=26, signal_period=9,
                                   high_low_period=14, d_sma_period=3,
                                   sma_period=20, bands_multiplayer=2,
                                   dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
 
 # testna mnozica
-# testirajNaPortfoliuEnoKombinacijo(start_date="2016-06-20", end_date="2021-01-01", short_period=12, long_period=26, signal_period=9,
+# testirajNaPortfoliuEnoKombinacijo(start_date="2017-02-02", end_date="2021-01-01", short_period=12, long_period=26, signal_period=9,
 #                                   high_low_period=14, d_sma_period=3,
 #                                   sma_period=20, bands_multiplayer=2,
 #                                   dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)

@@ -21,9 +21,9 @@ fundamentalIndicatorsDB = getFundamentalIndicators.StockFundamentalData()
 print('mixed fundamentals strategy po klicu inicializacije objekta')
 
 # ucna mnozica
-testirajNaPortfoliu(start_date="2005-11-21", end_date="2016-06-20", dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, fundamental_indicators=fundamentalIndicatorsDB)
+testirajNaPortfoliu(start_date="2005-11-21", end_date="2017-02-02", dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, fundamental_indicators=fundamentalIndicatorsDB)
 
 # testna mnozica
-# testirajNaPortfoliu(start_date="2016-06-20", end_date="2021-01-01", dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, fundamental_indicators=fundamental_data)
+# testirajNaPortfoliu(start_date="2017-02-02", end_date="2021-01-01", dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, fundamental_indicators=fundamental_data)
 
 print('KONEC!!! ', datetime.datetime.now() - begin_time)

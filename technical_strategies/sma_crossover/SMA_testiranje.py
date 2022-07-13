@@ -89,7 +89,7 @@ def najdiOptimalneParametreNaPotrfoliu(start_period, end_period, dowTickers, sto
 
 def testirajNaPortfoliu(dowTickers, stock_prices_db, hold_cas):
     zacetni_cas = datetime.datetime.now()
-    rez_ucni = najdiOptimalneParametreNaPotrfoliu(start_period="2005-11-21", end_period="2016-06-20", dowTickers=dowTickers,
+    rez_ucni = najdiOptimalneParametreNaPotrfoliu(start_period="2005-11-21", end_period="2017-02-02", dowTickers=dowTickers,
                                                   stock_prices_db=stock_prices_db, hold_obdobje=hold_cas)
     print("Koncal testiranej na ucni: ", datetime.datetime.now() - begin_time)
 
