@@ -87,12 +87,12 @@ class StockOHLCData:
             tmpFileName = os.path.basename(file)
             tmpSplitArgs = tmpFileName.split('_')
             tmpSplitDotArgs = tmpSplitArgs[2].split('.')
-            if tmpSplitDotArgs[0] in ['DOW', 'GM', 'V']:
-                data = pd.read_csv(file, index_col=[0])
-                data = self.dopolniDataZaPodjetje(tmpSplitDotArgs[0], data)
-                StockOHLCData.stock_prices_data[tmpSplitDotArgs[0]] = data
-            else:
-                StockOHLCData.stock_prices_data[tmpSplitDotArgs[0]] = pd.read_csv(file, index_col=[0])
+            # if tmpSplitDotArgs[0] in ['DOW', 'GM', 'V']:
+            #     data = pd.read_csv(file, index_col=[0])
+            #     data = self.dopolniDataZaPodjetje(tmpSplitDotArgs[0], data)
+            #     StockOHLCData.stock_prices_data[tmpSplitDotArgs[0]] = data
+            # else:
+            StockOHLCData.stock_prices_data[tmpSplitDotArgs[0]] = pd.read_csv(file, index_col=[0])
 
     # Metoda za branje podatkov iz .csv datotek v dataframe, ki so shranjeni v slovarju objekta - datum je del tabele, index je int
     def readCsvToDataFrameTabela(self):
