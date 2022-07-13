@@ -116,3 +116,4 @@ print('Testrianje sma strategy portelj, inicializacija objektov')
 
 print('KONEC!!! ', datetime.datetime.now() - begin_time)
 
+
