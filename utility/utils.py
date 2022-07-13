@@ -108,3 +108,13 @@ def povprecnaLetnaObrestnaMera(zacetniZnesek, koncniZnesek, preteklaLeta):
     cagr_rate = round((((koncniZnesek/zacetniZnesek)**t_inv) - 1) * 100, 2)
     print("Compound Annual Growth Rate (CAGR): ", cagr_rate, ' %')
     return cagr_rate
+
+
+# vrne cas(leta) v ucni mnozici
+def ucnaMnozicaLeta():
+    return 4091 / 365  # 70% dni deljeno leto
+
+
+# vrne cas(leta) v testni mnozici
+def testnaMnozicaLeta():
+    return 1753 / 365  # 30% dni delejno eno leto
