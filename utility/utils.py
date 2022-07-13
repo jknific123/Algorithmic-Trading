@@ -110,6 +110,7 @@ def povprecnaLetnaObrestnaMera(zacetniZnesek, koncniZnesek, preteklaLeta):
     return cagr_rate
 
 
+# Skupaj vseh dni v 16 letih = 5844
 # vrne cas(leta) v ucni mnozici
 def ucnaMnozicaLeta():
     return 4091 / 365  # 70% dni deljeno leto
@@ -118,3 +119,8 @@ def ucnaMnozicaLeta():
 # vrne cas(leta) v testni mnozici
 def testnaMnozicaLeta():
     return 1753 / 365  # 30% dni delejno eno leto
+
+
+# vrne cas(leta) v vseh letih
+def vsaLeta():
+    return 16
