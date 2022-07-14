@@ -90,7 +90,7 @@ def testirajOptimalneNaTestniMnoziciZaHoldObdobjaIndeks(testnaStockPricesDB, hol
     optimalni_letni = [[40, 175], [70, 150], [70, 175]]
     dict_parametrov = {1: optimalni_dnevni, 7: optimalni_tedenski, 31: optimalni_mesecni, 365: optimalni_letni}
 
-    indeks_data_testna = testnaStockPricesDB.getCompanyStockDataInRange(date_from="2017-02-02", date_to="2021-11-21", companyTicker='^DJI')  # TODO bi se splačalo tuid tole popravit datum
+    indeks_data_testna = testnaStockPricesDB.getCompanyStockDataInRange(date_from="2016-04-19", date_to="2021-11-21", companyTicker='^DJI')  # TODO bi se splačalo tuid tole popravit datum
     indeks_data_testna = indeks_data_testna[['Close']].copy()
     indeks_data_testna = zacetniDf(data=indeks_data_testna)  # dodamo stolpce
 
