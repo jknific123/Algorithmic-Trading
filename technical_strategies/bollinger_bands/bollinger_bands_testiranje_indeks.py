@@ -1,13 +1,10 @@
 import datetime as datetime
-
 import numpy as np
-
-from technical_strategies.sma_crossover.sma_backtester import backtest
-from technical_strategies.sma_crossover.sma_crossover_nov import sma_crossover
-# from dow_index_data import dow_jones_companies as dow
+from technical_strategies.bollinger_bands.bollinger_bands_backtester import backtest
+from technical_strategies.bollinger_bands.bollinger_bands import bollingerBands
 from dow_index_data import dow_jones_index_data_csv as dowIndexData
 from stock_ohlc_data import get_stock_data as getStocks
-from technical_strategies.sma_crossover.sma_grafi import SMA_trading_graph, profit_graph
+from technical_strategies.bollinger_bands.bollinger_bands_grafi import bollinger_trading_graph, profit_graph
 from utility import utils as util
 
 
@@ -31,17 +28,14 @@ def zacetniDf(data):
 
 def najdiOptimalneParametreNaIndeksu(data, ticker, hold_obdobje):
     print("Testiram na ucni mnozici")
-    long_values = [100, 124, 150, 175, 200]
-    short_values = [40, 54, 70, 85, 100]
+    slovar_parametrov = {10: 1.9, 20: 2, 30: 2, 40: 2.1, 50: 2.1}  # key-value pari
     testni_rezultati = {}
     counter = 0
-    for long in long_values:
-        for short in short_values:
-            if long != short:
-                testni_rezultati[f"[{short},{long}]"] = {}
-                data_df = data.copy(deep=True)
-                testni_rezultati[f"[{short},{long}]"] = sma_crossover(short, long, data_df, ticker, 0, 0, True, hold_obdobje, True)
-                counter += 1
+    for sma_length in slovar_parametrov:
+        testni_rezultati[f"[{sma_length},{slovar_parametrov[sma_length]}]"] = {}
+        data_df = data.copy(deep=True)
+        testni_rezultati[f"[{sma_length},{slovar_parametrov[sma_length]}]"] = bollingerBands(sma_length, slovar_parametrov[sma_length], data_df, ticker, 0, 0, True, hold_obdobje, True)
+        counter += 1
 
     return testni_rezultati
 
@@ -51,7 +45,7 @@ def testirajNaIndeksuUcnaMnozica(company_ticker, hold_obdobje, stockPricesDBInde
     zacetni_cas_na_enem = datetime.datetime.now()
     # '2005-02-07' namesto '2005-11-21 za max long sma na ucni mnozici
     company_data_ucna = stockPricesDBIndex.getCompanyStockDataInRange(date_from="2005-02-07", date_to="2017-02-02", companyTicker=company_ticker)
-    company_data_ucna = company_data_ucna[['Close']].copy()
+    company_data_ucna = company_data_ucna[['Close', 'High', 'Low']].copy()
     company_data_ucna = zacetniDf(data=company_data_ucna)  # dodamo stolpce
 
     rez_ucni = najdiOptimalneParametreNaIndeksu(data=company_data_ucna, ticker=company_ticker, hold_obdobje=hold_obdobje)
@@ -64,7 +58,7 @@ def testirajNaIndeksuUcnaMnozica(company_ticker, hold_obdobje, stockPricesDBInde
     sorted_rez_total_ucni = {k: v for k, v in sorted(rez_total_ucni.items(), key=lambda item: item[1])}
     print('Rezultati: ')
     hold_obdobje_string = util.getStringForHoldObdobje(hold_obdobje)
-    with open(f'D:\Faks\Algorithmic-Trading\/technical_strategies\sma_crossover\sma_rezultati_indeks_ucna\SMA_crossover_{company_ticker}_{hold_obdobje_string}.txt', 'w', encoding='UTF8') as f:
+    with open(f'D:\Faks\Algorithmic-Trading\/technical_strategies\/bollinger_bands\/BB_rezultati_indeks_ucna\/bollinger_bands_{company_ticker}_{hold_obdobje_string}.txt', 'w', encoding='UTF8') as f:
         for x in sorted_rez_total_ucni:
             print(x, ": ", sorted_rez_total_ucni[x])
             row_string = str(x) + ': ' + str(round(sorted_rez_total_ucni[x], 2)) + ' ' + str(util.povprecnaLetnaObrestnaMera(30000, sorted_rez_total_ucni[x], util.ucnaMnozicaLeta())) + '%'
@@ -84,14 +78,14 @@ def pozeniTestiranjeNaSamemIndeksu(hold_obdobja_list, stockPricesDBIndex):
 
 
 def testirajOptimalneNaTestniMnoziciZaHoldObdobjaIndeks(testnaStockPricesDB, hold_obdobja_list):
-    optimalni_dnevni = [[54, 200], [40, 200], [70, 200]]
-    optimalni_tedenski = [[54, 200], [40, 200], [70, 200]]
-    optimalni_mesecni = [[85, 124], [40, 200], [70, 200]]
-    optimalni_letni = [[40, 175], [70, 150], [70, 175]]
+    optimalni_dnevni = [[50, 2.1], [30, 2], [40, 2.1]]
+    optimalni_tedenski = [[50, 2.1], [30, 2], [40, 2.1]]
+    optimalni_mesecni = [[50, 2.1], [40, 2.1], [30, 2]]
+    optimalni_letni = [[50, 2.1], [10, 1.9], [40, 2.1]]
     dict_parametrov = {1: optimalni_dnevni, 7: optimalni_tedenski, 31: optimalni_mesecni, 365: optimalni_letni}
 
-    indeks_data_testna = testnaStockPricesDB.getCompanyStockDataInRange(date_from="2017-02-02", date_to="2021-11-21", companyTicker='^DJI')  # TODO bi se splačalo tuid tole popravit datum
-    indeks_data_testna = indeks_data_testna[['Close']].copy()
+    indeks_data_testna = testnaStockPricesDB.getCompanyStockDataInRange(date_from="2016-04-19", date_to="2021-11-21", companyTicker='^DJI')
+    indeks_data_testna = indeks_data_testna[['Close', 'High', 'Low']].copy()
     indeks_data_testna = zacetniDf(data=indeks_data_testna)  # dodamo stolpce
 
     for hold_cas in hold_obdobja_list:
@@ -104,12 +98,12 @@ def testirajOptimalneNaTestniMnoziciZaHoldObdobjaIndeks(testnaStockPricesDB, hol
         for kombinacija in trenutni_parametri_list:
             print('Kombinacija: ', kombinacija)
             data_df = indeks_data_testna.copy(deep=True)
-            temp = sma_crossover(kombinacija[0], kombinacija[1], data_df, '^DJI', 0, 0, True, hold_cas, True)
+            temp = bollingerBands(kombinacija[0], kombinacija[1], data_df, '^DJI', 0, 0, True, hold_cas, True)
             koncno_stanje = temp['Total'].to_numpy()[-1]
             rez_total_testni[f"[{kombinacija[0]},{kombinacija[1]}]"] = koncno_stanje
 
         sorted_rez_total_testni = {k: v for k, v in sorted(rez_total_testni.items(), key=lambda item: item[1])}
-        with open(f'D:\Faks\Algorithmic-Trading\/technical_strategies\sma_crossover\sma_rezultati_indkes_testna\SMA_crossover_{hold_obdobje_string}_testna.txt', 'w', encoding='UTF8') as f:
+        with open(f'D:\Faks\Algorithmic-Trading\/technical_strategies\/bollinger_bands\/BB_rezultati_indeks_testna\/bollinger_bands_^DJI_{hold_obdobje_string}_testna.txt', 'w', encoding='UTF8') as f:
             for x in sorted_rez_total_testni:
                 print(x, ': ', sorted_rez_total_testni[x], ' ', util.testnaMnozicaLeta())
                 row_string = str(x) + ': ' + str(round(sorted_rez_total_testni[x], 2)) + ' ' + str(util.povprecnaLetnaObrestnaMera(30000, sorted_rez_total_testni[x], util.testnaMnozicaLeta())) + '%'
@@ -121,33 +115,43 @@ def testirajOptimalneNaTestniMnoziciZaHoldObdobjaIndeks(testnaStockPricesDB, hol
             f.write('\n')
 
 
-def testirajNaIndeksuEnoKombinacijo(start_date, end_date, short_sma, long_sma, stock_prices_db, hold_obdobje_kombinacija_indeks):
+def testirajNaIndeksuEnoKombinacijo(start_date, end_date, sma_length, bands_multiplayer, stock_prices_db, hold_obdobje_kombinacija_indeks):
     indeks_data = stock_prices_db.getCompanyStockDataInRange(date_from=start_date, date_to=end_date, companyTicker='^DJI')
-    indeks_data = indeks_data[['Close']].copy()
+    indeks_data = indeks_data[['Close', 'High', 'Low']].copy()
     indeks_data = zacetniDf(data=indeks_data)  # dodamo stolpce
     data_df = indeks_data.copy(deep=True)
-    tmp = sma_crossover(short_sma, long_sma, data_df, '^DJI', 0, 0, True, hold_obdobje_kombinacija_indeks, True)  # TODO tukaj nebi smel rezat oz bi mogu dat drug start date -> 2005-02-07
+    tmp = bollingerBands(sma_length, bands_multiplayer, data_df, '^DJI', 0, 0, True, hold_obdobje_kombinacija_indeks, True)
+
+    # bollinger_trading_graph(sma_period=sma_length, bands_multiplayer=bands_multiplayer, df=tmp, company='^DJI')
+    # profit_graph(tmp, 0, '^DJI', tmp["Total"].iloc[-1])
 
     print('Total profit: ', tmp['Total'].iat[-1])
-    print(f"[{short_sma},{long_sma}]: {round(tmp['Total'].to_numpy()[-1], 2)} {util.povprecnaLetnaObrestnaMera(30000, tmp['Total'].to_numpy()[-1], util.vsaLeta())}%")
+    print(f"[{sma_length},{bands_multiplayer}]: {round(tmp['Total'].to_numpy()[-1], 2)} {util.povprecnaLetnaObrestnaMera(30000, tmp['Total'].to_numpy()[-1], util.vsaLeta())}%")
     print('hold_obdobje: ', hold_obdobje_kombinacija_indeks)
     print()
 
 
-""" Testrianje SMA crossover na DJIA indeksu """
+"""
+ Od tukaj naprej se izvaja testiranje Bollinger bands strategije na DJIA indeksu:
+"""
 
+# Bollinger bands strategy
+# datetmie = leto, mesec, dan
+
+# sma_period = 20
+# bands_multiplayer = 2
 list_hold_obdobja_indeks = [1, 7, 31, 365]
 begin_time = datetime.datetime.now()
 dowJonesIndexData = dowIndexData.dowJonesIndexData
 stockPricesDB = getStocks.StockOHLCData()
-print('Testrianje sma strategy indeks, inicializacija objektov')
+print('BB strategy indeks, inicializacije objekta')
 
 # pozeniTestiranjeNaSamemIndeksu(hold_obdobja_list=list_hold_obdobja_indeks, stockPricesDBIndex=stockPricesDB)
 
 # testirajOptimalneNaTestniMnoziciZaHoldObdobjaIndeks(testnaStockPricesDB=stockPricesDB, hold_obdobja_list=list_hold_obdobja_indeks)
 
-# preverjanje uspesnosti optimalnih kombinacij na celotnem casovnem obdobju
-testirajNaIndeksuEnoKombinacijo(start_date="2005-02-07", end_date="2021-11-21", short_sma=70, long_sma=150,
-                                stock_prices_db=stockPricesDB, hold_obdobje_kombinacija_indeks=365)
+# # preverjanje uspesnosti optimalnih kombinacij na celotnem casovnem obdobju
+# testirajNaIndeksuEnoKombinacijo(start_date="2005-02-07", end_date="2021-11-21", sma_length=50, bands_multiplayer=2.1,
+#                                 stock_prices_db=stockPricesDB, hold_obdobje_kombinacija_indeks=1)
 
 print('KONEC!!! ', datetime.datetime.now() - begin_time)

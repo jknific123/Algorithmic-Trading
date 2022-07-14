@@ -1,9 +1,29 @@
 import datetime as datetime
 
-
-from technical_strategies.bollinger_bands.bollinger_bands_backtester import backtest
+import numpy as np
 from dow_index_data import dow_jones_index_data_csv as dowIndexData
 from stock_ohlc_data import get_stock_data as getStocks
+from technical_strategies.bollinger_bands.bollinger_bands_backtester import backtest
+from technical_strategies.bollinger_bands.bollinger_bands import bollingerBands
+from technical_strategies.bollinger_bands.bollinger_bands_grafi import bollinger_trading_graph, profit_graph
+
+
+def zacetniDf(data):
+
+    # kreiramo nova stolpca za buy/sell signale
+    data['Buy'] = np.nan
+    data['Sell'] = np.nan
+    data['Cash'] = 0.0
+    data['Shares'] = 0
+    data['Profit'] = 0.0
+    data['Total'] = 0.0
+    data['Ticker'] = ""
+    data['Buy-Signal'] = np.nan
+    data['Sell-Signal'] = np.nan
+    data["Buy-date"] = ""
+    data["Sell-date"] = ""
+
+    return data
 
 
 def najdiOptimalneParametreNaPotrfoliu(start_period, end_period, dowTickers, stock_data, hold_obdobje):
@@ -55,6 +75,21 @@ def testirajNaPortfoliuEnoKombinacijo(start_date, end_date, sma_period, bands_mu
     print('Total profit: ', tmp['Total'].iat[-1])
 
 
+def trejdajSamoEnoPodjetje(sma_period, bands_multiplayer, stockPricesDBIndex, hold_obdobje):
+    company_ticker = "AAPL"
+    # testiram od 2017-02-02 do 2021-11-21, za start date dam: '2015-09-02' za max sma na testni mnozci
+    # test_data = stockPricesDBIndex.getCompanyStockDataInRange(date_from="2005-02-07", date_to="2017-02-02", companyTicker=index_ticker)
+    test_data = stockPricesDBIndex.getCompanyStockDataInRange(date_from="2005-02-07", date_to="2007-02-07", companyTicker=company_ticker)
+
+    test_data = test_data[['Close', 'High', 'Low']].copy()
+    test_data = zacetniDf(test_data)  # dodamo stolpce
+    return_df = bollingerBands(sma_period=sma_period, bands_multiplayer=bands_multiplayer, df=test_data, ticker=company_ticker,
+                               starting_index=0, status=0, odZacetkaAliNe=True, holdObdobje=hold_obdobje, potrebnoRezatiGledeNaDatum=True)
+
+    bollinger_trading_graph(sma_period=sma_period, bands_multiplayer=bands_multiplayer, df=return_df, company=company_ticker)
+    profit_graph(return_df, 0, company_ticker, return_df["Total"].iloc[-1])
+
+
 """
  Od tukaj naprej se izvaja testiranje Bollinger bands strategije:
 """
@@ -74,6 +109,8 @@ dowJonesIndexData = dowIndexData.dowJonesIndexData
 stockPricesDB = getStocks.StockOHLCData()
 print('sma strategy po klicu inicializacije objekta')
 
+# trejdajSamoEnoPodjetje(sma_period=20, bands_multiplayer=2, stockPricesDBIndex=stockPricesDB, hold_obdobje=1)
+
 # testirajNaEnemPodjetju(hold_obdobje=holdObdobje)
 # testirajNaPortfoliu(dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
 
@@ -82,7 +119,7 @@ print('sma strategy po klicu inicializacije objekta')
 #                                   stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
 
 # testna mnozica
-testirajNaPortfoliuEnoKombinacijo(start_date="2017-02-02", end_date="2021-11-21", sma_period=50, bands_multiplayer=2.1, dowTickers=dowJonesIndexData,
-                                  stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
+# testirajNaPortfoliuEnoKombinacijo(start_date="2017-02-02", end_date="2021-11-21", sma_period=50, bands_multiplayer=2.1, dowTickers=dowJonesIndexData,
+#                                   stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
 
 print('KONEC!!! ', datetime.datetime.now() - begin_time)
