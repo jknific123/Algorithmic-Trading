@@ -237,7 +237,7 @@ def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis):
     pretekla_leta = datetime.datetime.strptime(allFunds.index[-1], '%Y-%m-%d').year - datetime.datetime.strptime(allFunds.index[0], '%Y-%m-%d').year
     povprecna_letna_obrestna_mera = util.povprecnaLetnaObrestnaMera(startFunds, endFunds, pretekla_leta)
 
-    profit_graph(allFunds, 1, "Portfolio", round(endFunds, 4))
+    # profit_graph(allFunds, 1, "Portfolio", round(endFunds, 4))
 
     print("Zacetna sredstva: ", startFunds, "$")
     print("Skupna sredstva portfolia: ", round(endFunds, 4), "$")

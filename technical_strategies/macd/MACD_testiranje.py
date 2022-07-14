@@ -94,8 +94,8 @@ print('MACD strategy po klicu inicializacije objekta')
 # testirajNaPortfoliu(dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
 
 # ucna mnozica
-testirajNaPortfoliuEnoKombinacijo(start_date="2005-11-21", end_date="2017-02-02", short_sma=12, long_sma=26, signal_line=9, dowTickers=dowJonesIndexData,
-                                  stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
+# testirajNaPortfoliuEnoKombinacijo(start_date="2005-11-21", end_date="2017-02-02", short_sma=12, long_sma=26, signal_line=9, dowTickers=dowJonesIndexData,
+#                                   stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
 
 # testna mnozica
 # testirajNaPortfoliuEnoKombinacijo(start_date="2017-02-02", end_date="2021-11-21", short_sma=20, long_sma=40, signal_line=9, dowTickers=dowJonesIndexData,
