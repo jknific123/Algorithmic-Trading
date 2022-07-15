@@ -21,6 +21,19 @@ def stohastic_trading_graph(sma_period, bands_multiplayer, df, company):
     plt.show()
 
 
+def stohastic_indicator_graf(high_low_period, d_sma_period, df, company):
+    # buy_signals = pd.DataFrame(df.index[df['Buy-Signal'] > 0].tolist())
+    # sell_signals = pd.DataFrame(df.index[df['Sell-Signal'] > 0].tolist())
+
+    axis = df[['%K', f'%D-{d_sma_period}-days']].plot()
+    axis2 = df['Close'].plot(ax=axis, secondary_y=True, color='black')
+    axis2.plot(df['Buy-Signal'], '^', markersize=6, color='green', label='Buy signal', lw=2)
+    axis2.plot(df['Sell-Signal'], 'v', markersize=6, color='red', label='Sell signal', lw=2)
+    axis.axhline(20, linestyle="--", color='r')
+    axis.axhline(80, linestyle="--", color='r')
+    plt.show()
+
+
 def profit_graph(df, mode, company, cash):
     # prikaz grafa sredstev
     # mode = 0 -> prikaz podjetja

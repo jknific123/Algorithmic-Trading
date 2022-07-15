@@ -19,7 +19,7 @@ def days_between(d1, d2):
     return abs((d2 - d1).days)
 
 
-def stohastic_oscilator(high_low_period, d_sma_period, df, ticker, starting_index, status, odZacetkaAliNe, holdObdobje):
+def stohastic_oscilator(high_low_period, d_sma_period, df, ticker, starting_index, status, odZacetkaAliNe, holdObdobje, potrebnoRezatiGledeNaDatum):
     # naredimo nove stolpce za EMA-e, MACD in signal line
 
     """
@@ -36,7 +36,11 @@ def stohastic_oscilator(high_low_period, d_sma_period, df, ticker, starting_inde
 
     # v nadaljevanju uporabljamo samo podatke od takrat, ko je dolgi sma že na voljo
     if odZacetkaAliNe is True and ticker != 'DOW':
-        df = df[high_low_period:]
+        if potrebnoRezatiGledeNaDatum:
+            indx_rezanja = util.poisciIndexZaRezanjeDf(df)
+            df = df[indx_rezanja:]
+        else:
+            df = df[high_low_period:]
         if starting_index != 0:
             starting_index = starting_index - high_low_period  # treba je posodobiti tudi starting_index, ko se reze df
 
@@ -69,7 +73,7 @@ def stohastic_oscilator(high_low_period, d_sma_period, df, ticker, starting_inde
 
         else:  # zacetek tabele -> inicializacija vrednosti
             if df['Cash'].to_numpy()[x] == 0:  # nimamo se denarja
-                df['Cash'].to_numpy()[x] = util.getMoney()
+                df['Cash'].to_numpy()[x] = util.getMoney(ticker)
             df['Total'].to_numpy()[x] = (df['Cash'].to_numpy()[x] + util.fees(df['Shares'].to_numpy()[x] * df['Close'].to_numpy()[x]))
             df['Ticker'].to_numpy()[x] = ticker
 
