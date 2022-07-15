@@ -82,7 +82,6 @@ def stohastic_oscilator(high_low_period, d_sma_period, df, ticker, starting_inde
             pretekli_dnevi_buy = days_between(df["Buy-date"].to_numpy()[x], df.index[x])
 
         # %K < 20 in %D < 20 in %K > %D -> buy signal
-        # za tazadnjega nisem sure < al >
         if df["%K"].to_numpy()[x] < 20 and df[f'%D-{d_sma_period}-days'].to_numpy()[x] < 20 and df["%K"].to_numpy()[x] > df[f'%D-{d_sma_period}-days'].to_numpy()[x] and df["Close"].to_numpy()[x] != 0:
 
             # preverimo ceno ene delnice in ce imamo dovolj denarja, da lahko kupimo delnice
