@@ -27,9 +27,9 @@ def pogojBollingerBands(x, df):
 
 
 def pogojStohascticOscilator(x, df):
-    if df["%K"].to_numpy()[x] < 20 and df[f'%D'].to_numpy()[x] < 20:   # and df["%K"].to_numpy()[x] > df[f'%D'].to_numpy()[x]
+    if df["%K"].to_numpy()[x] < 20 and df[f'%D'].to_numpy()[x] < 20 and df["%K"].to_numpy()[x] > df[f'%D'].to_numpy()[x]:   # and df["%K"].to_numpy()[x] > df[f'%D'].to_numpy()[x]
         return "Buy"
-    elif df["%K"].to_numpy()[x] > 80 and df[f'%D'].to_numpy()[x] > 80:  # and df["%K"].to_numpy()[x] < df[f'%D'].to_numpy()[x]
+    elif df["%K"].to_numpy()[x] > 80 and df[f'%D'].to_numpy()[x] > 80 and df["%K"].to_numpy()[x] < df[f'%D'].to_numpy()[x]:  # and df["%K"].to_numpy()[x] < df[f'%D'].to_numpy()[x]
         return "Sell"
 
 
@@ -43,9 +43,9 @@ def pogojMACD(x, df):
 def pogojBuy(x, df):
     bol = pogojBollingerBands(x, df)
     osc = pogojStohascticOscilator(x, df)
-    macd = pogojMACD(x, df)
+    # macd = pogojMACD(x, df)
 
-    if bol == "Buy" and osc == "Buy" and macd == "Buy":
+    if bol == "Buy" and osc == "Buy":  #  and macd == "Buy":
         return True
     else:
         return False
@@ -54,9 +54,9 @@ def pogojBuy(x, df):
 def pogojSell(x, df):
     bol = pogojBollingerBands(x, df)
     osc = pogojStohascticOscilator(x, df)
-    macd = pogojMACD(x, df)
+    # macd = pogojMACD(x, df)
 
-    if bol == "Sell" and osc == "Sell" and macd == "Sell":
+    if bol == "Sell" and osc == "Sell":  # and macd == "Sell":
         return True
     else:
         return False
@@ -64,11 +64,11 @@ def pogojSell(x, df):
 
 def mixed_tehnical_strategy(short_period_macd, long_period_macd, signal_period_macd, high_low_period_stohastic, d_sma_period_stohastic, sma_period_bollinger,
                             bands_multiplayer_bollinger, df, ticker, starting_index, status, odZacetkaAliNe, holdObdobje, potrebnoRezatiGledeNaDatum):
-    # MACD
-    df[f'EMA-{short_period_macd}'] = df['Close'].ewm(span=short_period_macd, adjust=False).mean()
-    df[f'EMA-{long_period_macd}'] = df['Close'].ewm(span=long_period_macd, adjust=False).mean()
-    df["MACD"] = df[f'EMA-{short_period_macd}'] - df[f'EMA-{long_period_macd}']
-    df[f"Signal MACD"] = df["MACD"].ewm(span=signal_period_macd, adjust=False).mean()
+    # # MACD
+    # df[f'EMA-{short_period_macd}'] = df['Close'].ewm(span=short_period_macd, adjust=False).mean()
+    # df[f'EMA-{long_period_macd}'] = df['Close'].ewm(span=long_period_macd, adjust=False).mean()
+    # df["MACD"] = df[f'EMA-{short_period_macd}'] - df[f'EMA-{long_period_macd}']
+    # df[f"Signal MACD"] = df["MACD"].ewm(span=signal_period_macd, adjust=False).mean()
 
     # Stohastic Oscilator
     df[f'Low-{high_low_period_stohastic}-days'] = df['Low'].rolling(window=high_low_period_stohastic, min_periods=1, center=False).min()
