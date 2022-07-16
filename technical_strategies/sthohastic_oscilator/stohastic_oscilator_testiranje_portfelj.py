@@ -110,5 +110,5 @@ print('Stohastic oscilator strategy portfelj, inicializacije objekta')
 # testirajOptimalneNaTestniMnoziciZaHoldObdobja(dowTickers=dowJonesIndexData, testnaStockPricesDB=stockPricesDB, hold_obdobja_list=list_hold_obdobja_portelj)
 
 # preverjanje uspesnosti optimalnih kombinacij na celotnem casovnem obdobju
-testirajNaPortfoliuEnoKombinacijo(start_date="2005-11-21", end_date="2021-11-21", k_sma=25, d_sma=3,
-                                  dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, hold_obdobje_kombinacija_portfolio=365)
+# testirajNaPortfoliuEnoKombinacijo(start_date="2005-11-21", end_date="2021-11-21", k_sma=25, d_sma=3,
+#                                   dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, hold_obdobje_kombinacija_portfolio=365)

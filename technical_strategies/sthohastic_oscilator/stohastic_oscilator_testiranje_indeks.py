@@ -81,10 +81,10 @@ def pozeniTestiranjeNaSamemIndeksu(hold_obdobja_list, stockPricesDBIndex):
 
 
 def testirajOptimalneNaTestniMnoziciZaHoldObdobjaIndeks(testnaStockPricesDB, hold_obdobja_list):
-    optimalni_dnevni = [[25, 8], [15, 3], [9, 8]]
-    optimalni_tedenski = [[25, 8], [15, 3], [9, 8]]
-    optimalni_mesecni = [[25, 8], [15, 11], [9, 8]]
-    optimalni_letni = [[20, 11], [20, 5], [9, 8]]
+    optimalni_dnevni = [[20, 14], [25, 5], [25, 8]]
+    optimalni_tedenski = [[20, 14], [25, 5], [25, 8]]
+    optimalni_mesecni = [[15, 14], [20, 14], [25, 8]]
+    optimalni_letni = [[25, 5], [25, 8], [20, 5]]
     dict_parametrov = {1: optimalni_dnevni, 7: optimalni_tedenski, 31: optimalni_mesecni, 365: optimalni_letni}
 
     indeks_data_testna = testnaStockPricesDB.getCompanyStockDataInRange(date_from="2016-04-19", date_to="2021-11-21", companyTicker='^DJI')
@@ -152,5 +152,5 @@ print('BB strategy indeks, inicializacije objekta')
 # testirajOptimalneNaTestniMnoziciZaHoldObdobjaIndeks(testnaStockPricesDB=stockPricesDB, hold_obdobja_list=list_hold_obdobja_indeks)
 
 # # preverjanje uspesnosti optimalnih kombinacij na celotnem casovnem obdobju
-testirajNaIndeksuEnoKombinacijo(start_date="2005-02-07", end_date="2021-11-21", k_sma=20, d_sma=5,
-                                stock_prices_db=stockPricesDB, hold_obdobje_kombinacija_indeks=365)
+# testirajNaIndeksuEnoKombinacijo(start_date="2005-02-07", end_date="2021-11-21", k_sma=20, d_sma=5,
+#                                 stock_prices_db=stockPricesDB, hold_obdobje_kombinacija_indeks=365)
