@@ -31,8 +31,9 @@ def stohastic_oscilator(high_low_period, d_sma_period, df, ticker, starting_inde
 
     df[f'Low-{high_low_period}-days'] = df['Low'].rolling(window=high_low_period, min_periods=1, center=False).min()
     df[f'High-{high_low_period}-days'] = df['High'].rolling(window=high_low_period, min_periods=1, center=False).max()
-    df['%K'] = (df["Close"] - df[f'Low-{high_low_period}-days']) / (df[f'High-{high_low_period}-days'] - df[f'Low-{high_low_period}-days']) * 100
-    df[f'%D-{d_sma_period}-days'] = df["%K"].rolling(window=d_sma_period, min_periods=1, center=False).mean()
+    df['Fast %K'] = (df["Close"] - df[f'Low-{high_low_period}-days']) / (df[f'High-{high_low_period}-days'] - df[f'Low-{high_low_period}-days']) * 100
+    df[f'%K'] = df["Fast %K"].rolling(window=d_sma_period, min_periods=1, center=False).mean()
+    df[f'%D'] = df[f"%K"].rolling(window=d_sma_period, min_periods=1, center=False).mean()
 
     # v nadaljevanju uporabljamo samo podatke od takrat, ko je dolgi sma že na voljo
     if odZacetkaAliNe is True and ticker != 'DOW':
@@ -82,7 +83,7 @@ def stohastic_oscilator(high_low_period, d_sma_period, df, ticker, starting_inde
             pretekli_dnevi_buy = days_between(df["Buy-date"].to_numpy()[x], df.index[x])
 
         # %K < 20 in %D < 20 in %K > %D -> buy signal
-        if df["%K"].to_numpy()[x] < 20 and df[f'%D-{d_sma_period}-days'].to_numpy()[x] < 20 and df["%K"].to_numpy()[x] > df[f'%D-{d_sma_period}-days'].to_numpy()[x] and df["Close"].to_numpy()[x] != 0:
+        if df["%K"].to_numpy()[x] < 20 and df[f'%D'].to_numpy()[x] < 20 and df["%K"].to_numpy()[x] > df[f'%D'].to_numpy()[x] and df["Close"].to_numpy()[x] != 0:
 
             # preverimo ceno ene delnice in ce imamo dovolj denarja, da lahko kupimo delnice
             cena_ene_delnice = df['Close'].to_numpy()[x] + util.percentageFee(util.feePercentage, df['Close'].to_numpy()[x])
@@ -105,7 +106,7 @@ def stohastic_oscilator(high_low_period, d_sma_period, df, ticker, starting_inde
                 check = 2
 
         # %K > 80 in %D > 80 in %K < %D -> sell signal
-        elif df["%K"].to_numpy()[x] > 80 and df[f'%D-{d_sma_period}-days'].to_numpy()[x] > 80 and df["%K"].to_numpy()[x] < df[f'%D-{d_sma_period}-days'].to_numpy()[x] and pretekli_dnevi_buy >= holdObdobje and df["Close"].to_numpy()[x] != 0:
+        elif df["%K"].to_numpy()[x] > 80 and df[f'%D'].to_numpy()[x] > 80 and df["%K"].to_numpy()[x] < df[f'%D'].to_numpy()[x] and pretekli_dnevi_buy >= holdObdobje and df["Close"].to_numpy()[x] != 0:
 
             if check != 1 and check != 0:  # zadnji signal ni bil sell in nismo na zacetku
 
