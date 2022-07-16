@@ -48,7 +48,8 @@ def setObdobja(startObdobja, endObdobja, dowTickersObdobja):
     return obdobja
 
 
-def backtest(start, end, short_period, long_period, signal_period, high_low_period, d_sma_period, sma_period, bands_multiplayer, dowTickers, stockPricesDB, hold_obdobje):
+def backtest(start, end, short_period_macd, long_period_macd, signal_period_macd, high_low_period_stohastic, d_sma_period_stohastic, sma_period_bollinger,
+             bands_multiplayer_bollinger, dowTickers, stockPricesDB, hold_obdobje):
     # nastavimo obdobja
     obdobja = setObdobja(startObdobja=start, endObdobja=end, dowTickersObdobja=dowTickers)
 
@@ -85,7 +86,7 @@ def backtest(start, end, short_period, long_period, signal_period, high_low_peri
                     prazen = prazen[['Close', 'High', 'Low']].copy()
                     prazen = zacetniDf(prazen)
                     prazen["Close"] = 0
-                    return_df = mixed_tehnical_strategy(short_period, long_period, signal_period, high_low_period, d_sma_period, sma_period, bands_multiplayer,
+                    return_df = mixed_tehnical_strategy(short_period_macd, long_period_macd, signal_period_macd, high_low_period_stohastic, d_sma_period_stohastic, sma_period_bollinger, bands_multiplayer_bollinger,
                                                         prazen, x, 0, 0, True, hold_obdobje, True)
                     portfolio[x] = return_df
 
@@ -93,7 +94,7 @@ def backtest(start, end, short_period, long_period, signal_period, high_low_peri
                     data = stockPricesDB.getCompanyStockDataInRange(date_from=ohlc_download_start_date, date_to=koncnoObdobje, companyTicker=x)
                     data = data[['Close', 'High', 'Low']].copy()
                     data = zacetniDf(data)  # dodamo stolpce
-                    return_df = mixed_tehnical_strategy(short_period, long_period, signal_period, high_low_period, d_sma_period, sma_period, bands_multiplayer,
+                    return_df = mixed_tehnical_strategy(short_period_macd, long_period_macd, signal_period_macd, high_low_period_stohastic, d_sma_period_stohastic, sma_period_bollinger, bands_multiplayer_bollinger,
                                                         data, x, 0, 0, True, hold_obdobje, True)
                     portfolio[x] = return_df
 
@@ -118,7 +119,7 @@ def backtest(start, end, short_period, long_period, signal_period, high_low_peri
                     print(odstranjenTicker, "->", nov_ticker)
                     real_start_date = datetime.datetime.strptime(zacetnoObdobje, "%Y-%m-%d")
                     plus_one_start_date = (real_start_date + datetime.timedelta(days=1)).strftime("%Y-%m-%d")  # adding one day
-                    modified_date = (datetime.datetime.strptime(plus_one_start_date, "%Y-%m-%d") - datetime.timedelta(days=(long_period * 2))).strftime(
+                    modified_date = (datetime.datetime.strptime(plus_one_start_date, "%Y-%m-%d") - datetime.timedelta(days=(long_period_macd * 2))).strftime(
                         "%Y-%m-%d")  # odstevamo long period, da dobimo dovolj podatkov
                     print('plus_one_start_date', plus_one_start_date)
                     print('modified_date', modified_date)
@@ -164,7 +165,7 @@ def backtest(start, end, short_period, long_period, signal_period, high_low_peri
 
                     # startamo trading algo
                     # zadnji argument True ker je razlicen ticker in zacnemo od zacetka trejdat, isti -> False ker samo nadaljujemo trejdanje
-                    new_returns = mixed_tehnical_strategy(short_period, long_period, signal_period, high_low_period, d_sma_period, sma_period, bands_multiplayer,
+                    new_returns = mixed_tehnical_strategy(short_period_macd, long_period_macd, signal_period_macd, high_low_period_stohastic, d_sma_period_stohastic, sma_period_bollinger, bands_multiplayer_bollinger,
                                                           new_df, nov_ticker, starting_index, 0, True, hold_obdobje, False)
 
                     added_returns = new_returns[plus_one_start_date:]  # iz new_returns vzamemo del dataframa od plus_one_start_date do konca in ga nato prilepimo v df iz portfolia
@@ -206,7 +207,7 @@ def backtest(start, end, short_period, long_period, signal_period, high_low_peri
 
                 concat_data = pd.concat([ostaliTickerDataframe, new_data])
 
-                new_ostaliTickerDataframe = mixed_tehnical_strategy(short_period, long_period, signal_period, high_low_period, d_sma_period, sma_period, bands_multiplayer,
+                new_ostaliTickerDataframe = mixed_tehnical_strategy(short_period_macd, long_period_macd, signal_period_macd, high_low_period_stohastic, d_sma_period_stohastic, sma_period_bollinger, bands_multiplayer_bollinger,
                                                                     concat_data, f"new{ostaliTicker}", starting_index, zadnji_signal, False, hold_obdobje, False)
                 portfolio[ostaliTicker] = new_ostaliTickerDataframe
 
@@ -263,15 +264,15 @@ def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis):
 # datetmie = leto, mesec, dan
 
 # MACD
-#short_period = 12
-#long_period = 26
-#signal_period = 9
+#short_period_macd = 12
+#long_period_macd = 26
+#signal_period_macd = 9
 
 # Stohastic oscilator
-#high_low_period = 14
-#d_sma_period = 3
+#high_low_period_stohastic = 14
+#d_sma_period_stohastic = 3
 
 # Bollinger bands
-#sma_period = 20
-#bands_multiplayer = 2
+#sma_period_bollinger = 20
+#bands_multiplayer_bollinger = 2
 

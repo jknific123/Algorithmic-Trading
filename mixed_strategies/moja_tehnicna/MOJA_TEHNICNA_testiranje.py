@@ -9,7 +9,7 @@ def najdiOptimalneParametreNaPotrfoliu(start_period, end_period, dowTickers, sto
     ucni_rezultati = {}
     counter = 0
 
-    # MACD parameters
+    # MACD parameters TODO stare vrednosti
     macd_dnevni = [[20, 40, 9], [20, 35, 9], [18, 40, 9]]
     macd_tedenski = [[20, 35, 9], [20, 40, 9], [18, 40, 9]]
     macd_mesecni = [[20, 35, 9], [20, 40, 9], [18, 40, 9]]
@@ -77,12 +77,12 @@ def testirajNaPortfoliu(dowTickers, stock_prices_db, hold_obdobje):
         print(x, ": ", sorted_rez_total_ucni[x])
 
 
-def testirajNaPortfoliuEnoKombinacijo(start_date, end_date, short_period, long_period, signal_period, high_low_period, d_sma_period, sma_period, bands_multiplayer,
+def testirajNaPortfoliuEnoKombinacijo(start_date, end_date, short_period_macd, long_period_macd, signal_period_macd, high_low_period_stohastic, d_sma_period_stohastic, sma_period_bollinger, bands_multiplayer_bollinger,
                                       dowTickers, stock_prices_db, hold_obdobje):
 
-    tmp = backtest(start=start_date, end=end_date, short_period=short_period, long_period=long_period, signal_period=signal_period, high_low_period=high_low_period,
-                   d_sma_period=d_sma_period, sma_period=sma_period, bands_multiplayer=bands_multiplayer, dowTickers=dowTickers, stockPricesDB=stock_prices_db,
-                   hold_obdobje=hold_obdobje)
+    tmp = backtest(start=start_date, end=end_date, short_period_macd=short_period_macd, long_period_macd=long_period_macd, signal_period_macd=signal_period_macd,
+                   high_low_period_stohastic=high_low_period_stohastic, d_sma_period_stohastic=d_sma_period_stohastic, sma_period_bollinger=sma_period_bollinger,
+                   bands_multiplayer_bollinger=bands_multiplayer_bollinger, dowTickers=dowTickers, stockPricesDB=stock_prices_db, hold_obdobje=hold_obdobje)
 
     print('Total profit: ', tmp['Total'].iat[-1])
 
@@ -121,9 +121,8 @@ print('stohastic oscilator strategy po klicu inicializacije objekta')
 
 
 # ucna mnozica
-testirajNaPortfoliuEnoKombinacijo(start_date="2005-11-21", end_date="2017-02-02", short_period=12, long_period=26, signal_period=9,
-                                  high_low_period=14, d_sma_period=3,
-                                  sma_period=20, bands_multiplayer=2,
+testirajNaPortfoliuEnoKombinacijo(start_date="2005-11-21", end_date="2017-02-02", short_period_macd=12, long_period_macd=26, signal_period_macd=9,
+                                  high_low_period_stohastic=14, d_sma_period_stohastic=3, sma_period_bollinger=20, bands_multiplayer_bollinger=2,
                                   dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
 
 # testna mnozica
