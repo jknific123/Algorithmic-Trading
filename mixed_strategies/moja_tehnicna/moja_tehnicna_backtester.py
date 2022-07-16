@@ -119,7 +119,7 @@ def backtest(start, end, short_period_macd, long_period_macd, signal_period_macd
                     print(odstranjenTicker, "->", nov_ticker)
                     real_start_date = datetime.datetime.strptime(zacetnoObdobje, "%Y-%m-%d")
                     plus_one_start_date = (real_start_date + datetime.timedelta(days=1)).strftime("%Y-%m-%d")  # adding one day
-                    modified_date = (datetime.datetime.strptime(plus_one_start_date, "%Y-%m-%d") - datetime.timedelta(days=(long_period_macd * 2))).strftime(
+                    modified_date = (datetime.datetime.strptime(plus_one_start_date, "%Y-%m-%d") - datetime.timedelta(days=(sma_period_bollinger * 2))).strftime(
                         "%Y-%m-%d")  # odstevamo long period, da dobimo dovolj podatkov
                     print('plus_one_start_date', plus_one_start_date)
                     print('modified_date', modified_date)
