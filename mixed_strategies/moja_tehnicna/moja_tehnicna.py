@@ -27,23 +27,23 @@ def pogojBollingerBands(x, df):
 
 
 def pogojStohascticOscilator(x, df):
-    if df["%K"].to_numpy()[x] < 20 and df[f'%D'].to_numpy()[x] < 20 :   # and df["%K"].to_numpy()[x] > df[f'%D'].to_numpy()[x]
+    if df["%K"].to_numpy()[x] < 20 and df[f'%D'].to_numpy()[x] < 20:   # and df["%K"].to_numpy()[x] > df[f'%D'].to_numpy()[x]
         return "Buy"
     elif df["%K"].to_numpy()[x] > 80 and df[f'%D'].to_numpy()[x] > 80:  # and df["%K"].to_numpy()[x] < df[f'%D'].to_numpy()[x]
         return "Sell"
 
 
-def pogojMACD(x, df, signal_period):
-    if df["MACD"].to_numpy()[x] > df[f"Signal-{signal_period}"].to_numpy()[x]:
+def pogojMACD(x, df):
+    if df["MACD"].to_numpy()[x] > df[f"Signal MACD"].to_numpy()[x]:
         return "Buy"
-    elif df["MACD"].to_numpy()[x] < df[f"Signal-{signal_period}"].to_numpy()[x]:
+    elif df["MACD"].to_numpy()[x] < df[f"Signal MACD"].to_numpy()[x]:
         return "Sell"
 
 
-def pogojBuy(x, df, signal_period):
+def pogojBuy(x, df):
     bol = pogojBollingerBands(x, df)
     osc = pogojStohascticOscilator(x, df)
-    macd = pogojMACD(x, df, signal_period)
+    macd = pogojMACD(x, df)
 
     if bol == "Buy" and osc == "Buy" and macd == "Buy":
         return True
@@ -51,10 +51,10 @@ def pogojBuy(x, df, signal_period):
         return False
 
 
-def pogojSell(x, df, d_sma_period, signal_period):
+def pogojSell(x, df):
     bol = pogojBollingerBands(x, df)
     osc = pogojStohascticOscilator(x, df)
-    macd = pogojMACD(x, df, signal_period)
+    macd = pogojMACD(x, df)
 
     if bol == "Sell" and osc == "Sell" and macd == "Sell":
         return True
@@ -62,29 +62,29 @@ def pogojSell(x, df, d_sma_period, signal_period):
         return False
 
 
-def mixed_tehnical_strategy(short_period, long_period, signal_period, high_low_period, d_sma_period, sma_period, bands_multiplayer, df, ticker, starting_index, status,
-                            odZacetkaAliNe, holdObdobje, potrebnoRezatiGledeNaDatum):
+def mixed_tehnical_strategy(short_period_macd, long_period_macd, signal_period_macd, high_low_period_stohastic, d_sma_period_stohastic, sma_period_bollinger,
+                            bands_multiplayer_bollinger, df, ticker, starting_index, status, odZacetkaAliNe, holdObdobje, potrebnoRezatiGledeNaDatum):
     # MACD
-    df[f'EMA-{short_period}'] = df['Close'].ewm(span=short_period, adjust=False).mean()
-    df[f'EMA-{long_period}'] = df['Close'].ewm(span=long_period, adjust=False).mean()
-    df["MACD"] = df[f'EMA-{short_period}'] - df[f'EMA-{long_period}']
-    df[f"Signal-{signal_period}"] = df["MACD"].ewm(span=signal_period, adjust=False).mean()
+    df[f'EMA-{short_period_macd}'] = df['Close'].ewm(span=short_period_macd, adjust=False).mean()
+    df[f'EMA-{long_period_macd}'] = df['Close'].ewm(span=long_period_macd, adjust=False).mean()
+    df["MACD"] = df[f'EMA-{short_period_macd}'] - df[f'EMA-{long_period_macd}']
+    df[f"Signal MACD"] = df["MACD"].ewm(span=signal_period_macd, adjust=False).mean()
 
     # Stohastic Oscilator
-    df[f'Low-{high_low_period}-days'] = df['Low'].rolling(window=high_low_period, min_periods=1, center=False).min()
-    df[f'High-{high_low_period}-days'] = df['High'].rolling(window=high_low_period, min_periods=1, center=False).max()
-    # df['%K'] = (df["Close"] - df[f'Low-{high_low_period}-days']) / (df[f'High-{high_low_period}-days'] - df[f'Low-{high_low_period}-days']) * 100
-    # df[f'%D'] = df["%K"].rolling(window=d_sma_period, min_periods=1, center=False).mean()
-    df['Fast %K'] = (df["Close"] - df[f'Low-{high_low_period}-days']) / (df[f'High-{high_low_period}-days'] - df[f'Low-{high_low_period}-days']) * 100
-    df[f'%K'] = df["Fast %K"].rolling(window=d_sma_period, min_periods=1, center=False).mean()
-    df[f'%D'] = df[f"%K"].rolling(window=d_sma_period, min_periods=1, center=False).mean()
+    df[f'Low-{high_low_period_stohastic}-days'] = df['Low'].rolling(window=high_low_period_stohastic, min_periods=1, center=False).min()
+    df[f'High-{high_low_period_stohastic}-days'] = df['High'].rolling(window=high_low_period_stohastic, min_periods=1, center=False).max()
+    # df['%K'] = (df["Close"] - df[f'Low-{high_low_period_stohastic}-days']) / (df[f'High-{high_low_period_stohastic}-days'] - df[f'Low-{high_low_period_stohastic}-days']) * 100
+    # df[f'%D'] = df["%K"].rolling(window=d_sma_period_stohastic, min_periods=1, center=False).mean()
+    df['Fast %K'] = (df["Close"] - df[f'Low-{high_low_period_stohastic}-days']) / (df[f'High-{high_low_period_stohastic}-days'] - df[f'Low-{high_low_period_stohastic}-days']) * 100
+    df[f'%K'] = df["Fast %K"].rolling(window=d_sma_period_stohastic, min_periods=1, center=False).mean()
+    df[f'%D'] = df[f"%K"].rolling(window=d_sma_period_stohastic, min_periods=1, center=False).mean()
 
     # Bollinger Bands
     df["Typical price"] = (df["High"] + df["Low"] + df["Close"]) / 3
-    df["STD"] = df["Typical price"].rolling(window=sma_period, min_periods=1, center=False).std(ddof=0)
-    df[f"TP SMA"] = df["Typical price"].rolling(sma_period).mean()
-    df['Upper band'] = df[f"TP SMA"] + (bands_multiplayer * df["STD"])
-    df['Lower band'] = df[f"TP SMA"] - (bands_multiplayer * df["STD"])
+    df["STD"] = df["Typical price"].rolling(window=sma_period_bollinger, min_periods=1, center=False).std(ddof=0)
+    df[f"TP SMA"] = df["Typical price"].rolling(sma_period_bollinger).mean()
+    df['Upper band'] = df[f"TP SMA"] + (bands_multiplayer_bollinger * df["STD"])
+    df['Lower band'] = df[f"TP SMA"] - (bands_multiplayer_bollinger * df["STD"])
 
     # v nadaljevanju uporabljamo samo podatke od takrat, ko je dolgi sma že na voljo
     if odZacetkaAliNe is True and ticker != 'DOW':
@@ -92,9 +92,9 @@ def mixed_tehnical_strategy(short_period, long_period, signal_period, high_low_p
             indx_rezanja = util.poisciIndexZaRezanjeDf(df)
             df = df[indx_rezanja:]
         else:
-            df = df[sma_period:]
+            df = df[sma_period_bollinger:]
         if starting_index != 0:
-            starting_index = starting_index - sma_period  # treba je posodobiti tudi starting_index, ko se reze df
+            starting_index = starting_index - sma_period_bollinger  # treba je posodobiti tudi starting_index, ko se reze df
 
     # za racunanje davka na dobiček
     sellPrice = 0
@@ -134,7 +134,7 @@ def mixed_tehnical_strategy(short_period, long_period, signal_period, high_low_p
             pretekli_dnevi_buy = days_between(df["Buy-date"].to_numpy()[x], df.index[x])
 
         # %K < 20 in %D < 20 in %K < %D -> buy signal
-        if df["Close"].to_numpy()[x] != 0 and pogojBuy(x, df, d_sma_period):
+        if df["Close"].to_numpy()[x] != 0 and pogojBuy(x, df):
 
             # preverimo ceno ene delnice in ce imamo dovolj denarja, da lahko kupimo delnice
             cena_ene_delnice = df['Close'].to_numpy()[x] + util.percentageFee(util.feePercentage, df['Close'].to_numpy()[x])
@@ -157,7 +157,7 @@ def mixed_tehnical_strategy(short_period, long_period, signal_period, high_low_p
                 check = 2
 
         # %K > 80 in %D > 80 in %K > %D -> sell signal
-        elif df["Close"].to_numpy()[x] != 0 and pogojSell(x, df, d_sma_period, signal_period) and pretekli_dnevi_buy >= holdObdobje:
+        elif df["Close"].to_numpy()[x] != 0 and pogojSell(x, df) and pretekli_dnevi_buy >= holdObdobje:
 
             if check != 1 and check != 0:  # zadnji signal ni bil sell in nismo na zacetku
 
