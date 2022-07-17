@@ -43,7 +43,7 @@ def pe_ratio_strategy(start_date, end_date, df, ticker, starting_index, status, 
 
         else:  # zacetek tabele -> inicializacija vrednosti
             if df['Cash'].to_numpy()[x] == 0:  # nimamo se denarja
-                df['Cash'].to_numpy()[x] = util.getMoney()
+                df['Cash'].to_numpy()[x] = util.getMoney(ticker)
             df['Total'].to_numpy()[x] = (df['Cash'].to_numpy()[x] + util.fees(df['Shares'].to_numpy()[x] * df['Close'].to_numpy()[x]))
             df['Ticker'].to_numpy()[x] = ticker
 

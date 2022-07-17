@@ -21,9 +21,12 @@ fundamentalIndicatorsDB = getFundamentalIndicators.StockFundamentalData()
 print('value investing strategy po klicu inicializacije objekta')
 
 # ucna mnozica
-testirajNaPortfoliu(start_date="2005-11-21", end_date="2017-02-02", dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, fundamental_indicators=fundamentalIndicatorsDB)
+# testirajNaPortfoliu(start_date="2005-11-21", end_date="2017-02-02", dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, fundamental_indicators=fundamentalIndicatorsDB)
 
 # testna mnozica
-testirajNaPortfoliu(start_date="2017-02-02", end_date="2021-11-21", dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, fundamental_indicators=fundamentalIndicatorsDB)
+# testirajNaPortfoliu(start_date="2017-02-02", end_date="2021-11-21", dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, fundamental_indicators=fundamentalIndicatorsDB)
+
+testirajNaPortfoliu(start_date="2005-11-21", end_date="2021-11-21", dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, fundamental_indicators=fundamentalIndicatorsDB)
+
 
 print('KONEC!!! ', datetime.datetime.now() - begin_time)
