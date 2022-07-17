@@ -68,10 +68,15 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stockPri
         # zacetek
         if zacetnoObdobje == start:
             # hardcodam za zacetno od ucne in testne mnozice
+            print("V zacetnem")
+
+            ohlc_download_start_date = ''
             if zacetnoObdobje == "2005-11-21":
                 starting_companies = dowTickers[zacetnoObdobje]["all"]
+                ohlc_download_start_date = '2005-02-07'  # za max long sma na ucni mnozici
             elif zacetnoObdobje == "2017-02-02":
                 starting_companies = dowTickers["2015-03-19"]["all"]
+                ohlc_download_start_date = '2016-04-19'  # prej '2015-09-02'  # za max sma na testni mnozci # prej '2015-08-06'
 
             # trejdamo z all od zacetnegaObdobja
             for x in starting_companies:
@@ -80,22 +85,22 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stockPri
                 # izjema za podjetje GM, za katerega nimam podatkov, zato samo naredim prazen dataframe
                 if x == "GM":
                     # pridobim df od podjetja HD in zbrišem podatke tako da je potem prazen
-                    prazen = stockPricesDB.getCompanyStockDataInRange(date_from=zacetnoObdobje, date_to=koncnoObdobje, companyTicker="HD")
+                    prazen = stockPricesDB.getCompanyStockDataInRange(date_from=ohlc_download_start_date, date_to=koncnoObdobje, companyTicker="HD")
                     prazen = prazen[['Close', 'High', 'Low']].copy()
                     prazen = zacetniDf(prazen)
                     prazen["Close"] = 0
                     return_df = dividend_investing_sma_crossover_strategy(start_date=zacetnoObdobje, end_date=koncnoObdobje, sPeriod=sma_period_short, lPeriod=sma_period_long,
                                                                           df=prazen, ticker=x, starting_index=0, status=0,
-                                                                          odZacetkaAliNe=True, fundamental_data=fundamental_data)
+                                                                          odZacetkaAliNe=True, fundamental_data=fundamental_data, potrebnoRezatiGledeNaDatum=True)
                     portfolio[x] = return_df
 
                 elif x != "GM":
-                    data = stockPricesDB.getCompanyStockDataInRange(date_from=zacetnoObdobje, date_to=koncnoObdobje, companyTicker=x)
+                    data = stockPricesDB.getCompanyStockDataInRange(date_from=ohlc_download_start_date, date_to=koncnoObdobje, companyTicker=x)
                     data = data[['Close', 'High', 'Low']].copy()
                     data = zacetniDf(data)  # dodamo stolpce
                     return_df = dividend_investing_sma_crossover_strategy(start_date=zacetnoObdobje, end_date=koncnoObdobje, sPeriod=sma_period_short, lPeriod=sma_period_long,
                                                                           df=data, ticker=x, starting_index=0, status=0,
-                                                                          odZacetkaAliNe=True, fundamental_data=fundamental_data)
+                                                                          odZacetkaAliNe=True, fundamental_data=fundamental_data, potrebnoRezatiGledeNaDatum=True)
                     portfolio[x] = return_df
 
             print(portfolio.keys())
@@ -167,7 +172,7 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stockPri
                     # zadnji argument True ker je razlicen ticker in zacnemo od zacetka trejdat, isti -> False ker samo nadaljujemo trejdanje
                     new_returns = dividend_investing_sma_crossover_strategy(start_date=zacetnoObdobje, end_date=koncnoObdobje, sPeriod=sma_period_short, lPeriod=sma_period_long,
                                                                             df=new_df, ticker=nov_ticker, starting_index=starting_index, status=0,
-                                                                            odZacetkaAliNe=True, fundamental_data=fundamental_data)
+                                                                            odZacetkaAliNe=True, fundamental_data=fundamental_data, potrebnoRezatiGledeNaDatum=False)
 
                     added_returns = new_returns[plus_one_start_date:]  # iz new_returns vzamemo del dataframa od plus_one_start_date do konca in ga nato prilepimo v df iz portfolia
                     concat_returns = pd.concat([ex_df, added_returns])
@@ -210,7 +215,7 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stockPri
 
                 new_ostaliTickerDataframe = dividend_investing_sma_crossover_strategy(start_date=zacetnoObdobje, end_date=koncnoObdobje, sPeriod=sma_period_short, lPeriod=sma_period_long,
                                                                                       df=concat_data, ticker=ostaliTicker, starting_index=starting_index, status=zadnji_signal,
-                                                                                      odZacetkaAliNe=False, fundamental_data=fundamental_data)
+                                                                                      odZacetkaAliNe=False, fundamental_data=fundamental_data, potrebnoRezatiGledeNaDatum=False)
                 portfolio[ostaliTicker] = new_ostaliTickerDataframe
 
     totals = prikaziPodatkePortfolia(portfolio, startIzpis=start, endIzpis=end)
@@ -241,7 +246,7 @@ def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis):
         count += 1
 
     # se izpis podatkov portfolia
-    startFunds = len(portfolio) * util.getMoney()
+    startFunds = len(portfolio) * util.getMoney('')
     endFunds = allFunds['Total'].to_numpy()[-1]
 
     profit_graph(allFunds, 1, "Portfolio", round(endFunds, 4))

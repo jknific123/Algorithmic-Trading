@@ -11,14 +11,18 @@ million = 1000000
 hundred_million = 100 * million
 
 
-def value_investing_strategy(start_date, end_date, sPeriod, lPeriod, df, ticker, starting_index, status, odZacetkaAliNe, fundamental_data):
+def value_investing_strategy(start_date, end_date, sPeriod, lPeriod, df, ticker, starting_index, status, odZacetkaAliNe, fundamental_data, potrebnoRezatiGledeNaDatum):
     print('Zacetek strategije za podjetje: ', ticker, 'obdobje: ', start_date, ' - ', end_date)
     # naredimo/napolnimo nova stolpca za oba SMA
     df[f'SMA-{sPeriod}'] = df['Close'].rolling(window=sPeriod, min_periods=1, center=False).mean()
     df[f'SMA-{lPeriod}'] = df['Close'].rolling(window=lPeriod, min_periods=1, center=False).mean()
     # v nadaljevanju uporabljamo samo podatke od takrat, ko je dolgi sma že na voljo
     if odZacetkaAliNe is True and ticker != 'DOW':
-        df = df[lPeriod:]
+        if potrebnoRezatiGledeNaDatum:
+            indx_rezanja = util.poisciIndexZaRezanjeDf(df)
+            df = df[indx_rezanja:]
+        else:
+            df = df[lPeriod:]
         if starting_index != 0:
             starting_index = starting_index - lPeriod  # treba je posodobiti tudi starting_index, ko se reze df
     # za fundamentalne indikatorje in njihovo povprecje v letu
@@ -56,7 +60,7 @@ def value_investing_strategy(start_date, end_date, sPeriod, lPeriod, df, ticker,
 
         else:  # zacetek tabele -> inicializacija vrednosti
             if df['Cash'].to_numpy()[x] == 0:  # nimamo se denarja
-                df['Cash'].to_numpy()[x] = util.getMoney()
+                df['Cash'].to_numpy()[x] = util.getMoney(ticker)
             df['Total'].to_numpy()[x] = (df['Cash'].to_numpy()[x] + util.fees(df['Shares'].to_numpy()[x] * df['Close'].to_numpy()[x]))
             df['Ticker'].to_numpy()[x] = ticker
 
