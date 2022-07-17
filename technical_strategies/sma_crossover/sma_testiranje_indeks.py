@@ -126,7 +126,9 @@ def testirajNaIndeksuEnoKombinacijo(start_date, end_date, short_sma, long_sma, s
     indeks_data = indeks_data[['Close']].copy()
     indeks_data = zacetniDf(data=indeks_data)  # dodamo stolpce
     data_df = indeks_data.copy(deep=True)
-    tmp = sma_crossover(short_sma, long_sma, data_df, '^DJI', 0, 0, True, hold_obdobje_kombinacija_indeks, True)  # TODO tukaj nebi smel rezat oz bi mogu dat drug start date -> 2005-02-07
+    tmp = sma_crossover(short_sma, long_sma, data_df, '^DJI', 0, 0, True, hold_obdobje_kombinacija_indeks, True)
+
+    # SMA_trading_graph(sPeriod=short_sma, lPeriod=long_sma, df=tmp, company='^DJI')
 
     print('Total profit: ', tmp['Total'].iat[-1])
     print(f"[{short_sma},{long_sma}]: {round(tmp['Total'].to_numpy()[-1], 2)} {util.povprecnaLetnaObrestnaMera(30000, tmp['Total'].to_numpy()[-1], util.vsaLeta())}%")

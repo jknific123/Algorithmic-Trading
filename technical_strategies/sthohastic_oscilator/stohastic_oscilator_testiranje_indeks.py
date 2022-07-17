@@ -4,7 +4,7 @@ from technical_strategies.sthohastic_oscilator.stohastic_oscilator_backtester im
 from technical_strategies.sthohastic_oscilator.stohastic_oscilator import stohastic_oscilator
 from dow_index_data import dow_jones_index_data_csv as dowIndexData
 from stock_ohlc_data import get_stock_data as getStocks
-from technical_strategies.sthohastic_oscilator.stohastic_oscilator_grafi import stohastic_trading_graph, profit_graph
+from technical_strategies.sthohastic_oscilator.stohastic_oscilator_grafi import stohastic_trading_graph, profit_graph, stohastic_indicator_graf
 from utility import utils as util
 
 
@@ -125,7 +125,8 @@ def testirajNaIndeksuEnoKombinacijo(start_date, end_date, k_sma, d_sma, stock_pr
     data_df = indeks_data.copy(deep=True)
     tmp = stohastic_oscilator(k_sma, d_sma, data_df, '^DJI', 0, 0, True, hold_obdobje_kombinacija_indeks, True)
 
-    # bollinger_trading_graph(sma_period=sma_length, bands_multiplayer=bands_multiplayer, df=tmp, company='^DJI')
+    # stohastic_trading_graph(sma_period=k_sma, bands_multiplayer=d_sma, df=tmp, company='^DJI')
+    # stohastic_indicator_graf(high_low_period=k_sma, d_sma_period=d_sma, df=tmp, company='^DJI')
     # profit_graph(tmp, 0, '^DJI', tmp["Total"].iloc[-1])
 
     print('Total profit: ', tmp['Total'].iat[-1])
@@ -152,5 +153,5 @@ print('BB strategy indeks, inicializacije objekta')
 # testirajOptimalneNaTestniMnoziciZaHoldObdobjaIndeks(testnaStockPricesDB=stockPricesDB, hold_obdobja_list=list_hold_obdobja_indeks)
 
 # # preverjanje uspesnosti optimalnih kombinacij na celotnem casovnem obdobju
-# testirajNaIndeksuEnoKombinacijo(start_date="2005-02-07", end_date="2021-11-21", k_sma=20, d_sma=5,
-#                                 stock_prices_db=stockPricesDB, hold_obdobje_kombinacija_indeks=365)
+testirajNaIndeksuEnoKombinacijo(start_date="2005-02-07", end_date="2007-11-21", k_sma=25, d_sma=8,
+                                stock_prices_db=stockPricesDB, hold_obdobje_kombinacija_indeks=1)
