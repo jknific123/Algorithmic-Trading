@@ -2,7 +2,7 @@ from matplotlib import pyplot as plt
 import pandas as pd
 
 
-def stohastic_trading_graph(sma_period, bands_multiplayer, df, company):
+def bollinger_trading_graph(sma_period, bands_multiplayer, df, company):
     # prikaz grafa gibanja cene in kupovanja ter prodajanja delnice
 
     fig = plt.figure(figsize=(8, 6), dpi=200)
@@ -11,7 +11,7 @@ def stohastic_trading_graph(sma_period, bands_multiplayer, df, company):
 
     # cena
     df['Close'].plot(ax=ax1, color='black', label="Cena", alpha=0.5)
-    df[f'SMA-{sma_period}'].plot(ax=ax1 ,color='orange', linestyle="--")
+    df[f'TP SMA'].plot(ax=ax1, color='orange', linestyle="--")
 
     # kratki in dolgi SMA
     df['Upper band'].plot(ax=ax1, label="Zgornji pas", color="blue", linestyle="--")
@@ -23,6 +23,19 @@ def stohastic_trading_graph(sma_period, bands_multiplayer, df, company):
     legend = plt.legend(loc="upper left", edgecolor="black")
     legend.get_frame().set_alpha(None)
     legend.get_frame().set_facecolor((0, 0, 1, 0.1))
+    plt.show()
+
+
+def stohastic_indicator_graf(high_low_period, d_sma_period, df, company):
+    # buy_signals = pd.DataFrame(df.index[df['Buy-Signal'] > 0].tolist())
+    # sell_signals = pd.DataFrame(df.index[df['Sell-Signal'] > 0].tolist())
+
+    axis = df[['%K', '%D']].plot()
+    axis2 = df['Close'].plot(ax=axis, secondary_y=True, color='black')
+    axis2.plot(df['Buy-Signal'], '^', markersize=6, color='green', label='Buy signal', lw=2)
+    axis2.plot(df['Sell-Signal'], 'v', markersize=6, color='red', label='Sell signal', lw=2)
+    axis.axhline(20, linestyle="--", color='r')
+    axis.axhline(80, linestyle="--", color='r')
     plt.show()
 
 
