@@ -11,7 +11,7 @@ def testirajNaPortfoliu(start_date, end_date, dowTickers, stock_prices_db, funda
 
 
 """
- Od tukaj naprej se izvaja testiranje dividend yield investing strategije:
+ Od tukaj naprej se izvaja testiranje High dividend yield investing strategije:
 """
 
 begin_time = datetime.datetime.now()
@@ -19,12 +19,15 @@ begin_time = datetime.datetime.now()
 dowJonesIndexData = dowIndexData.dowJonesIndexData
 stockPricesDB = getStocks.StockOHLCData()
 fundamentalIndicatorsDB = getFundamentalIndicators.StockFundamentalData()
-print('value investing strategy po klicu inicializacije objekta')
+print('High dividend investing strategy po klicu inicializacije objekta')
 
 # ucna mnozica
-testirajNaPortfoliu(start_date="2005-11-21", end_date="2017-02-02", dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, fundamental_indicators=fundamentalIndicatorsDB)
+# testirajNaPortfoliu(start_date="2005-11-21", end_date="2017-02-02", dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, fundamental_indicators=fundamentalIndicatorsDB)
 
 # testna mnozica
 # testirajNaPortfoliu(start_date="2017-02-02", end_date="2021-11-21", dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, fundamental_indicators=fundamentalIndicatorsDB)
+
+# testiraj na celotnih podatkih
+testirajNaPortfoliu(start_date="2005-11-21", end_date="2021-11-21", dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, fundamental_indicators=fundamentalIndicatorsDB)
 
 print('KONEC!!! ', datetime.datetime.now() - begin_time)
