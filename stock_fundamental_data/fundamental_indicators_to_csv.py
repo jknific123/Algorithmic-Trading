@@ -3,7 +3,7 @@ from datetime import datetime
 import pandas as pd
 import requests
 from stock_fundamental_data.fundamental_indicators_util import fundamental_indicators_util as fUtil
-from stock_fundamental_data.fundamental_indicators_util import average_data_calculation as avgUtil, dividend_calculation as dividendUtil
+from stock_fundamental_data.fundamental_indicators_util import average_data_calculation as avgUtil, dividend_calculation as dividendUtil, average_industry_data_calculation as avgIndustry
 
 # AA ni tu not ker fundamentalen api za njega nima podatkov zato se uporablja HWM ticker
 vsi_tickerji = ['AAPL', 'AIG', 'AMGN', 'AXP', 'BA', 'BAC', 'C', 'CAT', 'CRM', 'CSCO', 'CVX', 'DD', 'DOW', 'DIS',  'GE', 'GM',
@@ -126,15 +126,20 @@ def getDataAllEverForCsv(allCompanies):
         allCompiesData[x] = dictToDf['modified']
         # najprej shranimo original v csv
         print('original to csv')
-        dictToDfToCsvFile(dictToDf['original'], x, "raw_fundamental_data_original", "_original", True)
+        # dictToDfToCsvFile(dictToDf['original'], x, "raw_fundamental_data_original", "_original", True)
         print('modified to csv')
-        dictToDfToCsvFile(dictToDf['modified'], x, "raw_fundamental_data_modified", "", True)
+        # dictToDfToCsvFile(dictToDf['modified'], x, "raw_fundamental_data_modified", "", True)
         count += 1
         print(f"DOWNLOADED data for {x}. {count}/{len(allCompanies)}")
 
     fundamentalAvgDict = avgUtil.getAllFundamentalAvgData(allCompiesData)
+    fundamentalIndustryAvgDict = avgIndustry.getAllFundamentalIndustryAvgData(allCompiesData)
     print('delam AVG CSV')
     dictToDfToCsvFile(fundamentalAvgDict, 'AVERAGE', 'raw_fundamental_average_data', '', False)
+    print('delam industrije avg csv')
+    for industrija in fundamentalIndustryAvgDict:
+        dictToDfToCsvFile(fundamentalIndustryAvgDict[industrija], industrija, 'raw_industries_average_data', '', False)
+
     print('KONEC getDataAllEverForCsv')
 
 
