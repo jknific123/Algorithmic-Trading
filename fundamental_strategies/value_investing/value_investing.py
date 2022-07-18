@@ -18,7 +18,8 @@ def value_investing_strategy(start_date, end_date, df, ticker, starting_index, s
     company_report = fundamental_data.getCompanyFundamentalDataForDate(ticker, df.index[starting_index])  # pridobim zacetno letno porocilo in njegovo leto
     print('pridobivanje prvega letnega porocila za podjetje: ', ticker, 'datum novega porocila: ', company_report['datum'])
     company_data = company_report['porocilo']
-    year_avg_data = fundamental_data.getAvgFundamentalDataForYear(datetime.strptime(company_report['datum'], '%Y-%m-%d').year)  # pridobim povprecne indikatorje za zacetno leto
+    industrija_podjetja = company_report['porocilo']['sector']
+    year_avg_data = fundamental_data.getAvgIndustryFundamentalDataForYear(industrija_podjetja, datetime.strptime(company_report['datum'], '%Y-%m-%d').year)  # pridobim povprecne indikatorje za zacetno leto
     prvo_porocilo = True
     # za racunanje davka na dobiček
     sellPrice = 0
@@ -57,7 +58,7 @@ def value_investing_strategy(start_date, end_date, df, ticker, starting_index, s
             company_report = fundamental_data.getCompanyFundamentalDataForDate(ticker, trenutni_datum)
             print('zamenjava letnega porocila za podjetje: ', ticker, 'datum novega porocila: ', company_report['datum'])
             company_data = company_report['porocilo']
-            year_avg_data = fundamental_data.getAvgFundamentalDataForYear(datetime.strptime(company_report['datum'], '%Y-%m-%d').year)
+            year_avg_data = fundamental_data.getAvgIndustryFundamentalDataForYear(company_data['sector'], datetime.strptime(company_report['datum'], '%Y-%m-%d').year)
             if prvo_porocilo:  # ko se zamenja porocilo popravim to vrendost
                 prvo_porocilo = False
 
@@ -71,7 +72,7 @@ def value_investing_strategy(start_date, end_date, df, ticker, starting_index, s
         df["DCF"].to_numpy()[x] = company_data["dcf"]
 
         # manjka -> BUY signal
-        if (prvo_porocilo or trenutni_datum == company_report['datum']) and pogojBuy(currCompany_data=company_data, avgData=year_avg_data) and df["Close"].to_numpy()[x] != 0:
+        if (prvo_porocilo or trenutni_datum == company_report['datum']) and pogojBuy(currCompany_data=company_data, currCompanyIndustry_data=year_avg_data) and df["Close"].to_numpy()[x] != 0:
             print('SEM V BUY IN PROBAM KUPITI, datum: ', df.index[x])
             # preverimo ceno ene delnice in ce imamo dovolj denarja, da lahko kupimo delnice
             cena_ene_delnice = df['Close'].to_numpy()[x] + util.percentageFee(util.feePercentage, df['Close'].to_numpy()[x])
@@ -95,7 +96,7 @@ def value_investing_strategy(start_date, end_date, df, ticker, starting_index, s
                 check = 2
 
         # manjka -> Sell signal
-        elif (prvo_porocilo or trenutni_datum == company_report['datum']) and pogojSell(currCompany_data=company_data, avgData=year_avg_data):
+        elif (prvo_porocilo or trenutni_datum == company_report['datum']) and check == 2 and pogojSell(currCompany_data=company_data, currCompanyIndustry_data=year_avg_data):
 
             if check != 1 and check != 0:  # zadnji signal ni bil sell in nismo na zacetku
                 print("SEM V SELL IN BOM PORODAL", df.index[x])
@@ -123,12 +124,14 @@ def value_investing_strategy(start_date, end_date, df, ticker, starting_index, s
                 df['Total'].to_numpy()[x] = df['Cash'].to_numpy()[x]
 
                 check = 1
+        elif prvo_porocilo:  # ce smo pogledali prvo porocilo ga ne gledamo vec
+            prvo_porocilo = False
 
     print('Konec strategije za podjetje: ', ticker)
     return df
 
 
-def pogojBuy(currCompany_data, avgData):
+def pogojBuy(currCompany_data, currCompanyIndustry_data):
     # ROE > avg(5 let), D/E < 2, P/B < 1, profitMargin nad 10% in narascajoc trend, age > 10, goodwill > avg, revenue > avg, DCF > cena
     print('Pogoj buy')
     # print(currCompany_data)
@@ -137,14 +140,15 @@ def pogojBuy(currCompany_data, avgData):
     # print()
 
     buy_flags = {}
-    buy_flags["ROE"] = True if currCompany_data["ROE"] > avgData["avgROE"] else False  # TODO povprecje ROE za 5 let
+    buy_flags["ROE"] = True if currCompany_data["ROE"] >= currCompanyIndustry_data["avgROE"] else False
     buy_flags["D/E"] = True if currCompany_data["D/E"] < 2 else False
     buy_flags["P/B"] = True if currCompany_data["P/B"] < 2 else False
+    # buy_flags["P/B"] = True if currCompany_data["P/B"] <= currCompanyIndustry_data['avgP/B'] else False
     buy_flags["profitMargin"] = True if currCompany_data["profitMargin"] > 0.1 else False
     buy_flags["company_age"] = True if currCompany_data["company_age"] > 10 else False
-    # buy_flags["goodwill"] = True if currCompany_data["goodwill"] > avgData["avgGoodwill"] else False
+    buy_flags["goodwill"] = True if currCompany_data["goodwill"] >= currCompanyIndustry_data["avgGoodwill"] else False
     # buy_flags["revenue"] = True if currCompany_data["revenue"] > avgData["avgRevenue"] else False
-    # buy_flags["dcf"] = True if currCompany_data["dcf"] < currCompany_data["price"] else False
+    buy_flags["dcf"] = True if currCompany_data["dcf"] < currCompany_data["price"] else False
 
     should_buy = True
     napacni_flagi = ''
@@ -159,7 +163,64 @@ def pogojBuy(currCompany_data, avgData):
     return should_buy
 
 
-def pogojSell(currCompany_data, avgData):
+def pogojSell(currCompany_data, currCompanyIndustry_data):
+    print('Pogoj sell')
+    sell_flags = {}
+    sell_flags["ROE"] = True if currCompany_data["ROE"] < currCompanyIndustry_data["avgROE"] else False
+    sell_flags["D/E"] = True if currCompany_data["D/E"] > 2 else False
+    sell_flags["P/B"] = True if currCompany_data["P/B"] > currCompanyIndustry_data['avgP/B'] else False
+    sell_flags["profitMargin"] = True if currCompany_data["profitMargin"] < 0.1 else False
+    # sell_flags["company_age"] = True if currCompany_data["company_age"] < 10 else False
+    # sell_flags["goodwill"] = True if currCompany_data["goodwill"] < avgData["avgGoodwill"] else False
+    # sell_flags["revenue"] = True if currCompany_data["revenue"] < avgData["avgRevenue"] else False
+    # sell_flags["dcf"] = True if currCompany_data["dcf"] > currCompany_data["price"] else False
+
+    should_sell = True
+    napacni_flagi = ''
+    for flag in sell_flags:
+        if sell_flags[flag] == False:
+            should_sell = False
+            napacni_flagi = napacni_flagi + flag + ' : ' + str(sell_flags[flag]) + ', '
+
+    if not should_sell:
+        print(napacni_flagi)
+
+    return should_sell
+
+
+
+def pogojBuy2(currCompany_data, avgData):
+    # ROE > avg(5 let), D/E < 2, P/B < 1, profitMargin nad 10% in narascajoc trend, age > 10, goodwill > avg, revenue > avg, DCF > cena
+    print('Pogoj buy')
+    # print(currCompany_data)
+    # print()
+    # print(avgData)
+    # print()
+
+    buy_flags = {}
+    buy_flags["ROE"] = True if currCompany_data["ROE"] > avgData["avgROE"] else False  # TODO povprecje ROE za 5 let
+    buy_flags["D/E"] = True if currCompany_data["D/E"] < 2 else False
+    buy_flags["P/B"] = True if currCompany_data["P/B"] < 2 else False
+    buy_flags["profitMargin"] = True if currCompany_data["profitMargin"] > 0.1 else False
+    buy_flags["company_age"] = True if currCompany_data["company_age"] > 10 else False
+    buy_flags["goodwill"] = True if currCompany_data["goodwill"] > avgData["avgGoodwill"] else False
+    # buy_flags["revenue"] = True if currCompany_data["revenue"] > avgData["avgRevenue"] else False
+    buy_flags["dcf"] = True if currCompany_data["dcf"] < currCompany_data["price"] else False
+
+    should_buy = True
+    napacni_flagi = ''
+    for flag in buy_flags:
+        if buy_flags[flag] == False:
+            should_buy = False
+            napacni_flagi = napacni_flagi + flag + ' : ' + str(buy_flags[flag]) + ', '
+
+    if not should_buy:
+        print(napacni_flagi)
+
+    return should_buy
+
+
+def pogojSell2(currCompany_data, avgData):
     print('Pogoj sell')
     sell_flags = {}
     sell_flags["ROE"] = True if currCompany_data["ROE"] < avgData["avgROE"] else False  # TODO povprecje ROE za 5 let
