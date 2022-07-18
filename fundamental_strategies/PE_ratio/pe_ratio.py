@@ -10,6 +10,7 @@ years = 30
 million = 1000000
 hundred_million = 100 * million
 
+
 def pe_ratio_strategy(start_date, end_date, df, ticker, starting_index, status, odZacetkaAliNe, fundamental_data):
     print('Zacetek strategije za podjetje: ', ticker, 'obdobje: ', start_date, ' - ', end_date)
     # za fundamentalne indikatorje in njihovo povprecje v letu

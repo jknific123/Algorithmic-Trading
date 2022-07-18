@@ -1,5 +1,6 @@
 import math
 import pandas as pd
+from datetime import datetime
 import numpy as np
 from utility import utils as util
 
@@ -9,6 +10,7 @@ years = 30
 million = 1000000
 hundred_million = 100 * million
 
+
 def pb_ratio_strategy(start_date, end_date, df, ticker, starting_index, status, odZacetkaAliNe, fundamental_data):
     print('Zacetek strategije za podjetje: ', ticker, 'obdobje: ', start_date, ' - ', end_date)
     # za fundamentalne indikatorje in njihovo povprecje v letu
@@ -16,6 +18,9 @@ def pb_ratio_strategy(start_date, end_date, df, ticker, starting_index, status, 
     company_report = fundamental_data.getCompanyFundamentalDataForDate(ticker, df.index[starting_index])  # pridobim zacetno letno porocilo in njegovo leto3
     print('pridobivanje prvega letnega porocila za podjetje: ', ticker, 'datum novega porocila: ', company_report['datum'])
     company_data = company_report['porocilo']
+    industrija_podjetja = company_report['porocilo']['sector']
+    year_avg_data = fundamental_data.getAvgIndustryFundamentalDataForYear(industrija_podjetja, datetime.strptime(company_report['datum'], '%Y-%m-%d').year)  # pridobim povprecne indikatorje za zacetno leto
+    prvo_porocilo = True
     # za racunanje davka na dobiček
     sellPrice = 0
     # check -> zato da nimamo dveh zapovrstnih buy/sell signalov: 2 = buy, 1 = sell
@@ -53,11 +58,14 @@ def pb_ratio_strategy(start_date, end_date, df, ticker, starting_index, status, 
             company_report = fundamental_data.getCompanyFundamentalDataForDate(ticker, trenutni_datum)
             print('zamenjava letnega porocila za podjetje: ', ticker, 'datum novega porocila: ', company_report['datum'])
             company_data = company_report['porocilo']
+            year_avg_data = fundamental_data.getAvgIndustryFundamentalDataForYear(company_data['sector'], datetime.strptime(company_report['datum'], '%Y-%m-%d').year)
+            if prvo_porocilo:  # ko se zamenja porocilo popravim to vrendost
+                prvo_porocilo = False
 
         df["P/B"].to_numpy()[x] = company_data["P/B"]
 
         # manjka -> BUY signal
-        if trenutni_datum == company_report['datum'] and pogojBuy(currCompany_data=company_data) and df["Close"].to_numpy()[x] != 0:
+        if (prvo_porocilo or trenutni_datum == company_report['datum']) and pogojBuy(currCompany_data=company_data, currCompanyIndustry_data=year_avg_data) and df["Close"].to_numpy()[x] != 0:
             print('SEM V BUY IN PROBAM KUPITI, datum: ', df.index[x])
             # preverimo ceno ene delnice in ce imamo dovolj denarja, da lahko kupimo delnice
             cena_ene_delnice = df['Close'].to_numpy()[x] + util.percentageFee(util.feePercentage, df['Close'].to_numpy()[x])
@@ -81,7 +89,7 @@ def pb_ratio_strategy(start_date, end_date, df, ticker, starting_index, status, 
                 check = 2
 
         # manjka -> Sell signal
-        elif trenutni_datum == company_report['datum'] and pogojSell(currCompany_data=company_data):
+        elif (prvo_porocilo or trenutni_datum == company_report['datum']) and pogojSell(currCompany_data=company_data, currCompanyIndustry_data=year_avg_data):
 
             if check != 1 and check != 0:  # zadnji signal ni bil sell in nismo na zacetku
                 print("SEM V SELL IN BOM PORODAL", df.index[x])
@@ -114,11 +122,12 @@ def pb_ratio_strategy(start_date, end_date, df, ticker, starting_index, status, 
     return df
 
 
-def pogojBuy(currCompany_data):
+def pogojBuy(currCompany_data, currCompanyIndustry_data):
     print('Pogoj buy')
 
     buy_flags = {}
-    buy_flags["P/B"] = True if currCompany_data["P/B"] < 16 else False  # manjsi od 16
+    # buy_flags["P/B"] = True if currCompany_data["P/B"] < 16 else False  # manjsi od 16
+    buy_flags["P/B"] = True if currCompany_data["P/B"] <= currCompanyIndustry_data['avgP/B'] else False  # manjsi od 16
 
     should_buy = True
     napacni_flagi = ''
@@ -133,10 +142,11 @@ def pogojBuy(currCompany_data):
     return should_buy
 
 
-def pogojSell(currCompany_data):
+def pogojSell(currCompany_data, currCompanyIndustry_data):
     print('Pogoj sell')
     sell_flags = {}
-    sell_flags["P/B"] = True if 16 <= currCompany_data["P/B"] else False  # vecji enak 16
+    # sell_flags["P/B"] = True if 16 <= currCompany_data["P/B"] else False  # vecji enak 16
+    sell_flags["P/B"] = True if currCompany_data["P/B"] > currCompanyIndustry_data['avgP/B'] else False  # vecji enak 16
 
     should_sell = True
     napacni_flagi = ''
