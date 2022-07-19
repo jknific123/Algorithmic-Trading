@@ -11,7 +11,7 @@ def izracunajSePodatkeZaDividende(fundamentalDataDict):
             if fundamentalDataDict[lansko_leto]['dividendPerShare'] != 0:  # da ni napake zaradi deljenja z 0
                 fundamentalDataDict[leto_dividenda]['oneYearDividendGrowthRate'] = round(
                     fundamentalDataDict[leto_dividenda]['dividendPerShare'] / fundamentalDataDict[lansko_leto]['dividendPerShare'] - 1, 4)
-            # ce lani ni bilo dividende in letos je potem je zrasla za 100% TODO
+            # ce lani ni bilo dividende in letos je potem je zrasla za 100%
             elif fundamentalDataDict[lansko_leto]['dividendPerShare'] == 0 and fundamentalDataDict[leto_dividenda]['dividendPerShare'] != 0:
                 fundamentalDataDict[leto_dividenda]['oneYearDividendGrowthRate'] = 1
 

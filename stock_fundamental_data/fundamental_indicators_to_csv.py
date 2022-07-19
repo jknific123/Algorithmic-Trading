@@ -25,6 +25,7 @@ def doAllAPIcallsForCsv(company):
     company_profile = requests.get(f'https://financialmodelingprep.com/api/v3/profile/{company}?limit={years}&apikey={api_key}')
     enterprise_value = requests.get(f'https://financialmodelingprep.com/api/v3/enterprise-values/{company}?limit={years}&apikey={api_key}')
     income_statement = requests.get(f'https://financialmodelingprep.com/api/v3/income-statement/{company}?limit={years}&apikey={api_key}')
+    financial_growth = requests.get(f'https://financialmodelingprep.com/api/v3/financial-growth/{company}?limit={years}&apikey={api_key}')
 
     # financials
     financial_ratios = financial_ratios.json()
@@ -72,6 +73,16 @@ def doAllAPIcallsForCsv(company):
     income_statement = fUtil.pridobiPomembneIncomeStatement(income_statement)
     slovar_podjetja["income_statement"] = income_statement
 
+    # financial growth
+    financial_growth = financial_growth.json()
+    financial_growth = fUtil.zmanjsajObsegPodatkovCsv(financial_growth) # skrajsaj
+    financial_growth = list(reversed(financial_growth))
+    financial_growth = fUtil.obdelaj_podatke_csv(financial_growth, company, 'financial_growth')
+    financial_growth = fUtil.pridobiPomembneFinancialGrowth(financial_growth)
+    slovar_podjetja["financial_growth"] = financial_growth
+
+    print('koncal z slovar_podjetja: ', company)
+
     return slovar_podjetja
 
 
@@ -83,9 +94,15 @@ def mergeFundamentalDataCsv(data):
         mergedFundamentalDict[x].update(data['discounted_cash_flow'][fUtil.pridobiZapisIstegaLeta(x, data['discounted_cash_flow'])])
         mergedFundamentalDict[x].update(data['enterprise_value'][fUtil.pridobiZapisIstegaLeta(x, data['enterprise_value'])])
         mergedFundamentalDict[x].update(data['income_statement'][fUtil.pridobiZapisIstegaLeta(x, data['income_statement'])])
-        mergedFundamentalDict[x]['dividendPerShare'] = round(mergedFundamentalDict[x]['dividendYield'] * mergedFundamentalDict[x]['price'], 4)
+        mergedFundamentalDict[x].update(data['financial_growth'][fUtil.pridobiZapisIstegaLeta(x, data['financial_growth'])])
+        mergedFundamentalDict[x]['dividendPerShare'] = round(mergedFundamentalDict[x]['dividendYield'] * mergedFundamentalDict[x]['price'], 2)
         mergedFundamentalDict[x]['dividendPaid'] = round(mergedFundamentalDict[x]['dividendYield'] *
-                                                         mergedFundamentalDict[x]['price'] * mergedFundamentalDict[x]['numberOfShares'], 4)
+                                                         mergedFundamentalDict[x]['price'] * mergedFundamentalDict[x]['numberOfShares'], 2)
+        if mergedFundamentalDict[x]['revenue'] != 0:
+            mergedFundamentalDict[x]['ebitdaMargin'] = round(mergedFundamentalDict[x]['ebitda'] / mergedFundamentalDict[x]['revenue'], 3)
+        else:
+            mergedFundamentalDict[x]['ebitdaMargin'] = 0
+
         age = datetime.strptime(x, "%Y-%m-%d").year - datetime.strptime(data['company_profile']["ipoDate"], "%Y-%m-%d").year
         if age > 0:
             mergedFundamentalDict[x]["company_age"] = age
@@ -93,7 +110,7 @@ def mergeFundamentalDataCsv(data):
             mergedFundamentalDict[x]["company_age"] = 0
         mergedFundamentalDict[x]["sector"] = data['company_profile']["sector"]
 
-    mergedFundamentalDict = dividendUtil.izracunajSePodatkeZaDividende(mergedFundamentalDict)
+    # mergedFundamentalDict = dividendUtil.izracunajSePodatkeZaDividende(mergedFundamentalDict)
     return_data = {}
     modified_date_data = {}
     # pretvorimo se v datume, ki predstavljajo delovne dni, za normalen klic, za izracun avg pa ne
@@ -126,9 +143,9 @@ def getDataAllEverForCsv(allCompanies):
         allCompiesData[x] = dictToDf['modified']
         # najprej shranimo original v csv
         print('original to csv')
-        # dictToDfToCsvFile(dictToDf['original'], x, "raw_fundamental_data_original", "_original", True)
+        dictToDfToCsvFile(dictToDf['original'], x, "raw_fundamental_data_original", "_original", True)
         print('modified to csv')
-        # dictToDfToCsvFile(dictToDf['modified'], x, "raw_fundamental_data_modified", "", True)
+        dictToDfToCsvFile(dictToDf['modified'], x, "raw_fundamental_data_modified", "", True)
         count += 1
         print(f"DOWNLOADED data for {x}. {count}/{len(allCompanies)}")
 

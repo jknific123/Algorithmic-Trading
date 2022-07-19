@@ -33,6 +33,14 @@ class StockFundamentalData:
         StockFundamentalData.readIndustiresAvgFundamentalDataCsvToDict(self)
         print('Inicializacija končana!')
 
+    def preveriPrimernostDCF(self):
+        for company in self.stock_fundamental_data:
+            company_data = self.stock_fundamental_data[company]
+            for zapis in company_data:
+                if datetime.strptime(zapis, '%Y-%m-%d').year >= 2004:
+                    if self.stock_fundamental_data[company][zapis]['dcf'] < self.stock_fundamental_data[company][zapis]['price']:
+                        print('Nasel ok DCF za podjetje: ', company, 'zapis: ', zapis, 'DCF: ', self.stock_fundamental_data[company][zapis]['dcf'], 'price: ', self.stock_fundamental_data[company][zapis]['price'])
+
     def dobiVseIndustrije(self):
         slovar_industrij = {}
         for company in self.stock_fundamental_data:
