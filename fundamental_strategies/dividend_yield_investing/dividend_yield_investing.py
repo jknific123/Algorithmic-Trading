@@ -59,7 +59,8 @@ def dividend_investing_strategy(start_date, end_date, df, ticker, starting_index
                 prvo_porocilo = False
 
         df["dividendYield"].to_numpy()[x] = company_data["dividendYield"]
-        df["fiveYearDividendGrowthRate"].to_numpy()[x] = company_data["fiveYearDividendGrowthRate"]
+        # df["fiveYearDividendGrowthRate"].to_numpy()[x] = company_data["fiveYearDividendGrowthRate"]
+        df["fiveYDividendperShareGrowth"].to_numpy()[x] = company_data["fiveYDividendperShareGrowth"]
         df["dividendPayoutRatio"].to_numpy()[x] = company_data["dividendPayoutRatio"]
 
         # manjka -> BUY signal
@@ -127,7 +128,8 @@ def pogojBuy(currCompany_data):
 
     buy_flags = {}
     buy_flags["dividendYield"] = True if 0.02 <= currCompany_data["dividendYield"] <= 0.06 else False  # med 2% in 6%
-    buy_flags["fiveYearDividendGrowthRate"] = True if currCompany_data["fiveYearDividendGrowthRate"] > 0.05 else False  # nad 5%
+    # buy_flags["fiveYearDividendGrowthRate"] = True if currCompany_data["fiveYearDividendGrowthRate"] > 0.05 else False  # nad 5%
+    buy_flags["fiveYDividendperShareGrowth"] = True if currCompany_data["fiveYDividendperShareGrowth"] > 0.05 else False  # nad 5%
     buy_flags["dividendPayoutRatio"] = True if 0.35 <= currCompany_data["dividendPayoutRatio"] <= 0.55 else False  # med 35% in 55%
 
     should_buy = True
@@ -147,7 +149,8 @@ def pogojSell(currCompany_data):
     print('Pogoj sell')
     sell_flags = {}
     sell_flags["dividendYield"] = True if 0.02 > currCompany_data["dividendYield"] or currCompany_data["dividendYield"] > 0.06 else False  # manjsi od 2% ali vecji od 6%
-    sell_flags["fiveYearDividendGrowthRate"] = True if currCompany_data["fiveYearDividendGrowthRate"] <= 0.05 else False  # manjse enako 5%
+    # sell_flags["fiveYearDividendGrowthRate"] = True if currCompany_data["fiveYearDividendGrowthRate"] <= 0.05 else False  # manjse enako 5%
+    sell_flags["fiveYDividendperShareGrowth"] = True if currCompany_data["fiveYDividendperShareGrowth"] <= 0.05 else False  # nad 5%
     sell_flags["dividendPayoutRatio"] = True if 0.35 > currCompany_data["dividendPayoutRatio"] or currCompany_data["dividendPayoutRatio"] >= 0.7 else False  # manjse od 35%, vecje od 70%
 
     should_sell = True

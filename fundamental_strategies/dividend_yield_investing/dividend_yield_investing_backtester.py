@@ -14,7 +14,8 @@ def zacetniDf(data):
 
     # kreiramo nova stolpca za buy/sell signale
     data['dividendYield'] = np.nan
-    data['fiveYearDividendGrowthRate'] = np.nan
+    # data['fiveYearDividendGrowthRate'] = np.nan
+    data['fiveYDividendperShareGrowth'] = np.nan
     data['dividendPayoutRatio'] = np.nan
 
     data['Buy'] = np.nan
