@@ -148,9 +148,9 @@ def pogojBuy(currCompany_data, currCompanyIndustry_data, datum, ticker, fDB):
     buy_flags["D/E"] = True if 0 < currCompany_data["D/E"] <= 1.5 else False
     # buy_flags["P/B"] = True if currCompany_data["P/B"] < 2 else False
     buy_flags["P/B"] = True if 0 < currCompany_data["P/B"] <= currCompanyIndustry_data['avgP/B'] else False
-    buy_flags["ebitdaMargin"] = True if currCompany_data["ebitdaMargin"] > currCompanyIndustry_data['avgEbitdaMargin'] else False
+    buy_flags["freeCashFlowMargin"] = True if currCompany_data["freeCashFlowMargin"] >= 0.1 else False
+    # buy_flags["freeCashFlowGrowth"] = True if currCompany_data["freeCashFlowGrowth"] >= 0.1 else False
 
-    buy_flags["company_age"] = True if currCompany_data["company_age"] >= 10 else False
     buy_flags["dcf"] = True if currCompany_data["dcf"] > currCompany_data["price"] else False
 
     should_buy = True
@@ -174,8 +174,8 @@ def pogojSell(currCompany_data, currCompanyIndustry_data, datum, ticker, fDB):
     sell_flags["profitMargin"] = preveriProfitMarginSell(ticker, datum, fDB, currCompany_data['sector'])
     # sell_flags["profitMargin"] = True if currCompany_data["profitMargin"] < 0.1 and currCompany_data["profitMargin"] < currCompanyIndustry_data['avgProfitMargin'] else False
     sell_flags["D/E"] = True if currCompany_data["D/E"] < 0 or currCompany_data["D/E"] > 1.5 else False
-    sell_flags["P/B"] = True if currCompany_data["P/B"] < 0 or currCompany_data["P/B"] > currCompanyIndustry_data['avgP/B'] else False
-    sell_flags["ebitdaMargin"] = True if currCompany_data["ebitdaMargin"] < currCompanyIndustry_data['avgEbitdaMargin'] else False
+    # sell_flags["P/B"] = True if currCompany_data["P/B"] < 0 or currCompany_data["P/B"] > currCompanyIndustry_data['avgP/B'] else False
+    sell_flags["freeCashFlowMargin"] = True if currCompany_data["freeCashFlowMargin"] < 0.1 else False
 
     # sell_flags["company_age"] = True if currCompany_data["company_age"] < 10 else False
     # sell_flags["dcf"] = True if currCompany_data["dcf"] < currCompany_data["price"] else False
@@ -227,7 +227,7 @@ def preveriProfitMarginBuy(companyTicker, datum, fundamental_data, industrija):
 
     roeOk = True
     for zapis in period_company_data:
-        if period_company_data[zapis]['profitMargin'] > 0.1 and period_company_data[zapis]['profitMargin'] > period_avg_industry_data[datetime.strptime(zapis, '%Y-%m-%d').year]['avgProfitMargin']:
+        if period_company_data[zapis]['profitMargin'] > 0.2 and period_company_data[zapis]['profitMargin'] > period_avg_industry_data[datetime.strptime(zapis, '%Y-%m-%d').year]['avgProfitMargin']:
             roeOk = True
         else:
             roeOk = False
@@ -241,7 +241,7 @@ def preveriProfitMarginSell(companyTicker, datum, fundamental_data, industrija):
 
     roeOk = True
     for zapis in period_company_data:
-        if period_company_data[zapis]['profitMargin'] < 0.1 and period_company_data[zapis]['profitMargin'] < period_avg_industry_data[datetime.strptime(zapis, '%Y-%m-%d').year]['avgProfitMargin']:
+        if period_company_data[zapis]['profitMargin'] < 0.2 and period_company_data[zapis]['profitMargin'] < period_avg_industry_data[datetime.strptime(zapis, '%Y-%m-%d').year]['avgProfitMargin']:
             roeOk = True
         else:
             roeOk = False

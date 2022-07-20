@@ -98,10 +98,15 @@ def mergeFundamentalDataCsv(data):
         mergedFundamentalDict[x]['dividendPerShare'] = round(mergedFundamentalDict[x]['dividendYield'] * mergedFundamentalDict[x]['price'], 2)
         mergedFundamentalDict[x]['dividendPaid'] = round(mergedFundamentalDict[x]['dividendYield'] *
                                                          mergedFundamentalDict[x]['price'] * mergedFundamentalDict[x]['numberOfShares'], 2)
-        if mergedFundamentalDict[x]['revenue'] != 0:
-            mergedFundamentalDict[x]['ebitdaMargin'] = round(mergedFundamentalDict[x]['ebitda'] / mergedFundamentalDict[x]['revenue'], 3)
+        if mergedFundamentalDict[x]['numberOfShares'] != 0:
+            mergedFundamentalDict[x]['freeCashFlow'] = round(mergedFundamentalDict[x]['freeCashFlowPerShare'] * mergedFundamentalDict[x]['numberOfShares'], 3)
         else:
-            mergedFundamentalDict[x]['ebitdaMargin'] = 0
+            mergedFundamentalDict[x]['freeCashFlow'] = 0
+
+        if mergedFundamentalDict[x]['revenue'] != 0:
+            mergedFundamentalDict[x]['freeCashFlowMargin'] = round(mergedFundamentalDict[x]['freeCashFlow'] / mergedFundamentalDict[x]['revenue'], 3)
+        else:
+            mergedFundamentalDict[x]['freeCashFlowMargin'] = 0
 
         age = datetime.strptime(x, "%Y-%m-%d").year - datetime.strptime(data['company_profile']["ipoDate"], "%Y-%m-%d").year
         if age > 0:
