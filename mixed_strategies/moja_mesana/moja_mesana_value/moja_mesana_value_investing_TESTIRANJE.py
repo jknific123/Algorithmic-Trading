@@ -28,8 +28,8 @@ testirajNaPortfoliu(start_date="2005-11-21", end_date="2017-02-02", short_sma=85
                     dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, fundamental_indicators=fundamentalIndicatorsDB)
 
 # testna mnozica
-# testirajNaPortfoliu(start_date="2017-02-02", end_date="2021-11-21",  short_sma=85, long_sma=200,
-#                     dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, fundamental_indicators=fundamentalIndicatorsDB)
+testirajNaPortfoliu(start_date="2017-02-02", end_date="2021-11-21",  short_sma=85, long_sma=200,
+                    dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, fundamental_indicators=fundamentalIndicatorsDB)
 
 # tesiraj na vseh podatkih
 # testirajNaPortfoliu(start_date="2005-11-21", end_date="2021-11-21",  short_sma=85, long_sma=200,

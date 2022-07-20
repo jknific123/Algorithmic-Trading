@@ -95,7 +95,6 @@ class StockFundamentalData:
     def getAvgIndustryFundamentalDataForPeriodOfYears(self, industrija, leto, razpon_let):
         period_dict = {}
         start_year = leto - razpon_let
-        print('start_year ind avg: ', start_year)
         vsa_leta = list(self.stock_industries_average_fundamental_data[industrija].keys())
         for period_year in vsa_leta:
             if start_year <= period_year <= leto:
