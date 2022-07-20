@@ -72,6 +72,17 @@ class StockFundamentalData:
 
         return iskano_letno_porocilo_in_njegov_datum
 
+    # Metoda za pridobitev slovarja pravilnega letnega porocila fundamentalnih indikatorjev za določeno podjetje za določen razpon let
+    def getCompanyFundamentalDataForPeriodOfYears(self, companyTicker, datum, razpon_let):
+        dict_podjetja = self.stock_fundamental_data[companyTicker]
+        period_dict = {}
+        start_year = datetime.strptime(datum, '%Y-%m-%d').year - razpon_let
+        for x in dict_podjetja:
+            if start_year <= datetime.strptime(x, '%Y-%m-%d').year <= datetime.strptime(datum, '%Y-%m-%d').year:
+                period_dict[x] = dict_podjetja[x]
+
+        return period_dict
+
     # Metoda za pridobitev slovarja pravilnega povprecja fundamentalnih indikatorjev za določeno leto
     def getAvgFundamentalDataForYear(self, leto):
         return self.stock_average_fundamental_data[leto]
@@ -79,6 +90,18 @@ class StockFundamentalData:
     # Metoda za pridobitev slovarja pravilnega povprecja fundamentalnih indikatorjev za industrijo za določeno leto
     def getAvgIndustryFundamentalDataForYear(self, industrija, leto):
         return self.stock_industries_average_fundamental_data[industrija][leto]
+
+    # Metoda za pridobitev slovarja pravilnega povprecja fundamentalnih indikatorjev za industrijo za določen razpon let
+    def getAvgIndustryFundamentalDataForPeriodOfYears(self, industrija, leto, razpon_let):
+        period_dict = {}
+        start_year = leto - razpon_let
+        print('start_year ind avg: ', start_year)
+        vsa_leta = list(self.stock_industries_average_fundamental_data[industrija].keys())
+        for period_year in vsa_leta:
+            if start_year <= period_year <= leto:
+                period_dict[period_year] = self.stock_industries_average_fundamental_data[industrija][period_year]
+
+        return period_dict
 
     # vrne list datumov ki so kljuci slovarja fundamentalnih indikatorjev podjetja
     def getListOfDatesOfCompanyDataDict(self, ticker):
