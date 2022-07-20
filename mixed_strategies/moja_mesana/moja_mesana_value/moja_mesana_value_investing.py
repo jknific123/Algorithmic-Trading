@@ -30,7 +30,8 @@ def value_investing_strategy(start_date, end_date, sPeriod, lPeriod, df, ticker,
     company_report = fundamental_data.getCompanyFundamentalDataForDate(ticker, df.index[starting_index])  # pridobim zacetno letno porocilo in njegovo leto
     print('pridobivanje prvega letnega porocila za podjetje: ', ticker, 'datum novega porocila: ', company_report['datum'])
     company_data = company_report['porocilo']
-    year_avg_data = fundamental_data.getAvgFundamentalDataForYear(datetime.strptime(company_report['datum'], '%Y-%m-%d').year)  # pridobim povprecne indikatorje za zacetno leto
+    industrija_podjetja = company_report['porocilo']['sector']
+    year_avg_data = fundamental_data.getAvgIndustryFundamentalDataForYear(industrija_podjetja, datetime.strptime(company_report['datum'], '%Y-%m-%d').year)  # pridobim povprecne indikatorje za zacetno leto
     prvo_porocilo = True
     fundamentalni_tradin_signal = -1  # nan vrednost, se ni dolocen
     # za racunanje davka na dobiček
@@ -70,7 +71,7 @@ def value_investing_strategy(start_date, end_date, sPeriod, lPeriod, df, ticker,
             company_report = fundamental_data.getCompanyFundamentalDataForDate(ticker, trenutni_datum)
             print('zamenjava letnega porocila za podjetje: ', ticker, 'datum novega porocila: ', company_report['datum'])
             company_data = company_report['porocilo']
-            year_avg_data = fundamental_data.getAvgFundamentalDataForYear(datetime.strptime(company_report['datum'], '%Y-%m-%d').year)
+            year_avg_data = fundamental_data.getAvgIndustryFundamentalDataForYear(company_data['sector'], datetime.strptime(company_report['datum'], '%Y-%m-%d').year)
             # if prvo_porocilo:  # ko se zamenja porocilo popravim to vrendost
             #     prvo_porocilo = False
 
@@ -86,7 +87,8 @@ def value_investing_strategy(start_date, end_date, sPeriod, lPeriod, df, ticker,
 
         # generiraj fundamentalni BUY/ SELL signal
         if prvo_porocilo or trenutni_datum == company_report['datum']:
-            fundamentalni_tradin_signal = dolociFundamentalniTradinSignal(currCompany_data=company_data, avgData=year_avg_data, df=df, x=x)
+            fundamentalni_tradin_signal = dolociFundamentalniTradinSignal(currCompany_data=company_data, currCompanyIndustry_data=year_avg_data,
+                                                                          df=df, x=x, trenutni_datum=trenutni_datum, ticker=ticker, fundamental_data=fundamental_data)
             if prvo_porocilo:  # ko se prvic pogleda prvo porocilo popravim to vrendost
                 prvo_porocilo = False
 
@@ -150,22 +152,21 @@ def value_investing_strategy(start_date, end_date, sPeriod, lPeriod, df, ticker,
     return df
 
 
-def fundamentalniPogojBuy(currCompany_data, avgData):
+def fundamentalniPogojBuy(currCompany_data, currCompanyIndustry_data, datum, ticker, fDB):
     print('Pogoj buy')
-    # print(currCompany_data)
-    # print()
-    # print(avgData)
-    # print()
 
     buy_flags = {}
-    buy_flags["ROE"] = True if currCompany_data["ROE"] > avgData["avgROE"] else False  # TODO povprecje ROE za 5 let
-    buy_flags["D/E"] = True if currCompany_data["D/E"] < 2 else False
-    buy_flags["P/B"] = True if currCompany_data["P/B"] < 2 else False
-    buy_flags["profitMargin"] = True if currCompany_data["profitMargin"] > 0.1 else False
-    buy_flags["company_age"] = True if currCompany_data["company_age"] > 10 else False
-    # buy_flags["goodwill"] = True if currCompany_data["goodwill"] > avgData["avgGoodwill"] else False
-    # buy_flags["revenue"] = True if currCompany_data["revenue"] > avgData["avgRevenue"] else False
-    # buy_flags["dcf"] = True if currCompany_data["dcf"] < currCompany_data["price"] else False
+    # buy_flags["ROE"] = True if currCompany_data["ROE"] > currCompanyIndustry_data["avgROE"] and currCompany_data["ROE"] >= 0.1 else False
+    buy_flags["ROE"] = preveriROEBuy(ticker, datum, fDB, currCompany_data['sector'])
+    buy_flags["profitMargin"] = preveriProfitMarginBuy(ticker, datum, fDB, currCompany_data['sector'])
+    # buy_flags["profitMargin"] = True if currCompany_data["profitMargin"] > 0.1 and currCompany_data["profitMargin"] > currCompanyIndustry_data["avgProfitMargin"] else False
+    buy_flags["D/E"] = True if 0 < currCompany_data["D/E"] <= 1.5 else False
+    # buy_flags["P/B"] = True if currCompany_data["P/B"] < 2 else False
+    buy_flags["P/B"] = True if 0 < currCompany_data["P/B"] <= currCompanyIndustry_data['avgP/B'] else False
+    buy_flags["ebitdaMargin"] = True if currCompany_data["ebitdaMargin"] > currCompanyIndustry_data['avgEbitdaMargin'] else False
+
+    buy_flags["company_age"] = True if currCompany_data["company_age"] >= 10 else False
+    buy_flags["dcf"] = True if currCompany_data["dcf"] > currCompany_data["price"] else False
 
     should_buy = True
     napacni_flagi = ''
@@ -180,17 +181,19 @@ def fundamentalniPogojBuy(currCompany_data, avgData):
     return should_buy
 
 
-def fundamentalniPogojSell(currCompany_data, avgData):
+def fundamentalniPogojSell(currCompany_data, currCompanyIndustry_data, datum, ticker, fDB):
     print('Pogoj sell')
     sell_flags = {}
-    sell_flags["ROE"] = True if currCompany_data["ROE"] < avgData["avgROE"] else False  # TODO povprecje ROE za 5 let
-    sell_flags["D/E"] = True if currCompany_data["D/E"] > 2 else False
-    sell_flags["P/B"] = True if currCompany_data["P/B"] > 2 else False
-    sell_flags["profitMargin"] = True if currCompany_data["profitMargin"] < 0.1 else False
+    # sell_flags["ROE"] = True if currCompany_data["ROE"] < currCompanyIndustry_data["avgROE"] and currCompany_data["ROE"] < 0.1 else False
+    sell_flags["ROE"] = preveriROESell(ticker, datum, fDB, currCompany_data['sector'])
+    sell_flags["profitMargin"] = preveriProfitMarginSell(ticker, datum, fDB, currCompany_data['sector'])
+    # sell_flags["profitMargin"] = True if currCompany_data["profitMargin"] < 0.1 and currCompany_data["profitMargin"] < currCompanyIndustry_data['avgProfitMargin'] else False
+    sell_flags["D/E"] = True if currCompany_data["D/E"] < 0 or currCompany_data["D/E"] > 1.5 else False
+    sell_flags["P/B"] = True if currCompany_data["P/B"] < 0 or currCompany_data["P/B"] > currCompanyIndustry_data['avgP/B'] else False
+    sell_flags["ebitdaMargin"] = True if currCompany_data["ebitdaMargin"] < currCompanyIndustry_data['avgEbitdaMargin'] else False
+
     # sell_flags["company_age"] = True if currCompany_data["company_age"] < 10 else False
-    # sell_flags["goodwill"] = True if currCompany_data["goodwill"] < avgData["avgGoodwill"] else False
-    # sell_flags["revenue"] = True if currCompany_data["revenue"] < avgData["avgRevenue"] else False
-    # sell_flags["dcf"] = True if currCompany_data["dcf"] > currCompany_data["price"] else False
+    # sell_flags["dcf"] = True if currCompany_data["dcf"] < currCompany_data["price"] else False
 
     should_sell = True
     napacni_flagi = ''
@@ -205,13 +208,13 @@ def fundamentalniPogojSell(currCompany_data, avgData):
     return should_sell
 
 
-def dolociFundamentalniTradinSignal(currCompany_data, avgData, df, x):
+def dolociFundamentalniTradinSignal(currCompany_data, currCompanyIndustry_data, df, x, trenutni_datum, ticker, fundamental_data):
     # fundamentalni BUY signal => 3
     # fundamentalni SELL signal => 4
-    if fundamentalniPogojBuy(currCompany_data=currCompany_data, avgData=avgData):
+    if fundamentalniPogojBuy(currCompany_data=currCompany_data, currCompanyIndustry_data=currCompanyIndustry_data, datum=trenutni_datum, ticker=ticker, fDB=fundamental_data):
         df['Buy-Signal-Fundamental'].to_numpy()[x] = df["Close"].to_numpy()[x]
         return 3
-    elif fundamentalniPogojSell(currCompany_data=currCompany_data, avgData=avgData):
+    elif fundamentalniPogojSell(currCompany_data=currCompany_data, currCompanyIndustry_data=currCompanyIndustry_data, datum=trenutni_datum, ticker=ticker, fDB=fundamental_data):
         df['Sell-Signal-Fundamental'].to_numpy()[x] = df["Close"].to_numpy()[x]
         return 4
 
@@ -228,3 +231,59 @@ def dolociTehnicalTradinSignal(df, x, sPeriod, lPeriod):
         return 6
 
     return -3  # NAPAKA ne zgenerira se tehnical signal
+
+
+def preveriROEBuy(companyTicker, datum, fundamental_data, industrija):
+    period_company_data = fundamental_data.getCompanyFundamentalDataForPeriodOfYears(companyTicker, datum, 5)
+    period_avg_industry_data = fundamental_data.getAvgIndustryFundamentalDataForPeriodOfYears(industrija, datetime.strptime(datum, '%Y-%m-%d').year, 5)
+
+    roeOk = True
+    for zapis in period_company_data:
+        if period_company_data[zapis]['ROE'] > 0.1 and period_company_data[zapis]['ROE'] > period_avg_industry_data[datetime.strptime(zapis, '%Y-%m-%d').year]['avgROE']:
+            roeOk = True
+        else:
+            roeOk = False
+
+    return roeOk
+
+
+def preveriROESell(companyTicker, datum, fundamental_data, industrija):
+    period_company_data = fundamental_data.getCompanyFundamentalDataForPeriodOfYears(companyTicker, datum, 5)
+    period_avg_industry_data = fundamental_data.getAvgIndustryFundamentalDataForPeriodOfYears(industrija, datetime.strptime(datum, '%Y-%m-%d').year, 5)
+
+    roeOk = True
+    for zapis in period_company_data:
+        if period_company_data[zapis]['ROE'] < 0.1 and period_company_data[zapis]['ROE'] < period_avg_industry_data[datetime.strptime(zapis, '%Y-%m-%d').year]['avgROE']:
+            roeOk = True
+        else:
+            roeOk = False
+
+    return roeOk
+
+
+def preveriProfitMarginBuy(companyTicker, datum, fundamental_data, industrija):
+    period_company_data = fundamental_data.getCompanyFundamentalDataForPeriodOfYears(companyTicker, datum, 5)
+    period_avg_industry_data = fundamental_data.getAvgIndustryFundamentalDataForPeriodOfYears(industrija, datetime.strptime(datum, '%Y-%m-%d').year, 5)
+
+    roeOk = True
+    for zapis in period_company_data:
+        if period_company_data[zapis]['profitMargin'] > 0.1 and period_company_data[zapis]['profitMargin'] > period_avg_industry_data[datetime.strptime(zapis, '%Y-%m-%d').year]['avgProfitMargin']:
+            roeOk = True
+        else:
+            roeOk = False
+
+    return roeOk
+
+
+def preveriProfitMarginSell(companyTicker, datum, fundamental_data, industrija):
+    period_company_data = fundamental_data.getCompanyFundamentalDataForPeriodOfYears(companyTicker, datum, 5)
+    period_avg_industry_data = fundamental_data.getAvgIndustryFundamentalDataForPeriodOfYears(industrija, datetime.strptime(datum, '%Y-%m-%d').year, 5)
+
+    roeOk = True
+    for zapis in period_company_data:
+        if period_company_data[zapis]['profitMargin'] < 0.1 and period_company_data[zapis]['profitMargin'] < period_avg_industry_data[datetime.strptime(zapis, '%Y-%m-%d').year]['avgProfitMargin']:
+            roeOk = True
+        else:
+            roeOk = False
+
+    return roeOk
