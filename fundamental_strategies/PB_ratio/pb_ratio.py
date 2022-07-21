@@ -134,7 +134,7 @@ def pogojBuy(currCompany_data, currCompanyIndustry_data):
 
     buy_flags = {}
     # buy_flags["P/B"] = True if currCompany_data["P/B"] < 16 else False  # manjsi od 16
-    buy_flags["P/B"] = True if currCompany_data["P/B"] <= currCompanyIndustry_data['avgP/B'] else False  # manjsi od 16
+    buy_flags["P/B"] = True if 0 < currCompany_data["P/B"] < currCompanyIndustry_data['avgP/B'] else False  # manjsi od povprecja industrije
 
     should_buy = True
     napacni_flagi = ''
@@ -153,7 +153,7 @@ def pogojSell(currCompany_data, currCompanyIndustry_data):
     print('Pogoj sell')
     sell_flags = {}
     # sell_flags["P/B"] = True if 16 <= currCompany_data["P/B"] else False  # vecji enak 16
-    sell_flags["P/B"] = True if currCompany_data["P/B"] > currCompanyIndustry_data['avgP/B'] else False  # vecji enak 16
+    sell_flags["P/B"] = True if currCompany_data["P/B"] > currCompanyIndustry_data['avgP/B'] or 0 > currCompany_data["P/B"] else False  # vecji enak 16
 
     should_sell = True
     napacni_flagi = ''
