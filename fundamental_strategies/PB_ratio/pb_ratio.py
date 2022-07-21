@@ -15,7 +15,7 @@ def pb_ratio_strategy(start_date, end_date, df, ticker, starting_index, status, 
     print('Zacetek strategije za podjetje: ', ticker, 'obdobje: ', start_date, ' - ', end_date)
     # za fundamentalne indikatorje in njihovo povprecje v letu
     lista_datumov_porocil = fundamental_data.getListOfDatesOfCompanyDataDict(ticker)
-    company_report = fundamental_data.getCompanyFundamentalDataForDate(ticker, df.index[starting_index])  # pridobim zacetno letno porocilo in njegovo leto3
+    company_report = fundamental_data.getCompanyFundamentalDataForDate(ticker, df.index[starting_index])  # pridobim zacetno letno porocilo in njegovo leto
     print('pridobivanje prvega letnega porocila za podjetje: ', ticker, 'datum novega porocila: ', company_report['datum'])
     company_data = company_report['porocilo']
     industrija_podjetja = company_report['porocilo']['sector']
@@ -64,8 +64,10 @@ def pb_ratio_strategy(start_date, end_date, df, ticker, starting_index, status, 
 
         df["P/B"].to_numpy()[x] = company_data["P/B"]
 
+        isDatumOk = (prvo_porocilo or trenutni_datum == company_report['datum'])
+
         # manjka -> BUY signal
-        if (prvo_porocilo or trenutni_datum == company_report['datum']) and pogojBuy(currCompany_data=company_data, currCompanyIndustry_data=year_avg_data) and df["Close"].to_numpy()[x] != 0:
+        if isDatumOk and pogojBuy(currCompany_data=company_data, currCompanyIndustry_data=year_avg_data) and df["Close"].to_numpy()[x] != 0:
             print('SEM V BUY IN PROBAM KUPITI, datum: ', df.index[x])
             # preverimo ceno ene delnice in ce imamo dovolj denarja, da lahko kupimo delnice
             cena_ene_delnice = df['Close'].to_numpy()[x] + util.percentageFee(util.feePercentage, df['Close'].to_numpy()[x])
@@ -86,10 +88,13 @@ def pb_ratio_strategy(start_date, end_date, df, ticker, starting_index, status, 
                 df['Shares'].to_numpy()[x] = stDelnic
                 df['Total'].to_numpy()[x] = df['Cash'].to_numpy()[x] + buyPrice
 
+                if prvo_porocilo:  # ce smo pogledali prvo porocilo ga ne gledamo vec
+                    prvo_porocilo = False
+
                 check = 2
 
         # manjka -> Sell signal
-        elif (prvo_porocilo or trenutni_datum == company_report['datum']) and pogojSell(currCompany_data=company_data, currCompanyIndustry_data=year_avg_data):
+        elif isDatumOk and pogojSell(currCompany_data=company_data, currCompanyIndustry_data=year_avg_data):
 
             if check != 1 and check != 0:  # zadnji signal ni bil sell in nismo na zacetku
                 print("SEM V SELL IN BOM PORODAL", df.index[x])
@@ -117,6 +122,8 @@ def pb_ratio_strategy(start_date, end_date, df, ticker, starting_index, status, 
                 df['Total'].to_numpy()[x] = df['Cash'].to_numpy()[x]
 
                 check = 1
+        elif prvo_porocilo:  # ce smo pogledali prvo porocilo ga ne gledamo vec
+            prvo_porocilo = False
 
     print('Konec strategije za podjetje: ', ticker)
     return df
