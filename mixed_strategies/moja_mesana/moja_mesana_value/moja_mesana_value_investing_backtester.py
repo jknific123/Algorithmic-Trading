@@ -260,7 +260,7 @@ def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis):
     print("Skupna sredstva portfolia: ", round(endFunds, 4), "$")
     print("Profit: ", round(endFunds - startFunds, 4), "$")
     print("Kumulativni donos v procentih: ", round((endFunds - startFunds) / startFunds, 4) * 100, "%")
-    print("Povprecna letna obrestna mera: ", povprecna_letna_obrestna_mera)
+    print("Povprecna letna obrestna mera: ", povprecna_letna_obrestna_mera, '%')
 
 
     print("Delnice, ki jih še imamo v portfoliu:")
