@@ -12,7 +12,8 @@ pd.options.mode.chained_assignment = None  # default='warn'
 def zacetniDf(data):
     # kreiramo nova stolpca za buy/sell signale
     data['dividendYield'] = np.nan
-    data['fiveYearDividendGrowthRate'] = np.nan
+    # data['fiveYearDividendGrowthRate'] = np.nan
+    data['fiveYDividendperShareGrowth'] = np.nan
     data['dividendPayoutRatio'] = np.nan
 
     data['Buy'] = np.nan
@@ -248,6 +249,8 @@ def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis):
     # se izpis podatkov portfolia
     startFunds = len(portfolio) * util.getMoney('')
     endFunds = allFunds['Total'].to_numpy()[-1]
+    pretekla_leta = datetime.datetime.strptime(allFunds.index[-1], '%Y-%m-%d').year - datetime.datetime.strptime(allFunds.index[0], '%Y-%m-%d').year
+    povprecna_letna_obrestna_mera = util.povprecnaLetnaObrestnaMera(startFunds, endFunds, pretekla_leta)
 
     profit_graph(allFunds, 1, "Portfolio", round(endFunds, 4))
 
@@ -255,6 +258,8 @@ def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis):
     print("Skupna sredstva portfolia: ", round(endFunds, 4), "$")
     print("Profit: ", round(endFunds - startFunds, 4), "$")
     print("Kumulativni donos v procentih: ", round((endFunds - startFunds) / startFunds, 4) * 100, "%")
+    print("Povprecna letna obrestna mera: ", povprecna_letna_obrestna_mera, '%')
+
 
     print("Delnice, ki jih še imamo v portfoliu:")
     for key, value in allShares.items():
