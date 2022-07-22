@@ -15,10 +15,12 @@ def mixed_fundamentals_strategy(start_date, end_date, df, ticker, starting_index
     print('Zacetek strategije za podjetje: ', ticker, 'obdobje: ', start_date, ' - ', end_date)
     # za fundamentalne indikatorje in njihovo povprecje v letu
     lista_datumov_porocil = fundamental_data.getListOfDatesOfCompanyDataDict(ticker)
-    company_report = fundamental_data.getCompanyFundamentalDataForDate(ticker, df.index[starting_index])  # pridobim zacetno letno porocilo in njegovo leto3
+    company_report = fundamental_data.getCompanyFundamentalDataForDate(ticker, df.index[starting_index])  # pridobim zacetno letno porocilo in njegovo leto
     print('pridobivanje prvega letnega porocila za podjetje: ', ticker, 'datum novega porocila: ', company_report['datum'])
     company_data = company_report['porocilo']
-    year_avg_data = fundamental_data.getAvgFundamentalDataForYear(datetime.strptime(company_report['datum'], '%Y-%m-%d').year)  # pridobim povprecne indikatorje za zacetno leto
+    industrija_podjetja = company_report['porocilo']['sector']
+    year_avg_data = fundamental_data.getAvgIndustryFundamentalDataForYear(industrija_podjetja, datetime.strptime(company_report['datum'], '%Y-%m-%d').year)  # pridobim povprecne indikatorje za zacetno leto
+    prvo_porocilo = True
     # za racunanje davka na dobiček
     sellPrice = 0
     # check -> zato da nimamo dveh zapovrstnih buy/sell signalov: 2 = buy, 1 = sell
@@ -56,15 +58,19 @@ def mixed_fundamentals_strategy(start_date, end_date, df, ticker, starting_index
             company_report = fundamental_data.getCompanyFundamentalDataForDate(ticker, trenutni_datum)
             print('zamenjava letnega porocila za podjetje: ', ticker, 'datum novega porocila: ', company_report['datum'])
             company_data = company_report['porocilo']
-            year_avg_data = fundamental_data.getAvgFundamentalDataForYear(datetime.strptime(company_report['datum'], '%Y-%m-%d').year)
+            year_avg_data = fundamental_data.getAvgIndustryFundamentalDataForYear(company_data['sector'], datetime.strptime(company_report['datum'], '%Y-%m-%d').year)
+            if prvo_porocilo:  # ko se zamenja porocilo popravim to vrendost
+                prvo_porocilo = False
 
         df["ROE"].to_numpy()[x] = company_data["ROE"]
         df["P/E"].to_numpy()[x] = company_data["P/E"]
         df["P/B"].to_numpy()[x] = company_data["P/B"]
         df["marketCapitalization"].to_numpy()[x] = company_data["marketCapitalization"]
 
+        isDatumOk = (prvo_porocilo or trenutni_datum == company_report['datum'])
+
         # P/E < 15, P/B < 2, ROE > 15%, market cap > 100M$ -> BUY signal
-        if trenutni_datum == company_report['datum'] and pogojBuy(currCompany_data=company_data) and df["Close"].to_numpy()[x] != 0:
+        if isDatumOk and pogojBuy(currCompany_data=company_data, currCompanyIndustry_data=year_avg_data, datum=trenutni_datum, ticker=ticker, fDB=fundamental_data) and df["Close"].to_numpy()[x] != 0:
             print('SEM V BUY IN PROBAM KUPITI, datum: ', df.index[x])
             # preverimo ceno ene delnice in ce imamo dovolj denarja, da lahko kupimo delnice
             cena_ene_delnice = df['Close'].to_numpy()[x] + util.percentageFee(util.feePercentage, df['Close'].to_numpy()[x])
@@ -88,7 +94,7 @@ def mixed_fundamentals_strategy(start_date, end_date, df, ticker, starting_index
                 check = 2
 
         # P/E > 15, P/B > 2, ROE < 15%, market cap < 100M$ -> Sell signal
-        elif trenutni_datum == company_report['datum'] and pogojSell(currCompany_data=company_data):
+        elif isDatumOk and pogojSell(currCompany_data=company_data, currCompanyIndustry_data=year_avg_data, datum=trenutni_datum, ticker=ticker, fDB=fundamental_data):
 
             if check != 1 and check != 0:  # zadnji signal ni bil sell in nismo na zacetku
                 print("SEM V SELL IN BOM PORODAL", df.index[x])
@@ -116,20 +122,24 @@ def mixed_fundamentals_strategy(start_date, end_date, df, ticker, starting_index
                 df['Total'].to_numpy()[x] = df['Cash'].to_numpy()[x]
 
                 check = 1
+        elif prvo_porocilo:  # ce smo pogledali prvo porocilo ga ne gledamo vec
+            prvo_porocilo = False
 
     print('Konec strategije za podjetje: ', ticker)
     return df
 
 
-def pogojBuy(currCompany_data):
+def pogojBuy(currCompany_data, currCompanyIndustry_data, datum, ticker, fDB):
     # P/E < 15, P/B < 2, ROE > 15%, market cap > 100M$ -> BUY signal
     print('Pogoj buy')
 
     buy_flags = {}
-    buy_flags["P/E"] = True if currCompany_data["P/E"] < 15 else False
-    buy_flags["P/B"] = True if currCompany_data["P/B"] < 2 else False
-    buy_flags["ROE"] = True if currCompany_data["ROE"] > 0.15 else False
-    buy_flags["marketCapitalization"] = True if currCompany_data["marketCapitalization"] > hundred_million else False
+    buy_flags["P/E"] = True if 0 < currCompany_data["P/E"] < currCompanyIndustry_data['avgP/E'] else False
+    buy_flags["P/B"] = True if 0 < currCompany_data["P/B"] < currCompanyIndustry_data['avgP/B'] else False
+    buy_flags["ROE"] = True if preveriROEBuy(ticker, datum, fDB, currCompany_data['sector']) else False
+    buy_flags["dividendYield"] = True if 0.02 <= currCompany_data["dividendYield"] <= 0.06 else False  # med 2% in 6%
+    buy_flags["D/E"] = True if 0 < currCompany_data["D/E"] < currCompanyIndustry_data['avgD/E'] else False
+    # buy_flags["marketCapitalization"] = True if currCompany_data["marketCapitalization"] > 5 * hundred_million else False
 
     should_buy = True
     napacni_flagi = ''
@@ -144,14 +154,16 @@ def pogojBuy(currCompany_data):
     return should_buy
 
 
-def pogojSell(currCompany_data):
-    # P/E > 15, P/B > 2, ROE < 15%, market cap < 100M$ -> Sell signal
+def pogojSell(currCompany_data, currCompanyIndustry_data, datum, ticker, fDB):
+    # P/E > avg, P/B > avg, ROE < 10% 5 let, market cap < 500M$ -> Sell signal
     print('Pogoj sell')
     sell_flags = {}
-    sell_flags["P/E"] = True if currCompany_data["P/E"] >= 15 else False
-    sell_flags["P/B"] = True if currCompany_data["P/B"] >= 2 else False
-    sell_flags["ROE"] = True if currCompany_data["ROE"] <= 0.15 else False
-    sell_flags["marketCapitalization"] = True if currCompany_data["marketCapitalization"] <= hundred_million else False
+    sell_flags["P/E"] = True if currCompany_data["P/E"] > currCompanyIndustry_data['avgP/E'] else False
+    sell_flags["P/B"] = True if currCompany_data["P/B"] > currCompanyIndustry_data['avgP/B'] else False
+    sell_flags["ROE"] = True if preveriROESell(ticker, datum, fDB, currCompany_data['sector']) else False
+    sell_flags["dividendYield"] = True if 0.02 > currCompany_data["dividendYield"] or currCompany_data["dividendYield"] > 0.06 else False  # manjsi od 2% ali vecji od 6%
+    sell_flags["D/E"] = True if currCompany_data["D/E"] < 0 or currCompany_data["D/E"] > currCompanyIndustry_data['avgD/E'] else False
+    # sell_flags["marketCapitalization"] = True if currCompany_data["marketCapitalization"] < 5 * hundred_million else False
 
     should_sell = True
     napacni_flagi = ''
@@ -164,3 +176,59 @@ def pogojSell(currCompany_data):
         print(napacni_flagi)
 
     return should_sell
+
+
+def preveriROEBuy(companyTicker, datum, fundamental_data, industrija):
+    period_company_data = fundamental_data.getCompanyFundamentalDataForPeriodOfYears(companyTicker, datum, 5)
+    period_avg_industry_data = fundamental_data.getAvgIndustryFundamentalDataForPeriodOfYears(industrija, datetime.strptime(datum, '%Y-%m-%d').year, 5)
+
+    roeOk = True
+    for zapis in period_company_data:
+        if period_company_data[zapis]['ROE'] > 0.1 and period_company_data[zapis]['ROE'] > period_avg_industry_data[datetime.strptime(zapis, '%Y-%m-%d').year]['avgROE']:
+            roeOk = True
+        else:
+            roeOk = False
+
+    return roeOk
+
+
+def preveriROESell(companyTicker, datum, fundamental_data, industrija):
+    period_company_data = fundamental_data.getCompanyFundamentalDataForPeriodOfYears(companyTicker, datum, 5)
+    period_avg_industry_data = fundamental_data.getAvgIndustryFundamentalDataForPeriodOfYears(industrija, datetime.strptime(datum, '%Y-%m-%d').year, 5)
+
+    roeOk = True
+    for zapis in period_company_data:
+        if period_company_data[zapis]['ROE'] < 0.1 and period_company_data[zapis]['ROE'] < period_avg_industry_data[datetime.strptime(zapis, '%Y-%m-%d').year]['avgROE']:
+            roeOk = True
+        else:
+            roeOk = False
+
+    return roeOk
+
+
+def preveriProfitMarginBuy(companyTicker, datum, fundamental_data, industrija):
+    period_company_data = fundamental_data.getCompanyFundamentalDataForPeriodOfYears(companyTicker, datum, 5)
+    period_avg_industry_data = fundamental_data.getAvgIndustryFundamentalDataForPeriodOfYears(industrija, datetime.strptime(datum, '%Y-%m-%d').year, 5)
+
+    roeOk = True
+    for zapis in period_company_data:
+        if period_company_data[zapis]['profitMargin'] > 0.2 and period_company_data[zapis]['profitMargin'] > period_avg_industry_data[datetime.strptime(zapis, '%Y-%m-%d').year]['avgProfitMargin']:
+            roeOk = True
+        else:
+            roeOk = False
+
+    return roeOk
+
+
+def preveriProfitMarginSell(companyTicker, datum, fundamental_data, industrija):
+    period_company_data = fundamental_data.getCompanyFundamentalDataForPeriodOfYears(companyTicker, datum, 5)
+    period_avg_industry_data = fundamental_data.getAvgIndustryFundamentalDataForPeriodOfYears(industrija, datetime.strptime(datum, '%Y-%m-%d').year, 5)
+
+    roeOk = True
+    for zapis in period_company_data:
+        if period_company_data[zapis]['profitMargin'] < 0.2 and period_company_data[zapis]['profitMargin'] < period_avg_industry_data[datetime.strptime(zapis, '%Y-%m-%d').year]['avgProfitMargin']:
+            roeOk = True
+        else:
+            roeOk = False
+
+    return roeOk
