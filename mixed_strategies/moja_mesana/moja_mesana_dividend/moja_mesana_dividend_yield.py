@@ -83,7 +83,6 @@ def dividend_investing_sma_crossover_strategy(start_date, end_date, sPeriod, lPe
 
         tehnical_trading_signal = dolociTehnicalTradinSignal(df=df, x=x, sPeriod=sPeriod, lPeriod=lPeriod)
 
-        # manjka -> BUY signal
         if fundamentalni_tradin_signal == 3 and tehnical_trading_signal == 5 and df["Close"].to_numpy()[x] != 0:
             print('SEM V BUY IN PROBAM KUPITI, datum: ', df.index[x])
             # preverimo ceno ene delnice in ce imamo dovolj denarja, da lahko kupimo delnice
@@ -107,7 +106,6 @@ def dividend_investing_sma_crossover_strategy(start_date, end_date, sPeriod, lPe
 
                 check = 2
 
-        # manjka -> Sell signal
         elif fundamentalni_tradin_signal == 4 and tehnical_trading_signal == 6:
 
             if check != 1 and check != 0:  # zadnji signal ni bil sell in nismo na zacetku
