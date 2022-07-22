@@ -145,7 +145,8 @@ def pogojBuy(currCompany_data, currCompanyIndustry_data, datum, ticker, fDB):
     buy_flags["ROE"] = preveriROEBuy(ticker, datum, fDB, currCompany_data['sector'])
     buy_flags["profitMargin"] = preveriProfitMarginBuy(ticker, datum, fDB, currCompany_data['sector'])
     # buy_flags["profitMargin"] = True if currCompany_data["profitMargin"] > 0.1 and currCompany_data["profitMargin"] > currCompanyIndustry_data["avgProfitMargin"] else False
-    buy_flags["D/E"] = True if 0 < currCompany_data["D/E"] <= 1.5 else False
+    # buy_flags["D/E"] = True if 0 < currCompany_data["D/E"] <= 1.5 else False
+    buy_flags["D/E"] = True if 0 < currCompany_data["D/E"] <= currCompanyIndustry_data['avgD/E'] else False
     # buy_flags["P/B"] = True if currCompany_data["P/B"] < 2 else False
     buy_flags["P/B"] = True if 0 < currCompany_data["P/B"] <= currCompanyIndustry_data['avgP/B'] else False
     buy_flags["freeCashFlowMargin"] = True if currCompany_data["freeCashFlowMargin"] >= 0.1 else False
@@ -173,7 +174,7 @@ def pogojSell(currCompany_data, currCompanyIndustry_data, datum, ticker, fDB):
     sell_flags["ROE"] = preveriROESell(ticker, datum, fDB, currCompany_data['sector'])
     sell_flags["profitMargin"] = preveriProfitMarginSell(ticker, datum, fDB, currCompany_data['sector'])
     # sell_flags["profitMargin"] = True if currCompany_data["profitMargin"] < 0.1 and currCompany_data["profitMargin"] < currCompanyIndustry_data['avgProfitMargin'] else False
-    sell_flags["D/E"] = True if currCompany_data["D/E"] < 0 or currCompany_data["D/E"] > 1.5 else False
+    sell_flags["D/E"] = True if currCompany_data["D/E"] < 0 or currCompany_data["D/E"] > currCompanyIndustry_data['avgD/E'] else False
     # sell_flags["P/B"] = True if currCompany_data["P/B"] < 0 or currCompany_data["P/B"] > currCompanyIndustry_data['avgP/B'] else False
     sell_flags["freeCashFlowMargin"] = True if currCompany_data["freeCashFlowMargin"] < 0.1 else False
 

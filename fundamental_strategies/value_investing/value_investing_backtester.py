@@ -21,6 +21,7 @@ def zacetniDf(data):
     data["Revenue"] = np.nan
     data["DCF"] = np.nan
 
+
     # kreiramo nova stolpca za buy/sell signale
     data['Buy'] = np.nan
     data['Sell'] = np.nan
