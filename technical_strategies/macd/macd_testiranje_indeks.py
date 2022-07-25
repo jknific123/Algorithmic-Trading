@@ -125,6 +125,8 @@ def testirajNaIndeksuEnoKombinacijo(start_date, end_date, short_ema, long_ema, s
     indeks_data = zacetniDf(data=indeks_data)  # dodamo stolpce
     data_df = indeks_data.copy(deep=True)
     tmp = macd(short_ema, long_ema, signal_period, data_df, '^DJI', 0, 0, True, hold_obdobje_kombinacija_indeks, True)
+
+    MACD_trading_graph(sPeriod=short_ema, lPeriod=long_ema, signal_period=signal_period, df=tmp, company='^DJI')
     print('Total profit: ', tmp['Total'].iat[-1])
     print(f"[{short_ema},{long_ema},{signal_period}]: {round(tmp['Total'].to_numpy()[-1], 2)} {util.povprecnaLetnaObrestnaMera(30000, tmp['Total'].to_numpy()[-1], util.vsaLeta())}%")
     print('hold_obdobje: ', hold_obdobje_kombinacija_indeks)

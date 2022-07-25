@@ -110,6 +110,10 @@ def povprecnaLetnaObrestnaMera(zacetniZnesek, koncniZnesek, preteklaLeta):
     return cagr_rate
 
 
+# print('Ycharts dija:', povprecnaLetnaObrestnaMera(10717.500, 34483.719, 16))  # DIJA indeks
+# print('indeks ^dija:', povprecnaLetnaObrestnaMera(round(10820.28027, 2), round(35601.98047, 2), 16))  # DIJA indeks
+
+
 # Skupaj vseh dni v 16 letih = 5844
 # vrne cas(leta) v ucni mnozici
 def ucnaMnozicaLeta():
