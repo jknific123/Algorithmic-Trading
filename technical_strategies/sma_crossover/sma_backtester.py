@@ -15,15 +15,16 @@ def zacetniDf(data):
     # kreiramo nova stolpca za buy/sell signale
     data['Buy'] = np.nan
     data['Sell'] = np.nan
-    data['Cash'] = 0
+    data['Cash'] = 0.0
     data['Shares'] = 0
-    data['Profit'] = 0
-    data['Total'] = 0
+    data['Profit'] = 0.0
+    data['Total'] = 0.0
     data['Ticker'] = ""
     data['Buy-Signal'] = np.nan
     data['Sell-Signal'] = np.nan
     data["Buy-date"] = ""
     data["Sell-date"] = ""
+    data['Ostali Cash'] = 0.0
 
     return data
 
@@ -200,6 +201,7 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stockPri
                 if ostaliTicker == "GM":
                     new_data["Close"] = 0
                 new_data = new_data[['Close']].copy()
+                new_data = zacetniDf(new_data)  # dodamo stolpce
                 starting_index = len(ostaliTickerDataframe)
 
                 concat_data = pd.concat([ostaliTickerDataframe, new_data])
@@ -208,12 +210,25 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stockPri
                                                           zadnji_signal, False, hold_obdobje, False)
                 portfolio[ostaliTicker] = new_ostaliTickerDataframe
 
-    totals = prikaziPodatkePortfolia(portfolio, startIzpis=start, endIzpis=end)
+    ostali_cash = {}
+    for x in portfolio:
+        ostanek = 0
+        if len(portfolio[x].loc[portfolio[x]['Ostali Cash'] != 0]['Ostali Cash']) != 0:
+            ostanek = portfolio[x].loc[portfolio[x]['Ostali Cash'] != 0]['Ostali Cash'][0]
+        ostali_cash[x] = ostanek
+
+    celotni_ostali_cash = 0
+    for x in ostali_cash:
+        celotni_ostali_cash += ostali_cash[x]
+
+    print('Celotni ostali cash: ', celotni_ostali_cash)
+
+    totals = prikaziPodatkePortfolia(portfolio=portfolio, startIzpis=start, endIzpis=end, ostali_cash=celotni_ostali_cash)
 
     return totals
 
 
-def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis):
+def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis, ostali_cash):
     # gremo cez cel portfolio in sestejemo Totals ter potem plotamo graf
 
     allFunds = pd.DataFrame
@@ -236,7 +251,9 @@ def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis):
         count += 1
 
     # se izpis podatkov portfolia
-    startFunds = len(portfolio) * util.getMoney('')
+    # startFunds = len(portfolio) * util.getMoney('')
+    startFunds = (len(portfolio) * util.getMoney('')) - ostali_cash
+    print('Start funds: ', startFunds)
     endFunds = allFunds['Total'].to_numpy()[-1]
     pretekla_leta = datetime.datetime.strptime(allFunds.index[-1], '%Y-%m-%d').year - datetime.datetime.strptime(allFunds.index[0], '%Y-%m-%d').year
     povprecna_letna_obrestna_mera = util.povprecnaLetnaObrestnaMera(startFunds, endFunds, pretekla_leta)
