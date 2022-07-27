@@ -75,7 +75,7 @@ def buy_and_hold(sPeriod, lPeriod, df, ticker, starting_index, status, odZacetka
         if check != 2 and df['Close'].to_numpy()[x] != 0:
             # preverimo ceno ene delnice in ce imamo dovolj denarja, da lahko kupimo delnice
             cena_ene_delnice = df['Close'].to_numpy()[x] + util.percentageFee(util.feePercentage, df['Close'].to_numpy()[x])
-            stDelnic = math.floor(df['Cash'].to_numpy()[x] / cena_ene_delnice)  # stevilo delnic, ki jih lahko kupimo z nasim denarjem
+            stDelnic = df['Cash'].to_numpy()[x] / cena_ene_delnice  # stevilo delnic, ki jih lahko kupimo z nasim denarjem
             if check != 2 and stDelnic > 0:  # zadnji signal ni bil buy in imamo dovolj denarja za nakup
                 print('Kupim prvic, ticker datum: ', df.index[x], ticker, 'Close: ', df['Close'].to_numpy()[x])
                 # kupi kolikor je možno delnic glede na cash
