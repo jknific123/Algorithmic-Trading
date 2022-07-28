@@ -15,15 +15,16 @@ def zacetniDf(data):
     # kreiramo nova stolpca za buy/sell signale
     data['Buy'] = np.nan
     data['Sell'] = np.nan
-    data['Cash'] = 0
+    data['Cash'] = 0.0
     data['Shares'] = 0
-    data['Profit'] = 0
-    data['Total'] = 0
+    data['Profit'] = 0.0
+    data['Total'] = 0.0
     data['Ticker'] = ""
     data['Buy-Signal'] = np.nan
     data['Sell-Signal'] = np.nan
     data["Buy-date"] = ""
     data["Sell-date"] = ""
+    data['Ostali Cash'] = 0.0
 
     return data
 
@@ -32,7 +33,7 @@ def setObdobja(startObdobja, endObdobja, dowTickersObdobja):
     # hardcodam za testno mnozico
     obdobja = []
 
-    if startObdobja == "2017-02-02":
+    if startObdobja == "2017-02-02" or startObdobja == "2018-09-09" or startObdobja == '2020-4-16':
         obdobja.append(startObdobja)
 
     for x in dowTickersObdobja:
@@ -66,13 +67,23 @@ def backtest(start, end, sma_period, bands_multiplayer, dowTickers, stockPricesD
             # hardcodam za zacetno od ucne in testne mnozice
             print("V zacetnem")
 
+            # dolocanje zacetnih podjetji in zacetnega datuma za download
             ohlc_download_start_date = ''
+            # 70% - 30%
             if zacetnoObdobje == "2005-11-21":
                 starting_companies = dowTickers[zacetnoObdobje]["all"]
                 ohlc_download_start_date = '2005-02-07'  # za max long sma na ucni mnozici
             elif zacetnoObdobje == "2017-02-02":
                 starting_companies = dowTickers["2015-03-19"]["all"]
-                ohlc_download_start_date = '2016-04-19'  # prej '2015-09-02'  # za max sma na testni mnozci # prej '2015-08-06'
+                ohlc_download_start_date = '2016-04-19'  # za max sma na testni mnozci
+            # 80% - 20%
+            elif zacetnoObdobje == '2018-09-09':
+                starting_companies = dowTickers['2018-06-26']['all']
+                ohlc_download_start_date = '2017-11-21'  # za max sma na testni mnozci
+            # 90% - 10%
+            elif zacetnoObdobje == '2020-4-16':
+                starting_companies = dowTickers['2019-04-02']['all']
+                ohlc_download_start_date = '2019-07-01'  # za max sma na testni mnozci
 
             # trejdamo z all od zacetnegaObdobja
             for x in starting_companies:
@@ -199,6 +210,7 @@ def backtest(start, end, sma_period, bands_multiplayer, dowTickers, stockPricesD
                 if ostaliTicker == "GM":
                     new_data["Close"] = 0
                 new_data = new_data[['Close', 'High', 'Low']].copy()
+                new_data = zacetniDf(new_data)  # dodamo stolpce
                 starting_index = len(ostaliTickerDataframe)
 
                 concat_data = pd.concat([ostaliTickerDataframe, new_data])
@@ -207,12 +219,26 @@ def backtest(start, end, sma_period, bands_multiplayer, dowTickers, stockPricesD
                                                            zadnji_signal, False, hold_obdobje, False)
                 portfolio[ostaliTicker] = new_ostaliTickerDataframe
 
-    totals = prikaziPodatkePortfolia(portfolio, startIzpis=start, endIzpis=end)
+    ostali_cash = {}
+    for x in portfolio:
+        ostanek = 0
+        if len(portfolio[x].loc[portfolio[x]['Ostali Cash'] != 0]['Ostali Cash']) != 0:
+            ostanek = portfolio[x].loc[portfolio[x]['Ostali Cash'] != 0]['Ostali Cash'][0]
+        ostali_cash[x] = ostanek
 
-    return totals
+    celotni_ostali_cash = 0
+    for x in ostali_cash:
+        celotni_ostali_cash += ostali_cash[x]
+
+    print('Celotni ostali cash: ', celotni_ostali_cash)
+
+    totals = prikaziPodatkePortfolia(portfolio=portfolio, startIzpis=start, endIzpis=end, ostali_cash=celotni_ostali_cash)
+
+    return_dict = {'totals': totals, 'zacetna investicija': (len(portfolio) * util.getMoney('')) - celotni_ostali_cash}
+    return return_dict
 
 
-def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis):
+def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis, ostali_cash):
     # gremo cez cel portfolio in sestejemo Totals ter potem plotamo graf
 
     allFunds = pd.DataFrame
@@ -235,10 +261,13 @@ def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis):
         count += 1
 
     # se izpis podatkov portfolia
-    startFunds = len(portfolio) * util.getMoney('')
+    # startFunds = len(portfolio) * util.getMoney('')
+    startFunds = (len(portfolio) * util.getMoney('')) - ostali_cash
+    print('Start funds: ', startFunds)
     endFunds = allFunds['Total'].to_numpy()[-1]
-    pretekla_leta = datetime.datetime.strptime(allFunds.index[-1], '%Y-%m-%d').year - datetime.datetime.strptime(allFunds.index[0], '%Y-%m-%d').year
-    povprecna_letna_obrestna_mera = util.povprecnaLetnaObrestnaMera(startFunds, endFunds, pretekla_leta)
+    pretekli_cas = datetime.datetime.strptime(allFunds.index[-1], '%Y-%m-%d') - datetime.datetime.strptime(allFunds.index[0], '%Y-%m-%d')
+    print('pretekli cas v dnevih:', pretekli_cas.days)
+    povprecna_letna_obrestna_mera = util.povprecnaLetnaObrestnaMera(startFunds, endFunds, (pretekli_cas.days / 365))
 
     profit_graph(allFunds, 1, "Portfolio", round(endFunds, 4))
 
@@ -260,26 +289,3 @@ def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis):
 
 # sma_period = 20
 # bands_multiplayer = 2
-
-# testing date time
-# start = "2005-11-21"
-# #end = "2012-10-25"
-# #end = "2008-4-1"
-# #end = "2020-10-1"
-# # end = "2008-2-19"
-# #end = "2021-1-1"
-#
-# #end = "2012-1-1"
-# end = "2016-5-21"
-# holdObdobje = 365
-#
-# begin_time = datetime.datetime.now()
-#
-# dowTickers = dow.endTickers # podatki o sezona sprememb dow jones indexa
-# stock_data = getStocks.getAllStockData(start_date=start, end_date=end)
-#
-# # backtest(start, end, sma_period, bands_multiplayer, dowTickers, stock_data, holdObdobje)
-#
-# testirajNaPortfoliu(dowTickers, stock_data, holdObdobje)
-#
-# print(datetime.datetime.now() - begin_time)

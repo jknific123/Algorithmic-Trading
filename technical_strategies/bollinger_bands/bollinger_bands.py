@@ -100,7 +100,13 @@ def bollingerBands(sma_period, bands_multiplayer, df, ticker, starting_index, st
                 df['Buy-Signal'].to_numpy()[x] = df["Close"].to_numpy()[x]
                 df["Buy-date"].to_numpy()[x] = df.index[x]  # zapisem datum nakupa
 
-                df['Cash'].to_numpy()[x] = df['Cash'].to_numpy()[x] - buyPrice  # posodbi cash
+                # samo na zacetku gledamo ostali cash
+                if df['Cash'].to_numpy()[x] == 1000.00000:
+                    df['Ostali Cash'].to_numpy()[x] = df['Cash'].to_numpy()[x] - buyPrice
+                    df['Cash'].to_numpy()[x] = 0
+                else:
+                    df['Cash'].to_numpy()[x] = df['Cash'].to_numpy()[x] - buyPrice  # posodbi cash
+
                 df['Shares'].to_numpy()[x] = stDelnic
                 df['Total'].to_numpy()[x] = df['Cash'].to_numpy()[x] + buyPrice
 

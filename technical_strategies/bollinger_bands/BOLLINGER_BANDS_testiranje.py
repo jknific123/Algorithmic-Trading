@@ -72,7 +72,7 @@ def testirajNaPortfoliuEnoKombinacijo(start_date, end_date, sma_period, bands_mu
     tmp = backtest(start=start_date, end=end_date, sma_period=sma_period, bands_multiplayer=bands_multiplayer, dowTickers=dowTickers, stockPricesDB=stock_prices_db,
                    hold_obdobje=hold_obdobje)
 
-    print('Total profit: ', tmp['Total'].iat[-1])
+    print('Total profit: ', tmp['totals']['Total'].iat[-1])
 
 
 def trejdajSamoEnoPodjetje(sma_period, bands_multiplayer, stockPricesDBIndex, hold_obdobje):
