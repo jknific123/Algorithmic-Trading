@@ -158,7 +158,7 @@ def testirajNaPortfoliuEnoKombinacijo(start_date, end_date, short_sma, long_sma,
     tmp = backtest(start=start_date, end=end_date, sma_period_short=short_sma, sma_period_long=long_sma, dowTickers=dowTickers, stockPricesDB=stock_prices_db,
                    hold_obdobje=hold_obdobje_kombinacija_portfolio)
 
-    print('Total profit: ', tmp['Total'].iat[-1])
+    print('Total profit: ', tmp['totals']['Total'].iat[-1])
 
 
 # probal primerjat moje backteste s trejdanjem na DOW indexu...

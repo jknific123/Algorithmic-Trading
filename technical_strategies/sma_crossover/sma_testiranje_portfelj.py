@@ -11,6 +11,7 @@ from utility import utils as util
 def najdiOptimalneParametreNaPotrfoliu(start_period, end_period, dowTickers, stock_prices_db, hold_obdobje):
     print("Testiram na ucni mnozici")
     ucni_rezultati = {}
+    ucni_zacetna_investicijat = {}
     long_values = [100, 124, 150, 175, 200]
     short_values = [40, 54, 70, 85, 100]
 
@@ -20,16 +21,21 @@ def najdiOptimalneParametreNaPotrfoliu(start_period, end_period, dowTickers, sto
                 ucni_rezultati[f"[{short},{long}]"] = {}
                 # print(f"Kombinacija: Short = {short} , Long = {long}")
                 rezultati_backtesta = backtest(start_period, end_period, short, long, dowTickers, stock_prices_db, hold_obdobje)
-                ucni_rezultati[f"[{short},{long}]"] = rezultati_backtesta['Total'].to_numpy()[-1]
+                ucni_rezultati[f"[{short},{long}]"] = rezultati_backtesta['totals']['Total'].to_numpy()[-1]
+                ucni_zacetna_investicijat[f"[{short},{long}]"] = rezultati_backtesta['zacetna investicija']
 
-    return ucni_rezultati
+    ucni_return_dict = {'ucni_rezultati': ucni_rezultati, 'ucni_zacetna_investicijat': ucni_zacetna_investicijat}
+    return ucni_return_dict
 
 
 def testirajNaPortfoliuUcnaMnozica(dowTickers, stock_prices_db, hold_cas):
     zacetni_cas = datetime.datetime.now()
     # pridobimo dict key: kombinacija, value: koncno stanje sredstev
-    rez_total_ucni = najdiOptimalneParametreNaPotrfoliu(start_period="2005-11-21", end_period="2017-02-02", dowTickers=dowTickers, stock_prices_db=stock_prices_db,
+    return_ucni = najdiOptimalneParametreNaPotrfoliu(start_period="2005-11-21", end_period="2017-02-02", dowTickers=dowTickers, stock_prices_db=stock_prices_db,
                                                         hold_obdobje=hold_cas)
+
+    rez_total_ucni = return_ucni['ucni_rezultati']
+    rez_zacetna_investicija_ucni = return_ucni['ucni_zacetna_investicijat']
     print("Koncal testiranej na ucni: ", datetime.datetime.now() - zacetni_cas)
 
     # sortiram rezultate po velikosti koncnega stanja sredstev
@@ -39,7 +45,9 @@ def testirajNaPortfoliuUcnaMnozica(dowTickers, stock_prices_db, hold_cas):
         for x in sorted_rez_total_ucni:
             print(x, ": ", sorted_rez_total_ucni[x])
             row_string = str(x) + ': ' + str(round(sorted_rez_total_ucni[x], 2)) + ' ' + str(
-                util.povprecnaLetnaObrestnaMera(30000, sorted_rez_total_ucni[x], util.ucnaMnozicaLeta())) + '%'
+                util.povprecnaLetnaObrestnaMera(
+                    rez_zacetna_investicija_ucni[x], sorted_rez_total_ucni[x], util.ucnaMnozicaLeta())) + '% ' + str(round(rez_zacetna_investicija_ucni[x], 2))
+
             f.write(row_string)
             f.write('\n')
         f.write('hold_obdobje: ' + str(hold_cas))
@@ -66,18 +74,24 @@ def testirajOptimalneNaTestniMnoziciZaHoldObdobja(dowTickers, testnaStockPricesD
         hold_obdobje_string = util.getStringForHoldObdobje(hold_cas)
         print('Testiram za hold obdobje: ' + hold_obdobje_string, hold_cas)
         rez_total_testni = {}
+        rez_zacetna_investicija_testni = {}
         zacetni_cas = datetime.datetime.now()
         for kombinacija in trenutni_parametri_list:
             print('Kombinacija: ', kombinacija)
             temp = backtest('2017-02-02', '2021-11-21', kombinacija[0], kombinacija[1], dowTickers, testnaStockPricesDB, hold_cas)
-            koncno_stanje = temp['Total'].to_numpy()[-1]
+            koncno_stanje = temp['totals']['Total'].to_numpy()[-1]
+            zacetna_investicija = temp['zacetna investicija']
             rez_total_testni[f"[{kombinacija[0]},{kombinacija[1]}]"] = koncno_stanje
+            rez_zacetna_investicija_testni[f"[{kombinacija[0]},{kombinacija[1]}]"] = zacetna_investicija
 
         sorted_rez_total_testni = {k: v for k, v in sorted(rez_total_testni.items(), key=lambda item: item[1])}
         with open(f'D:\Faks\Algorithmic-Trading\/technical_strategies\sma_crossover\sma_rezultati_testna\SMA_crossover_{hold_obdobje_string}_testna.txt', 'w', encoding='UTF8') as f:
             for x in sorted_rez_total_testni:
                 print(x, ': ', sorted_rez_total_testni[x], ' ', util.testnaMnozicaLeta())
-                row_string = str(x) + ': ' + str(round(sorted_rez_total_testni[x], 2)) + ' ' + str(util.povprecnaLetnaObrestnaMera(30000, sorted_rez_total_testni[x], util.testnaMnozicaLeta())) + '%'
+                row_string = str(x) + ': ' + str(round(sorted_rez_total_testni[x], 2)) + ' ' + str(
+                    util.povprecnaLetnaObrestnaMera(rez_zacetna_investicija_testni[x], sorted_rez_total_testni[x], util.testnaMnozicaLeta())) + '% ' + str(
+                    round(rez_zacetna_investicija_testni[x], 2))
+
                 f.write(row_string)
                 f.write('\n')
             f.write('hold_obdobje: ' + str(hold_cas))

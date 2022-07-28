@@ -235,7 +235,8 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stockPri
 
     totals = prikaziPodatkePortfolia(portfolio=portfolio, startIzpis=start, endIzpis=end, ostali_cash=celotni_ostali_cash)
 
-    return totals
+    return_dict = {'totals': totals, 'zacetna investicija': (len(portfolio) * util.getMoney('')) - celotni_ostali_cash}
+    return return_dict
 
 
 def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis, ostali_cash):
@@ -265,8 +266,9 @@ def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis, ostali_cash):
     startFunds = (len(portfolio) * util.getMoney('')) - ostali_cash
     print('Start funds: ', startFunds)
     endFunds = allFunds['Total'].to_numpy()[-1]
-    pretekla_leta = datetime.datetime.strptime(allFunds.index[-1], '%Y-%m-%d').year - datetime.datetime.strptime(allFunds.index[0], '%Y-%m-%d').year
-    povprecna_letna_obrestna_mera = util.povprecnaLetnaObrestnaMera(startFunds, endFunds, pretekla_leta)
+    pretekli_cas = datetime.datetime.strptime(allFunds.index[-1], '%Y-%m-%d') - datetime.datetime.strptime(allFunds.index[0], '%Y-%m-%d')
+    print('pretekli cas v dnevih:', pretekli_cas.days)
+    povprecna_letna_obrestna_mera = util.povprecnaLetnaObrestnaMera(startFunds, endFunds, (pretekli_cas.days / 365))
 
     profit_graph(allFunds, 1, "Portfolio", round(endFunds, 4))
 
