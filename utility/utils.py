@@ -120,9 +120,25 @@ def ucnaMnozicaLeta():
     return 4091 / 365  # 70% dni deljeno leto
 
 
+def ucnaMnozicaLeta80procentov():
+    return 4675 / 365  # 80% dni deljeno leto
+
+
+def ucnaMnozicaLeta90procentov():
+    return 5260 / 365  # 90% dni deljeno leto
+
+
 # vrne cas(leta) v testni mnozici
 def testnaMnozicaLeta():
     return 1753 / 365  # 30% dni delejno eno leto
+
+
+def testnaMnozicaLeta20procentov():
+    return 1169 / 365  # 20% dni delejno eno leto
+
+
+def testnaMnozicaLeta10procentov():
+    return 584 / 365  # 10% dni delejno eno leto
 
 
 # vrne cas(leta) v vseh letih
