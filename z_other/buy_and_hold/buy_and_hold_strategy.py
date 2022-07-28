@@ -19,20 +19,7 @@ def days_between(d1, d2):
     return abs((d2 - d1).days)
 
 
-def buy_and_hold(sPeriod, lPeriod, df, ticker, starting_index, status, odZacetkaAliNe, holdObdobje, potrebnoRezatiGledeNaDatum):
-    # naredimo/napolnimo nova stolpca za oba SMA
-    # df[f'SMA-{sPeriod}'] = df['Close'].rolling(window=sPeriod, min_periods=1, center=False).mean()
-    # df[f'SMA-{lPeriod}'] = df['Close'].rolling(window=lPeriod, min_periods=1, center=False).mean()
-
-    # v nadaljevanju uporabljamo samo podatke od takrat, ko je dolgi sma že na voljo
-    if odZacetkaAliNe is True and ticker != 'DOW':
-        if potrebnoRezatiGledeNaDatum:
-            indx_rezanja = util.poisciIndexZaRezanjeDf(df)
-            df = df[indx_rezanja:]
-        else:
-            df = df[lPeriod:]
-        if starting_index != 0:
-            starting_index = starting_index - lPeriod  # treba je posodobiti tudi starting_index, ko se reze df
+def buy_and_hold(df, ticker, starting_index, status, odZacetkaAliNe):
 
     # za racunanje davka na dobiček
     sellPrice = 0
@@ -95,33 +82,32 @@ def buy_and_hold(sPeriod, lPeriod, df, ticker, starting_index, status, odZacetka
                 check = 2
 
         # nikoli ne prodaj
-        elif False and pretekli_dnevi_buy >= holdObdobje:
-
-            if check != 1 and check != 0:  # zadnji signal ni bil sell in nismo na zacetku
-                print('Prodajam v buy and hold??')
-                # prodaj vse delnic izracunaj profit in placaj davek
-                sellPrice = util.fees(df['Shares'].to_numpy()[x] * df['Close'].to_numpy()[x])  # delnice v denar, obracunamo fees
-                profitPredDavkom = util.profit(df['Buy'].to_numpy()[x], sellPrice)  # izracunamo profit pred davkom
-
-                # ce je dobicek pred davkom pozitiven zaracunamo davek na dobicek in ga odstejemo od sellPrice, da dobimo ostanek
-                if profitPredDavkom > 0:
-                    sellPrice = sellPrice - util.taxes(profitPredDavkom)  # popravimo sellPrice, tako da obracunamo davek
-
-                df['Sell'].to_numpy()[x] = sellPrice  # zapisemo sell price
-                df['Profit'].to_numpy()[x] = util.profit(df['Buy'].to_numpy()[x], sellPrice)
-                # za graf trgovanja
-                df['Sell-Signal'].to_numpy()[x] = df["Close"].to_numpy()[x]
-                df["Sell-date"].to_numpy()[x] = df.index[x]  # zapisem datum nakupa
-
-                df['Buy'].to_numpy()[x] = 0  # zapisemo 0 da oznacimo da je zadnji signal bil sell
-                df['Buy-date'].to_numpy()[x] = ""  # zapisemo "" da oznacimo da je zadnji signal bil sell
-
-                df['Cash'].to_numpy()[x] = df['Cash'].to_numpy()[x] + sellPrice  # posodbi cash
-                df['Shares'].to_numpy()[x] = 0
-                # updejtamo total
-                df['Total'].to_numpy()[x] = df['Cash'].to_numpy()[x]
-
-                check = 1
+        # elif False:
+            # if check != 1 and check != 0:  # zadnji signal ni bil sell in nismo na zacetku
+            #     print('Prodajam v buy and hold??')
+            #     # prodaj vse delnic izracunaj profit in placaj davek
+            #     sellPrice = util.fees(df['Shares'].to_numpy()[x] * df['Close'].to_numpy()[x])  # delnice v denar, obracunamo fees
+            #     profitPredDavkom = util.profit(df['Buy'].to_numpy()[x], sellPrice)  # izracunamo profit pred davkom
+            #
+            #     # ce je dobicek pred davkom pozitiven zaracunamo davek na dobicek in ga odstejemo od sellPrice, da dobimo ostanek
+            #     if profitPredDavkom > 0:
+            #         sellPrice = sellPrice - util.taxes(profitPredDavkom)  # popravimo sellPrice, tako da obracunamo davek
+            #
+            #     df['Sell'].to_numpy()[x] = sellPrice  # zapisemo sell price
+            #     df['Profit'].to_numpy()[x] = util.profit(df['Buy'].to_numpy()[x], sellPrice)
+            #     # za graf trgovanja
+            #     df['Sell-Signal'].to_numpy()[x] = df["Close"].to_numpy()[x]
+            #     df["Sell-date"].to_numpy()[x] = df.index[x]  # zapisem datum nakupa
+            #
+            #     df['Buy'].to_numpy()[x] = 0  # zapisemo 0 da oznacimo da je zadnji signal bil sell
+            #     df['Buy-date'].to_numpy()[x] = ""  # zapisemo "" da oznacimo da je zadnji signal bil sell
+            #
+            #     df['Cash'].to_numpy()[x] = df['Cash'].to_numpy()[x] + sellPrice  # posodbi cash
+            #     df['Shares'].to_numpy()[x] = 0
+            #     # updejtamo total
+            #     df['Total'].to_numpy()[x] = df['Cash'].to_numpy()[x]
+            #
+            #     check = 1
 
     # print('Zaključni Close: ', df['Close'].to_numpy()[-1])
     return df
