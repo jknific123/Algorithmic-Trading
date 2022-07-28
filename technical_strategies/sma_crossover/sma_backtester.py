@@ -33,7 +33,7 @@ def setObdobja(startObdobja, endObdobja, dowTickersObdobja):
     # hardcodam za testno mnozico
     obdobja = []
 
-    if startObdobja == "2017-02-02":
+    if startObdobja == "2017-02-02" or startObdobja == "2018-09-09" or startObdobja == '2020-4-16':
         obdobja.append(startObdobja)
 
     for x in dowTickersObdobja:
@@ -68,13 +68,23 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stockPri
             # hardcodam za zacetno od ucne in testne mnozice
             print("V zacetnem")
 
+            # dolocanje zacetnih podjetji in zacetnega datuma za download
             ohlc_download_start_date = ''
+            # 70% - 30%
             if zacetnoObdobje == "2005-11-21":
                 starting_companies = dowTickers[zacetnoObdobje]["all"]
                 ohlc_download_start_date = '2005-02-07'  # za max long sma na ucni mnozici
             elif zacetnoObdobje == "2017-02-02":
                 starting_companies = dowTickers["2015-03-19"]["all"]
-                ohlc_download_start_date = '2016-04-19'  # prej '2015-09-02'  # za max sma na testni mnozci # prej '2015-08-06'
+                ohlc_download_start_date = '2016-04-19'  # za max sma na testni mnozci
+            # 80% - 20%
+            elif zacetnoObdobje == '2018-09-09':
+                starting_companies = dowTickers['2018-06-26']['all']
+                ohlc_download_start_date = '2017-11-21'  # za max sma na testni mnozci
+            # 90% - 10%
+            elif zacetnoObdobje == '2020-4-16':
+                starting_companies = dowTickers['2019-04-02']['all']
+                ohlc_download_start_date = '2019-07-01'  # za max sma na testni mnozci
 
             # trejdamo z all od zacetnegaObdobja
             for x in starting_companies:
