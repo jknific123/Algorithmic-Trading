@@ -17,9 +17,9 @@ NOVO UCNA IN TESTNA DELITEV
 
 -------------------------
 
-# UCNA MNOZICA 90% = 2005-11-21 do 2020-4-16
+# UCNA MNOZICA 90% = 2005-11-21 do 2020-04-16
 
-# TESTNA MNOZICA 10% = 2020-4-16 do 2021-11-21
+# TESTNA MNOZICA 10% = 2020-04-16 do 2021-11-21
 
 
 fundamental data api rewiev
