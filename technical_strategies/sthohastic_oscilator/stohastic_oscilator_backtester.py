@@ -33,7 +33,7 @@ def setObdobja(startObdobja, endObdobja, dowTickersObdobja):
     # hardcodam za testno mnozico
     obdobja = []
 
-    if startObdobja == "2017-02-02" or startObdobja == "2018-09-09" or startObdobja == '2020-4-16':
+    if startObdobja == "2017-02-02" or startObdobja == "2018-09-09" or startObdobja == '2020-04-16':
         obdobja.append(startObdobja)
 
     for x in dowTickersObdobja:
@@ -81,7 +81,7 @@ def backtest(start, end, high_low_period, d_sma_period, dowTickers, stockPricesD
                 starting_companies = dowTickers['2018-06-26']['all']
                 ohlc_download_start_date = '2017-11-21'  # za max sma na testni mnozci
             # 90% - 10%
-            elif zacetnoObdobje == '2020-4-16':
+            elif zacetnoObdobje == '2020-04-16':
                 starting_companies = dowTickers['2019-04-02']['all']
                 ohlc_download_start_date = '2019-07-01'  # za max sma na testni mnozci
 
