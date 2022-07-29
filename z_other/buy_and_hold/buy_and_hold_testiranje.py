@@ -63,7 +63,7 @@ def trejdajNaCelotnemIndexuTestna20procentov(short_sma, long_sma, stockPricesDBI
 
 def trejdajNaCelotnemIndexuTestna10procentov(short_sma, long_sma, stockPricesDBIndex):
     index_ticker = "^DJI"
-    test_data = stockPricesDBIndex.getCompanyStockDataInRange(date_from="2020-4-16", date_to="2021-11-21", companyTicker='^DJI')
+    test_data = stockPricesDBIndex.getCompanyStockDataInRange(date_from="2020-04-16", date_to="2021-11-21", companyTicker='^DJI')
 
     test_data = test_data[['Close']].copy()
     test_data = zacetniDf(test_data)  # dodamo stolpce
