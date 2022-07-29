@@ -93,6 +93,22 @@ def trejdajNaCelotnemIndexuTestna10procentov(short_sma, long_sma, stockPricesDBI
     print(cagr, '%')
 
 
+def trejdajNaCelotnemIndexuZadnjeLeto(short_sma, long_sma, stockPricesDBIndex):
+    index_ticker = "^DJI"
+    test_data = stockPricesDBIndex.getCompanyStockDataInRange(date_from="2020-11-21", date_to="2021-11-21", companyTicker='^DJI')
+
+    test_data = test_data[['Close']].copy()
+    test_data = zacetniDf(test_data)  # dodamo stolpce
+    return_df = buy_and_hold(test_data, index_ticker, 0, 0, True)
+
+    SMA_trading_graph(short_sma, long_sma, return_df, index_ticker)
+    profit_graph(return_df, 0, index_ticker, round(return_df["Total"].iloc[-1], 2))
+
+    cagr = util.povprecnaLetnaObrestnaMera(30000, return_df["Total"].iloc[-1], 1)
+    print('Koncno stanje: ', return_df["Total"].iloc[-1])
+    print(cagr, '%')
+
+
 """
  Od tukaj naprej se izvaja testiranje Buy and hold strategije:
 """
@@ -112,5 +128,6 @@ print('bu and hold strategy po klicu inicializacije objekta')
 
 # trejdajNaCelotnemIndexuTestna10procentov(short_sma=1, long_sma=1, stockPricesDBIndex=stockPricesDB)
 
+# trejdajNaCelotnemIndexuZadnjeLeto(short_sma=1, long_sma=1, stockPricesDBIndex=stockPricesDB)
 
 print('KONEC!!! ', datetime.datetime.now() - begin_time)
