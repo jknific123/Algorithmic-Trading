@@ -24,6 +24,7 @@ def zacetniDf(data):
     data['Sell-Signal'] = np.nan
     data["Buy-date"] = ""
     data["Sell-date"] = ""
+    data['Ostali Cash'] = 0.0
 
     return data
 
