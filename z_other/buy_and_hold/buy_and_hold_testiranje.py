@@ -29,6 +29,22 @@ def zacetniDf(data):
     return data
 
 
+def trejdajNaCelotnemIndexu(short_sma, long_sma, stockPricesDBIndex):
+    index_ticker = "^DJI"
+    test_data = stockPricesDBIndex.getCompanyStockDataInRange(date_from="2005-11-21", date_to="2021-11-21", companyTicker='^DJI')
+
+    test_data = test_data[['Close']].copy()
+    test_data = zacetniDf(test_data)  # dodamo stolpce
+    return_df = buy_and_hold(test_data, index_ticker, 0, 0, True)
+
+    SMA_trading_graph(short_sma, long_sma, return_df, index_ticker)
+    profit_graph(return_df, 0, index_ticker, round(return_df["Total"].iloc[-1], 2))
+
+    cagr = util.povprecnaLetnaObrestnaMera(30000, return_df["Total"].iloc[-1], util.vsaLeta())
+    print('Koncno stanje: ', return_df["Total"].iloc[-1])
+    print(cagr, '%')
+
+
 def trejdajNaCelotnemIndexuTestna(short_sma, long_sma, stockPricesDBIndex):
     index_ticker = "^DJI"
     test_data = stockPricesDBIndex.getCompanyStockDataInRange(date_from="2017-02-02", date_to="2021-11-21", companyTicker='^DJI')
@@ -88,11 +104,13 @@ dowJonesIndexData = dowIndexData.dowJonesIndexData
 stockPricesDB = getStocks.StockOHLCData()
 print('bu and hold strategy po klicu inicializacije objekta')
 
+# trejdajNaCelotnemIndexu(short_sma=1, long_sma=1, stockPricesDBIndex=stockPricesDB)
+
 # trejdajNaCelotnemIndexuTestna(short_sma=1, long_sma=1, stockPricesDBIndex=stockPricesDB)
 
 # trejdajNaCelotnemIndexuTestna20procentov(short_sma=1, long_sma=1, stockPricesDBIndex=stockPricesDB)
 
-trejdajNaCelotnemIndexuTestna10procentov(short_sma=1, long_sma=1, stockPricesDBIndex=stockPricesDB)
+# trejdajNaCelotnemIndexuTestna10procentov(short_sma=1, long_sma=1, stockPricesDBIndex=stockPricesDB)
 
 
 print('KONEC!!! ', datetime.datetime.now() - begin_time)
