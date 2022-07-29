@@ -74,7 +74,7 @@ def testirajNaPortfoliu(dowTickers, stock_prices_db, hold_obdobje):
 def testirajNaPortfoliuEnoKombinacijo(start_date, end_date, sma, d_sma, dowTickers, stock_prices_db, hold_obdobje):
     tmp = backtest(start=start_date, end=end_date, high_low_period=sma, d_sma_period=d_sma, dowTickers=dowTickers, stockPricesDB=stock_prices_db, hold_obdobje=hold_obdobje)
 
-    print('Total profit: ', tmp['Total'].iat[-1])
+    print('Total profit: ', tmp['totals']['Total'].iat[-1])
 
 
 def trejdajSamoEnoPodjetje(high_low_period, d_sma_period, stockPricesDBIndex, hold_obdobje):
@@ -112,8 +112,8 @@ print('stohastic oscilator strategy po klicu inicializacije objekta')
 # testirajNaPortfoliu(dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
 
 # ucna mnozica
-# testirajNaPortfoliuEnoKombinacijo(start_date="2005-11-21", end_date="2017-02-02", sma=14, d_sma=3, dowTickers=dowJonesIndexData,
-#                                   stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
+testirajNaPortfoliuEnoKombinacijo(start_date="2005-11-21", end_date="2017-02-02", sma=14, d_sma=3, dowTickers=dowJonesIndexData,
+                                  stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
 #
 # # testna mnozica
 # testirajNaPortfoliuEnoKombinacijo(start_date="2017-02-02", end_date="2021-11-21", sma=5, d_sma=9, dowTickers=dowJonesIndexData,
