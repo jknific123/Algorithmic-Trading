@@ -45,7 +45,7 @@ def setObdobja(startObdobja, endObdobja, dowTickersObdobja):
     if endObdobja > zadnjeObdobje:
         obdobja.append(endObdobja)  # appendamo end date ker skoraj nikoli ne bo čisto točno eno obdobje iz dowTickers
 
-    print("Obdobja: ", obdobja)
+    # print("Obdobja: ", obdobja)
     return obdobja
 
 
@@ -60,12 +60,12 @@ def backtest(start, end, high_low_period, d_sma_period, dowTickers, stockPricesD
 
         zacetnoObdobje = obdobja[i]
         koncnoObdobje = obdobja[i + 1]
-        print(i, zacetnoObdobje, "+", koncnoObdobje)
+        # print(i, zacetnoObdobje, "+", koncnoObdobje)
 
         # zacetek
         if zacetnoObdobje == start:
             # hardcodam za zacetno od ucne in testne mnozice
-            print("V zacetnem")
+            # print("V zacetnem")
 
             # dolocanje zacetnih podjetji in zacetnega datuma za download
             ohlc_download_start_date = ''
@@ -87,7 +87,7 @@ def backtest(start, end, high_low_period, d_sma_period, dowTickers, stockPricesD
 
             # trejdamo z all od zacetnegaObdobja
             for x in starting_companies:
-                print("Company: ", x)
+                # print("Company: ", x)
 
                 # izjema za podjetje GM, za katerega nimam podatkov, zato samo naredim prazen dataframe
                 if x == "GM":
@@ -106,10 +106,10 @@ def backtest(start, end, high_low_period, d_sma_period, dowTickers, stockPricesD
                     return_df = stohastic_oscilator(high_low_period, d_sma_period, data, x, 0, 0, True, hold_obdobje, True)
                     portfolio[x] = return_df
 
-            print(portfolio.keys())
-            print(starting_companies)
-            print(dowTickers["2005-11-21"]["all"])
-            print("LEN: ", len(portfolio))
+            # print(portfolio.keys())
+            # print(starting_companies)
+            # print(dowTickers["2005-11-21"]["all"])
+            # print("LEN: ", len(portfolio))
 
         # ce nismo na zacetku gremo cez removed in added in naredimo menjave ter trejdamo za naslednje obdobje
         elif zacetnoObdobje != start:
@@ -124,13 +124,13 @@ def backtest(start, end, high_low_period, d_sma_period, dowTickers, stockPricesD
 
                     # zamenjamo odstranjenTicker z isto ležečim tickerjem iz added
                     nov_ticker = dowTickers[zacetnoObdobje]["added"][dowTickers[zacetnoObdobje]["removed"].index(odstranjenTicker)]
-                    print(odstranjenTicker, "->", nov_ticker)
+                    # print(odstranjenTicker, "->", nov_ticker)
                     real_start_date = datetime.datetime.strptime(zacetnoObdobje, "%Y-%m-%d")
                     plus_one_start_date = (real_start_date + datetime.timedelta(days=1)).strftime("%Y-%m-%d")  # adding one day
                     modified_date = (datetime.datetime.strptime(plus_one_start_date, "%Y-%m-%d") - datetime.timedelta(days=(high_low_period * 2))).strftime(
                         "%Y-%m-%d")  # odstevamo long period, da dobimo dovolj podatkov
-                    print('plus_one_start_date', plus_one_start_date)
-                    print('modified_date', modified_date)
+                    # print('plus_one_start_date', plus_one_start_date)
+                    # print('modified_date', modified_date)
                     new_df = stockPricesDB.getCompanyStockDataInRange(date_from=modified_date, date_to=koncnoObdobje, companyTicker=nov_ticker)
 
                     new_df = new_df[['Close', 'High', 'Low']].copy()
@@ -182,14 +182,14 @@ def backtest(start, end, high_low_period, d_sma_period, dowTickers, stockPricesD
                     new_portfolio[nov_ticker] = concat_returns  # shranimo nov podaljšan dataframe v nov portfolio
                     portfolio = new_portfolio
                     dodani.append(nov_ticker)
-                    print("Po izlocanju: ", odstranjenTicker)
-                    print(sorted(portfolio.keys()))
+                    # print("Po izlocanju: ", odstranjenTicker)
+                    # print(sorted(portfolio.keys()))
 
             # smo updejtali vse removed, zdej pa samo nadaljujemo trejdanej z usemi ostalimi
 
             ostali = set(portfolio.keys()) - set(dodani)
             ostali = sorted(list(ostali))
-            print("Ostali tickerji: ", sorted(ostali))
+            # print("Ostali tickerji: ", sorted(ostali))
             for ostaliTicker in ostali:
 
                 real_start_date = datetime.datetime.strptime(zacetnoObdobje, "%Y-%m-%d")
@@ -202,7 +202,7 @@ def backtest(start, end, high_low_period, d_sma_period, dowTickers, stockPricesD
                 elif ostaliTickerDataframe['Shares'].to_numpy()[-1] > 0:
                     zadnji_signal = 2  # imamo delnice tako da jih lahko samo prodamo zdej
 
-                print("Trenutni ostali ticker: ", ostaliTicker)
+                # print("Trenutni ostali ticker: ", ostaliTicker)
                 company = ostaliTicker
                 if ostaliTicker == "GM":
                     company = "HD"  # ce se prav spomnem se uzame HD samo zato, da se dobi ok velik df, ker za GM ne morem
@@ -243,7 +243,7 @@ def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis, ostali_cash):
     allFunds = pd.DataFrame
     allShares = {}
     count = 0
-    print("Pred totals: ", portfolio.keys())
+    # print("Pred totals: ", portfolio.keys())
     for ticker in portfolio:
 
         tickerTotals = portfolio[ticker]
@@ -268,7 +268,7 @@ def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis, ostali_cash):
     print('pretekli cas v dnevih:', pretekli_cas.days)
     povprecna_letna_obrestna_mera = util.povprecnaLetnaObrestnaMera(startFunds, endFunds, (pretekli_cas.days / 365))
 
-    profit_graph(allFunds, 1, "Portfolio", round(endFunds, 4))
+    # profit_graph(allFunds, 1, "Portfolio", round(endFunds, 4))
 
     print("Zacetna sredstva: ", startFunds, "$")
     print("Skupna sredstva portfolia: ", round(endFunds, 4), "$")
