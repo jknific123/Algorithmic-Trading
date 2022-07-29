@@ -25,7 +25,7 @@ def najdiOptimalneParametreNaPotrfoliu(start_period, end_period, dowTickers, sto
 def testirajNaPortfoliuUcnaMnozica(dowTickers, stock_prices_db, hold_cas):
     zacetni_cas = datetime.datetime.now()
     # pridobimo dict key: kombinacija, value: koncno stanje sredstev
-    return_ucni = najdiOptimalneParametreNaPotrfoliu(start_period="2005-11-21", end_period="2020-4-16", dowTickers=dowTickers, stock_prices_db=stock_prices_db,
+    return_ucni = najdiOptimalneParametreNaPotrfoliu(start_period="2005-11-21", end_period="2020-04-16", dowTickers=dowTickers, stock_prices_db=stock_prices_db,
                                                      hold_obdobje=hold_cas)
 
     rez_total_ucni = return_ucni['ucni_rezultati']
@@ -73,7 +73,7 @@ def testirajOptimalneNaTestniMnoziciZaHoldObdobja(dowTickers, testnaStockPricesD
         zacetni_cas = datetime.datetime.now()
         for kombinacija in trenutni_parametri_list:
             print('Kombinacija: ', kombinacija)
-            temp = backtest('2020-4-16', '2021-11-21', kombinacija[0], kombinacija[1], dowTickers, testnaStockPricesDB, hold_cas)
+            temp = backtest('2020-04-16', '2021-11-21', kombinacija[0], kombinacija[1], dowTickers, testnaStockPricesDB, hold_cas)
             koncno_stanje = temp['totals']['Total'].to_numpy()[-1]
             zacetna_investicija = temp['zacetna investicija']
             rez_total_testni[f"[{kombinacija[0]},{kombinacija[1]}]"] = koncno_stanje
