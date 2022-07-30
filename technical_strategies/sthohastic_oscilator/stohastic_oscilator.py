@@ -29,7 +29,7 @@ def stohastic_oscilator(high_low_period, d_sma_period, df, ticker, starting_inde
 
     df[f'Low-{high_low_period}-days'] = df['Low'].rolling(window=high_low_period, min_periods=1, center=False).min()
     df[f'High-{high_low_period}-days'] = df['High'].rolling(window=high_low_period, min_periods=1, center=False).max()
-    df['%K'] = (df["Close"] - df[f'Low-{high_low_period}-days']) / (df[f'High-{high_low_period}-days'] - df[f'Low-{high_low_period}-days']) * 100
+    df['%K'] = ((df["Close"] - df[f'Low-{high_low_period}-days']) / (df[f'High-{high_low_period}-days'] - df[f'Low-{high_low_period}-days'])) * 100
     df['%D'] = df["%K"].rolling(window=d_sma_period, min_periods=1, center=False).mean()
 
     # v nadaljevanju uporabljamo samo podatke od takrat, ko je dolgi sma že na voljo
