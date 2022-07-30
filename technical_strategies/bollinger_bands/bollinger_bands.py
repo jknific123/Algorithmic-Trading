@@ -19,21 +19,36 @@ def days_between(d1, d2):
     return abs((d2 - d1).days)
 
 
+def BBpogojBuy(x, df):
+    # cena - 1 < Lower band - 1 and cena > Lower band -> buy signal
+    if df["Close"].to_numpy()[x - 1] < df[f'Lower band'].to_numpy()[x - 1] and df["Close"].to_numpy()[x] > df[f'Lower band'].to_numpy()[x]:
+        return True
+    else:
+        return False
+
+
+def BBpogojSell(x, df):
+    # cena - 1 > Upper band - 1 and cena < Upper band -> sell signal
+    if df["Close"].to_numpy()[x - 1] > df[f'Upper band'].to_numpy()[x - 1] and df["Close"].to_numpy()[x] < df[f'Upper band'].to_numpy()[x]:
+        return True
+    else:
+        return False
+
+
 def bollingerBands(sma_period, bands_multiplayer, df, ticker, starting_index, status, odZacetkaAliNe, holdObdobje, potrebnoRezatiGledeNaDatum):
-    # naredimo nove stolpce za EMA-e, MACD in signal line
-    """
+    # """
     df[f'SMA-{sma_period}'] = df['Close'].rolling(window=sma_period, min_periods=1, center=False).mean()
     df["STD"] = df['Close'].rolling(window=sma_period, min_periods=1, center=False).std()
     df['Upper band'] = df[f'SMA-{sma_period}'] + (df["STD"] * bands_multiplayer)
     df['Lower band'] = df[f'SMA-{sma_period}'] - (df["STD"] * bands_multiplayer)
-    """
+    # """
 
-    df["Typical price"] = (df["High"] + df["Low"] + df["Close"]) / 3
-    df["STD"] = df["Typical price"].rolling(window=sma_period, min_periods=1, center=False).std(ddof=0)
-    df[f"TP SMA"] = df["Typical price"].rolling(sma_period).mean()
-    df['Upper band'] = df[f"TP SMA"] + (bands_multiplayer * df["STD"])
-    df['Lower band'] = df[f"TP SMA"] - (bands_multiplayer * df["STD"])
-    df['Close2'] = df['Close']
+    # df["Typical price"] = (df["High"] + df["Low"] + df["Close"]) / 3
+    # df["STD"] = df["Typical price"].rolling(window=sma_period, min_periods=1, center=False).std(ddof=0)
+    # df[f"TP SMA"] = df["Typical price"].rolling(sma_period).mean()
+    # df['Upper band'] = df[f"TP SMA"] + (bands_multiplayer * df["STD"])
+    # df['Lower band'] = df[f"TP SMA"] - (bands_multiplayer * df["STD"])
+    # df['Close2'] = df['Close']
 
     # v nadaljevanju uporabljamo samo podatke od takrat, ko je dolgi sma že na voljo
     if odZacetkaAliNe is True and ticker != 'DOW':
@@ -82,9 +97,9 @@ def bollingerBands(sma_period, bands_multiplayer, df, ticker, starting_index, st
         if df["Buy-date"].to_numpy()[x] != "":
             pretekli_dnevi_buy = days_between(df["Buy-date"].to_numpy()[x], df.index[x])
 
-        # cena < Lower band -> buy signal
+        # cena - 1 < Lower band - 1 and cena > Lower band -> buy signal
         # pri tej strategiji morem dodati pogoj da Close ni 0, da ne pride do errorja zaradi deljenja z 0
-        if df["Close"].to_numpy()[x] < df[f'Lower band'].to_numpy()[x] and df["Close"].to_numpy()[x] != 0:
+        if x != 0 and df["Close"].to_numpy()[x] != 0 and BBpogojBuy(x, df):
 
             # preverimo ceno ene delnice in ce imamo dovolj denarja, da lahko kupimo delnice
             cena_ene_delnice = df['Close'].to_numpy()[x] + util.percentageFee(util.feePercentage, df['Close'].to_numpy()[x])
@@ -113,7 +128,8 @@ def bollingerBands(sma_period, bands_multiplayer, df, ticker, starting_index, st
                 check = 2
 
         # cena > Upper band -> sell signal
-        elif df["Close"].to_numpy()[x] > df[f'Upper band'].to_numpy()[x] and pretekli_dnevi_buy >= holdObdobje and df["Close"].to_numpy()[x] != 0:
+        # cena - 1 > Upper band - 1 and cena < Upper band -> sell signal
+        elif x != 0 and df["Close"].to_numpy()[x] != 0 and pretekli_dnevi_buy >= holdObdobje and BBpogojSell(x, df):
 
             if check != 1 and check != 0:  # zadnji signal ni bil sell in nismo na zacetku
 
