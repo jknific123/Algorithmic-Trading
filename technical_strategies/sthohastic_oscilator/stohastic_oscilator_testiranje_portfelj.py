@@ -28,7 +28,7 @@ def testirajNaPortfoliuUcnaMnozica(dowTickers, stock_prices_db, hold_cas):
     zacetni_cas = datetime.datetime.now()
     # pridobimo dict key: kombinacija, value: koncno stanje sredstev
     return_ucni = najdiOptimalneParametreNaPotrfoliu(start_period="2005-11-21", end_period="2017-02-02", dowTickers=dowTickers, stock_prices_db=stock_prices_db,
-                                                        hold_obdobje=hold_cas)
+                                                     hold_obdobje=hold_cas)
 
     rez_total_ucni = return_ucni['ucni_rezultati']
     rez_zacetna_investicija_ucni = return_ucni['ucni_zacetna_investicijat']
@@ -59,10 +59,10 @@ def najdiOptimalneParametreNaPotrfoliuZaHoldObdobjaUcnaMnozica(hold_obdobja_list
 
 
 def testirajOptimalneNaTestniMnoziciZaHoldObdobja(dowTickers, testnaStockPricesDB, hold_obdobja_list):
-    optimalni_dnevni = [[15, 11], [20, 14], [15, 14]]
-    optimalni_tedenski = [[15, 11], [20, 14], [15, 14]]
-    optimalni_mesecni = [[20, 14], [15, 11], [15, 14]]
-    optimalni_letni = [[20, 5], [25, 5], [5, 3]]
+    optimalni_dnevni = [[15, 11], [15, 14], [9, 8]]
+    optimalni_tedenski = [[15, 11], [15, 14], [9, 8]]
+    optimalni_mesecni = [[15, 11], [15, 14], [9, 8]]
+    optimalni_letni = [[9, 3], [20, 8], [15, 3]]
     dict_parametrov = {1: optimalni_dnevni, 7: optimalni_tedenski, 31: optimalni_mesecni, 365: optimalni_letni}
 
     for hold_cas in hold_obdobja_list:
