@@ -66,20 +66,12 @@ def pogojSell(x, df):
 
 def mixed_tehnical_strategy(short_period_macd, long_period_macd, signal_period_macd, high_low_period_stohastic, d_sma_period_stohastic, sma_period_bollinger,
                             bands_multiplayer_bollinger, df, ticker, starting_index, status, odZacetkaAliNe, holdObdobje, potrebnoRezatiGledeNaDatum):
-    # # MACD
-    # df[f'EMA-{short_period_macd}'] = df['Close'].ewm(span=short_period_macd, adjust=False).mean()
-    # df[f'EMA-{long_period_macd}'] = df['Close'].ewm(span=long_period_macd, adjust=False).mean()
-    # df["MACD"] = df[f'EMA-{short_period_macd}'] - df[f'EMA-{long_period_macd}']
-    # df[f"Signal MACD"] = df["MACD"].ewm(span=signal_period_macd, adjust=False).mean()
 
     # Stohastic Oscilator
     df[f'Low-{high_low_period_stohastic}-days'] = df['Low'].rolling(window=high_low_period_stohastic, min_periods=1, center=False).min()
     df[f'High-{high_low_period_stohastic}-days'] = df['High'].rolling(window=high_low_period_stohastic, min_periods=1, center=False).max()
-    # df['%K'] = (df["Close"] - df[f'Low-{high_low_period_stohastic}-days']) / (df[f'High-{high_low_period_stohastic}-days'] - df[f'Low-{high_low_period_stohastic}-days']) * 100
-    # df[f'%D'] = df["%K"].rolling(window=d_sma_period_stohastic, min_periods=1, center=False).mean()
-    df['Fast %K'] = (df["Close"] - df[f'Low-{high_low_period_stohastic}-days']) / (df[f'High-{high_low_period_stohastic}-days'] - df[f'Low-{high_low_period_stohastic}-days']) * 100
-    df[f'%K'] = df["Fast %K"].rolling(window=d_sma_period_stohastic, min_periods=1, center=False).mean()
-    df[f'%D'] = df[f"%K"].rolling(window=d_sma_period_stohastic, min_periods=1, center=False).mean()
+    df['%K'] = ((df["Close"] - df[f'Low-{high_low_period_stohastic}-days']) / (df[f'High-{high_low_period_stohastic}-days'] - df[f'Low-{high_low_period_stohastic}-days'])) * 100
+    df['%D'] = df["%K"].rolling(window=d_sma_period_stohastic, min_periods=1, center=False).mean()
 
     # Bollinger Bands
     df[f'SMA-{sma_period_bollinger}'] = df['Close'].rolling(window=sma_period_bollinger, min_periods=1, center=False).mean()
