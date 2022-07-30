@@ -20,20 +20,17 @@ def days_between(d1, d2):
 
 
 def stohastic_oscilator(high_low_period, d_sma_period, df, ticker, starting_index, status, odZacetkaAliNe, holdObdobje, potrebnoRezatiGledeNaDatum):
-    # naredimo nove stolpce za EMA-e, MACD in signal line
-
     """
     df[f'Low-{high_low_period}-days'] = df['Close'].rolling(window=high_low_period, min_periods=1, center=False).min()
     df[f'High-{high_low_period}-days'] = df['Close'].rolling(window=high_low_period, min_periods=1, center=False).max()
     df['%K'] = (df["Close"] - df[f'Low-{high_low_period}-days']) / (df[f'High-{high_low_period}-days'] - df[f'Low-{high_low_period}-days']) * 100
-    df[f'%D-{d_sma_period}-days'] = df['Close'].rolling(window=high_low_period, min_periods=1, center=False).min() # TODO a je to narobe ??
+    df[f'%D-{d_sma_period}-days'] = df['Close'].rolling(window=high_low_period, min_periods=1, center=False)
     """
 
     df[f'Low-{high_low_period}-days'] = df['Low'].rolling(window=high_low_period, min_periods=1, center=False).min()
     df[f'High-{high_low_period}-days'] = df['High'].rolling(window=high_low_period, min_periods=1, center=False).max()
-    df['Fast %K'] = (df["Close"] - df[f'Low-{high_low_period}-days']) / (df[f'High-{high_low_period}-days'] - df[f'Low-{high_low_period}-days']) * 100
-    df[f'%K'] = df["Fast %K"].rolling(window=d_sma_period, min_periods=1, center=False).mean()
-    df[f'%D'] = df[f"%K"].rolling(window=d_sma_period, min_periods=1, center=False).mean()
+    df['%K'] = (df["Close"] - df[f'Low-{high_low_period}-days']) / (df[f'High-{high_low_period}-days'] - df[f'Low-{high_low_period}-days']) * 100
+    df['%D'] = df["%K"].rolling(window=d_sma_period, min_periods=1, center=False).mean()
 
     # v nadaljevanju uporabljamo samo podatke od takrat, ko je dolgi sma že na voljo
     if odZacetkaAliNe is True and ticker != 'DOW':
