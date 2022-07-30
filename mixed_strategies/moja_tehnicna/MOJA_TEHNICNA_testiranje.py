@@ -84,7 +84,7 @@ def testirajNaPortfoliuEnoKombinacijo(start_date, end_date, short_period_macd, l
                    high_low_period_stohastic=high_low_period_stohastic, d_sma_period_stohastic=d_sma_period_stohastic, sma_period_bollinger=sma_period_bollinger,
                    bands_multiplayer_bollinger=bands_multiplayer_bollinger, dowTickers=dowTickers, stockPricesDB=stock_prices_db, hold_obdobje=hold_obdobje)
 
-    print('Total profit: ', tmp['Total'].iat[-1])
+    print('Total profit: ', tmp['totals']['Total'].iat[-1])
 
 
 """
