@@ -100,10 +100,10 @@ def najdiOptimalneParametreNaPotrfoliuZaHoldObdobjaUcnaMnozica(hold_obdobja_list
 
 
 def testirajOptimalneNaTestniMnoziciZaHoldObdobja(dowTickers, testnaStockPricesDB, hold_obdobja_list):
-    optimalni_dnevni = [[[5, 3], [10, 1.9]],  [[9, 8], [20, 2]],  [[15, 14], [10, 1.9]]]
-    optimalni_tedenski = [[[5, 3], [10, 1.9]],  [[9, 8], [20, 2]],  [[15, 14], [10, 1.9]]]
-    optimalni_mesecni = [[[9, 5], [20, 2]],  [[9, 8], [20, 2]],  [[15, 14], [10, 1.9]]]
-    optimalni_letni = [[[20, 3], [40, 2.1]],  [[9, 5], [10, 1.9]],  [[9, 5], [20, 2]]]
+    optimalni_dnevni = [[[15, 14], [40, 2.1]],  [[20, 14], [40, 2.1]],  [[5, 3], [30, 2]]]
+    optimalni_tedenski = [[[15, 14], [40, 2.1]],  [[20, 14], [40, 2.1]],  [[5, 3], [30, 2]]]
+    optimalni_mesecni = [[[15, 14], [40, 2.1]],  [[20, 14], [40, 2.1]],  [[5, 3], [30, 2]]]
+    optimalni_letni = [[[15, 14], [50, 2.1]],  [[15, 11], [40, 2.1]],  [[15, 11], [50, 2.1]]]
     dict_parametrov = {1: optimalni_dnevni, 7: optimalni_tedenski, 31: optimalni_mesecni, 365: optimalni_letni}
 
     for hold_cas in hold_obdobja_list:
