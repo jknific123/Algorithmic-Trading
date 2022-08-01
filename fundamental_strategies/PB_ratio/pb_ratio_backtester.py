@@ -15,15 +15,16 @@ def zacetniDf(data):
     data["P/B"] = np.nan
     data['Buy'] = np.nan
     data['Sell'] = np.nan
-    data['Cash'] = 0
+    data['Cash'] = 0.0
     data['Shares'] = 0
-    data['Profit'] = 0
-    data['Total'] = 0
+    data['Profit'] = 0.0
+    data['Total'] = 0.0
     data['Ticker'] = ""
     data['Buy-Signal'] = np.nan
     data['Sell-Signal'] = np.nan
     data["Buy-date"] = ""
     data["Sell-date"] = ""
+    data['Ostali Cash'] = 0.0
 
     return data
 
@@ -32,7 +33,7 @@ def setObdobja(startObdobja, endObdobja, dowTickersObdobja):
     # hardcodam za testno mnozico
     obdobja = []
 
-    if startObdobja == "2017-02-02":
+    if startObdobja == "2017-02-02" or startObdobja == "2018-09-09" or startObdobja == '2020-04-16':
         obdobja.append(startObdobja)
 
     for x in dowTickersObdobja:
@@ -64,10 +65,17 @@ def backtest(start, end, dowTickers, stockPricesDB, fundamental_data):
         # zacetek
         if zacetnoObdobje == start:
             # hardcodam za zacetno od ucne in testne mnozice
+            # 70% - 30%
             if zacetnoObdobje == "2005-11-21":
                 starting_companies = dowTickers[zacetnoObdobje]["all"]
             elif zacetnoObdobje == "2017-02-02":
                 starting_companies = dowTickers["2015-03-19"]["all"]
+            # 80% - 20%
+            elif zacetnoObdobje == '2018-09-09':
+                starting_companies = dowTickers['2018-06-26']['all']
+            # 90% - 10%
+            elif zacetnoObdobje == '2020-04-16':
+                starting_companies = dowTickers['2019-04-02']['all']
 
             # trejdamo z all od zacetnegaObdobja
             for x in starting_companies:
@@ -92,10 +100,10 @@ def backtest(start, end, dowTickers, stockPricesDB, fundamental_data):
                                                   fundamental_data=fundamental_data)
                     portfolio[x] = return_df
 
-            print(portfolio.keys())
-            print(starting_companies)
-            print(dowTickers["2005-11-21"]["all"])
-            print("LEN: ", len(portfolio))
+            # print(portfolio.keys())
+            # print(starting_companies)
+            # print(dowTickers["2005-11-21"]["all"])
+            # print("LEN: ", len(portfolio))
 
         # ce nismo na zacetku gremo cez removed in added in naredimo menjave ter trejdamo za naslednje obdobje
         elif zacetnoObdobje != start:
@@ -110,10 +118,10 @@ def backtest(start, end, dowTickers, stockPricesDB, fundamental_data):
 
                     # zamenjamo odstranjenTicker z isto ležečim tickerjem iz added
                     nov_ticker = dowTickers[zacetnoObdobje]["added"][dowTickers[zacetnoObdobje]["removed"].index(odstranjenTicker)]
-                    print(odstranjenTicker, "->", nov_ticker)
+                    # print(odstranjenTicker, "->", nov_ticker)
                     real_start_date = datetime.datetime.strptime(zacetnoObdobje, "%Y-%m-%d")
                     plus_one_start_date = (real_start_date + datetime.timedelta(days=1)).strftime("%Y-%m-%d")  # adding one day
-                    print('plus_one_start_date', plus_one_start_date)
+                    # print('plus_one_start_date', plus_one_start_date)
                     new_df = stockPricesDB.getCompanyStockDataInRange(date_from=plus_one_start_date, date_to=koncnoObdobje, companyTicker=nov_ticker)
 
                     new_df = new_df[['Close', 'High', 'Low']].copy()
@@ -166,14 +174,14 @@ def backtest(start, end, dowTickers, stockPricesDB, fundamental_data):
                     new_portfolio[nov_ticker] = concat_returns  # shranimo nov podaljšan dataframe v nov portfolio
                     portfolio = new_portfolio
                     dodani.append(nov_ticker)
-                    print("Po izlocanju: ", odstranjenTicker)
-                    print(sorted(portfolio.keys()))
+                    # print("Po izlocanju: ", odstranjenTicker)
+                    # print(sorted(portfolio.keys()))
 
             # smo updejtali vse removed, zdej pa samo nadaljujemo trejdanej z usemi ostalimi
 
             ostali = set(portfolio.keys()) - set(dodani)
             ostali = sorted(list(ostali))
-            print("Ostali tickerji: ", sorted(ostali))
+            # print("Ostali tickerji: ", sorted(ostali))
             for ostaliTicker in ostali:
 
                 real_start_date = datetime.datetime.strptime(zacetnoObdobje, "%Y-%m-%d")
@@ -186,7 +194,7 @@ def backtest(start, end, dowTickers, stockPricesDB, fundamental_data):
                 elif ostaliTickerDataframe['Shares'].to_numpy()[-1] > 0:
                     zadnji_signal = 2  # imamo delnice tako da jih lahko samo prodamo zdej
 
-                print("Trenutni ostali ticker: ", ostaliTicker)
+                # print("Trenutni ostali ticker: ", ostaliTicker)
                 company = ostaliTicker
                 if ostaliTicker == "GM":
                     company = "HD"  # ce se prav spomnem se uzame HD samo zato, da se dobi ok velik df, ker za GM ne morem
@@ -194,6 +202,7 @@ def backtest(start, end, dowTickers, stockPricesDB, fundamental_data):
                 if ostaliTicker == "GM":
                     new_data["Close"] = 0
                 new_data = new_data[['Close', 'High', 'Low']].copy()
+                new_data = zacetniDf(new_data)  # dodamo stolpce
                 starting_index = len(ostaliTickerDataframe)
 
                 concat_data = pd.concat([ostaliTickerDataframe, new_data])
@@ -202,12 +211,26 @@ def backtest(start, end, dowTickers, stockPricesDB, fundamental_data):
                                                               status=zadnji_signal, odZacetkaAliNe=False, fundamental_data=fundamental_data)
                 portfolio[ostaliTicker] = new_ostaliTickerDataframe
 
-    totals = prikaziPodatkePortfolia(portfolio, startIzpis=start, endIzpis=end)
+    ostali_cash = {}
+    for x in portfolio:
+        ostanek = 0
+        if len(portfolio[x].loc[portfolio[x]['Ostali Cash'] != 0]['Ostali Cash']) != 0:
+            ostanek = portfolio[x].loc[portfolio[x]['Ostali Cash'] != 0]['Ostali Cash'][0]
+        ostali_cash[x] = ostanek
 
-    return totals
+    celotni_ostali_cash = 0
+    for x in ostali_cash:
+        celotni_ostali_cash += ostali_cash[x]
+
+    print('Celotni ostali cash: ', celotni_ostali_cash)
+
+    totals = prikaziPodatkePortfolia(portfolio=portfolio, startIzpis=start, endIzpis=end, ostali_cash=celotni_ostali_cash)
+
+    return_dict = {'totals': totals, 'zacetna investicija': (len(portfolio) * util.getMoney('')) - celotni_ostali_cash}
+    return return_dict
 
 
-def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis):
+def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis, ostali_cash):
     # gremo cez cel portfolio in sestejemo Totals ter potem plotamo graf
 
     allFunds = pd.DataFrame
@@ -218,7 +241,7 @@ def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis):
 
         tickerTotals = portfolio[ticker]
 
-        util.preveriPravilnostDatumov(ticker, portfolio)
+        # util.preveriPravilnostDatumov(ticker, portfolio)
 
         allShares[ticker] = tickerTotals['Shares'].to_numpy()[-1]
 
@@ -230,10 +253,13 @@ def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis):
         count += 1
 
     # se izpis podatkov portfolia
-    startFunds = len(portfolio) * util.getMoney('')
+    # startFunds = len(portfolio) * util.getMoney('')
+    startFunds = (len(portfolio) * util.getMoney('')) - ostali_cash
+    print('Start funds: ', startFunds)
     endFunds = allFunds['Total'].to_numpy()[-1]
-    pretekla_leta = datetime.datetime.strptime(allFunds.index[-1], '%Y-%m-%d').year - datetime.datetime.strptime(allFunds.index[0], '%Y-%m-%d').year
-    povprecna_letna_obrestna_mera = util.povprecnaLetnaObrestnaMera(startFunds, endFunds, pretekla_leta)
+    pretekli_cas = datetime.datetime.strptime(allFunds.index[-1], '%Y-%m-%d') - datetime.datetime.strptime(allFunds.index[0], '%Y-%m-%d')
+    print('pretekli cas v dnevih:', pretekli_cas.days)
+    povprecna_letna_obrestna_mera = util.povprecnaLetnaObrestnaMera(startFunds, endFunds, (pretekli_cas.days / 365))
 
     profit_graph(allFunds, 1, "Portfolio", round(endFunds, 2))
 
@@ -242,6 +268,8 @@ def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis):
     print("Profit: ", round(endFunds - startFunds, 4), "$")
     print("Kumulativni donos v procentih: ", round((endFunds - startFunds) / startFunds, 4) * 100, "%")
     print("Povprecna letna obrestna mera: ", povprecna_letna_obrestna_mera, '%')
+
+    print('Končna vrednost:', round(endFunds, 2), '$,', 'povp. obr. mera:', povprecna_letna_obrestna_mera, '%, ', 'zacetna investicija: ', round(startFunds, 2), '$')
 
 
     print("Delnice, ki jih še imamo v portfoliu:")
