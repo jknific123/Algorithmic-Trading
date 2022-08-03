@@ -103,10 +103,10 @@ def poisciIndexZaRezanjeDf(df):
 def povprecnaLetnaObrestnaMera(zacetniZnesek, koncniZnesek, preteklaLeta):
     # print("Initial value of money: ", zacetniZnesek)
     # print('Final value of money: ', koncniZnesek)
-    print("Time in years: ", preteklaLeta)
+    # print("Time in years: ", preteklaLeta)
     t_inv = 1/preteklaLeta
     cagr_rate = round((((koncniZnesek/zacetniZnesek)**t_inv) - 1) * 100, 2)
-    print("Compound Annual Growth Rate (CAGR): ", cagr_rate, ' %')
+    # print("Compound Annual Growth Rate (CAGR): ", cagr_rate, ' %')
     return cagr_rate
 
 

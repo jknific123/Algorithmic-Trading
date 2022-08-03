@@ -64,8 +64,8 @@ def dividend_investing_strategy(start_date, end_date, df, ticker, starting_index
         df["dividendPayoutRatio"].to_numpy()[x] = company_data["dividendPayoutRatio"]
 
         # manjka -> BUY signal
-        if (prvo_porocilo or trenutni_datum == company_report['datum']) and pogojBuy(currCompany_data=company_data) and df["Close"].to_numpy()[x] != 0:
-            print('SEM V BUY IN PROBAM KUPITI, datum: ', df.index[x])
+        if (prvo_porocilo or trenutni_datum == company_report['datum']) and pogojBuy(currCompany_data=company_data, datum=trenutni_datum, ticker=ticker, fDB=fundamental_data) and df["Close"].to_numpy()[x] != 0:
+            # print('SEM V BUY IN PROBAM KUPITI, datum: ', df.index[x])
             # preverimo ceno ene delnice in ce imamo dovolj denarja, da lahko kupimo delnice
             cena_ene_delnice = df['Close'].to_numpy()[x] + util.percentageFee(util.feePercentage, df['Close'].to_numpy()[x])
             stDelnic = math.floor(df['Cash'].to_numpy()[x] / cena_ene_delnice)  # stevilo delnic, ki jih lahko kupimo z nasim denarjem
@@ -81,14 +81,21 @@ def dividend_investing_strategy(start_date, end_date, df, ticker, starting_index
                 df['Buy-Signal'].to_numpy()[x] = df["Close"].to_numpy()[x]
                 df["Buy-date"].to_numpy()[x] = df.index[x]  # zapisem datum nakupa
 
-                df['Cash'].to_numpy()[x] = df['Cash'].to_numpy()[x] - buyPrice  # posodbi cash
+                # samo na zacetku gledamo ostali cash
+                if df['Cash'].to_numpy()[x] == 1000.00000:
+                    df['Vlozeni Cash'].to_numpy()[x] = buyPrice
+                    df['Ostali Cash'].to_numpy()[x] = df['Cash'].to_numpy()[x] - buyPrice
+                    df['Cash'].to_numpy()[x] = 0
+                else:
+                    df['Cash'].to_numpy()[x] = df['Cash'].to_numpy()[x] - buyPrice  # posodbi cash
+
                 df['Shares'].to_numpy()[x] = stDelnic
                 df['Total'].to_numpy()[x] = df['Cash'].to_numpy()[x] + buyPrice
 
                 check = 2
 
         # manjka -> Sell signal
-        elif (prvo_porocilo or trenutni_datum == company_report['datum']) and pogojSell(currCompany_data=company_data):
+        elif (prvo_porocilo or trenutni_datum == company_report['datum']) and pogojSell(currCompany_data=company_data, datum=trenutni_datum, ticker=ticker, fDB=fundamental_data):
 
             if check != 1 and check != 0:  # zadnji signal ni bil sell in nismo na zacetku
                 print("SEM V SELL IN BOM PORODAL", df.index[x])
@@ -121,16 +128,17 @@ def dividend_investing_strategy(start_date, end_date, df, ticker, starting_index
     return df
 
 
-def pogojBuy(currCompany_data):
-    print('Pogoj buy')
+def pogojBuy(currCompany_data, datum, ticker, fDB):
+    # print('Pogoj buy')
     #print(currCompany_data)
     #print()
 
     buy_flags = {}
-    buy_flags["dividendYield"] = True if 0.02 <= currCompany_data["dividendYield"] <= 0.06 else False  # med 2% in 6%
+    # buy_flags["dividendYield"] = True if 0.02 <= currCompany_data["dividendYield"] <= 0.06 else False  # med 2% in 6%
     # buy_flags["fiveYearDividendGrowthRate"] = True if currCompany_data["fiveYearDividendGrowthRate"] > 0.05 else False  # nad 5%
-    buy_flags["fiveYDividendperShareGrowth"] = True if currCompany_data["fiveYDividendperShareGrowth"] > 0.05 else False  # nad 5%
-    buy_flags["dividendPayoutRatio"] = True if 0.35 <= currCompany_data["dividendPayoutRatio"] <= 0.55 else False  # med 35% in 55%
+    # buy_flags["fiveYDividendperShareGrowth"] = True if currCompany_data["fiveYDividendperShareGrowth"] > 0.05 else False  # nad 5%
+    # buy_flags["dividendPayoutRatio"] = True if 0.35 <= currCompany_data["dividendPayoutRatio"] <= 0.55 else False  # med 35% in 55%
+    buy_flags["dividendPayoutRatio"] = preveriPayoutRatioBuy(ticker, datum, fDB)  # 5 let med 35% in 55%
 
     should_buy = True
     napacni_flagi = ''
@@ -139,19 +147,20 @@ def pogojBuy(currCompany_data):
             should_buy = False
             napacni_flagi = napacni_flagi + flag + ' : ' + str(buy_flags[flag]) + ', '
 
-    if not should_buy:
-        print(napacni_flagi)
+    # if not should_buy:
+    #     print(napacni_flagi)
 
     return should_buy
 
 
-def pogojSell(currCompany_data):
-    print('Pogoj sell')
+def pogojSell(currCompany_data, datum, ticker, fDB):
+    # print('Pogoj sell')
     sell_flags = {}
-    sell_flags["dividendYield"] = True if 0.02 > currCompany_data["dividendYield"] or currCompany_data["dividendYield"] > 0.06 else False  # manjsi od 2% ali vecji od 6%
+    # sell_flags["dividendYield"] = True if 0.02 > currCompany_data["dividendYield"] or currCompany_data["dividendYield"] > 0.06 else False  # manjsi od 2% ali vecji od 6%
     # sell_flags["fiveYearDividendGrowthRate"] = True if currCompany_data["fiveYearDividendGrowthRate"] <= 0.05 else False  # manjse enako 5%
-    sell_flags["fiveYDividendperShareGrowth"] = True if currCompany_data["fiveYDividendperShareGrowth"] <= 0.05 else False  # nad 5%
-    sell_flags["dividendPayoutRatio"] = True if 0.35 > currCompany_data["dividendPayoutRatio"] or currCompany_data["dividendPayoutRatio"] >= 0.7 else False  # manjse od 35%, vecje od 70%
+    # sell_flags["fiveYDividendperShareGrowth"] = True if currCompany_data["fiveYDividendperShareGrowth"] <= 0.05 else False  # nad 5%
+    # sell_flags["dividendPayoutRatio"] = True if 0.35 > currCompany_data["dividendPayoutRatio"] or currCompany_data["dividendPayoutRatio"] >= 0.7 else False  # manjse od 35%, vecje od 70%
+    sell_flags["dividendPayoutRatio"] = preveriPayoutRatioSell(ticker, datum, fDB)  # manjse od 35%, vecje od 70%
 
     should_sell = True
     napacni_flagi = ''
@@ -160,7 +169,35 @@ def pogojSell(currCompany_data):
             should_sell = False
             napacni_flagi = napacni_flagi + flag + ' : ' + str(sell_flags[flag]) + ', '
 
-    if not should_sell:
-        print(napacni_flagi)
+    # if not should_sell:
+    #     print(napacni_flagi)
 
     return should_sell
+
+
+def preveriPayoutRatioBuy(companyTicker, datum, fundamental_data):
+    period_company_data = fundamental_data.getCompanyFundamentalDataForPeriodOfYears(companyTicker, datum, 3)
+
+    payoutRatioOk = True
+    for zapis in period_company_data:
+        # med 35% in 55%
+        if 0.35 <= period_company_data[zapis]['dividendPayoutRatio'] <= 0.55:
+            payoutRatioOk = True
+        else:
+            payoutRatioOk = False
+
+    return payoutRatioOk
+
+
+def preveriPayoutRatioSell(companyTicker, datum, fundamental_data):
+    period_company_data = fundamental_data.getCompanyFundamentalDataForPeriodOfYears(companyTicker, datum, 3)
+
+    payoutRatioOk = True
+    for zapis in period_company_data:
+        # manjse od 35%, vecje od 70%
+        if 0.35 > period_company_data[zapis]['dividendPayoutRatio'] or period_company_data[zapis]['dividendPayoutRatio'] >= 0.7:
+            payoutRatioOk = True
+        else:
+            payoutRatioOk = False
+
+    return payoutRatioOk
