@@ -30,7 +30,7 @@ print('value investing strategy po klicu inicializacije objekta')
 # testirajNaPortfoliu(start_date="2018-09-09", end_date="2021-11-21", dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, fundamental_indicators=fundamentalIndicatorsDB)
 
 # testna mnozica 10%
-testirajNaPortfoliu(start_date="2020-04-16", end_date="2021-11-21", dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, fundamental_indicators=fundamentalIndicatorsDB)
+# testirajNaPortfoliu(start_date="2020-04-16", end_date="2021-11-21", dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, fundamental_indicators=fundamentalIndicatorsDB)
 
 # testiraj na celotnih podatkih
 # testirajNaPortfoliu(start_date="2005-11-21", end_date="2021-11-21", dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, fundamental_indicators=fundamentalIndicatorsDB)
