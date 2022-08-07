@@ -4,7 +4,7 @@ from technical_strategies.sma_crossover.sma_crossover_nov import sma_crossover
 # from dow_index_data import dow_jones_companies as dow
 from dow_index_data import dow_jones_index_data_csv as dowIndexData
 from stock_ohlc_data import get_stock_data as getStocks
-from technical_strategies.sma_crossover.sma_grafi import SMA_trading_graph, profit_graph
+from technical_strategies.sma_crossover.sma_grafi import SMA_trading_graph, SMA_trading_graph_diplomska, profit_graph
 from utility import utils as util
 
 
@@ -176,6 +176,16 @@ def trejdajNaCelotnemIndexu(short_sma, long_sma, stockPricesDBIndex, hold_obdobj
     profit_graph(return_df, 0, index_ticker, return_df["Total"].iloc[-1])
 
 
+def trejdajNaPodjetju(ticker, short_sma, long_sma, stockPricesDBPodjetje, hold_obdobje):
+    test_data = stockPricesDBPodjetje.getCompanyStockDataInRange(date_from="2005-02-07", date_to="2010-11-21", companyTicker=ticker)
+
+    test_data = test_data[['Close']].copy()
+    test_data = zacetniDf(test_data)  # dodamo stolpce
+    return_df = sma_crossover(short_sma, long_sma, test_data, ticker, 0, 0, True, hold_obdobje, True)
+
+    SMA_trading_graph_diplomska(short_sma, long_sma, return_df)
+
+
 def testirajTrejdanjeNaCelotnemIndexu(stockPricesDBIndex, hold_obdobja_list):
     for hold_obdobje_index in hold_obdobja_list:
         trejdajNaCelotnemIndexu(hold_obdobje_index, stockPricesDBIndex=stockPricesDBIndex)
@@ -198,6 +208,8 @@ begin_time = datetime.datetime.now()
 dowJonesIndexData = dowIndexData.dowJonesIndexData
 stockPricesDB = getStocks.StockOHLCData()
 print('sma strategy po klicu inicializacije objekta')
+
+trejdajNaPodjetju('^DJI', short_sma=50, long_sma=200, stockPricesDBPodjetje=stockPricesDB, hold_obdobje=1)
 
 # trejdajNaCelotnemIndexu(short_sma=70, long_sma=175, stockPricesDBIndex=stockPricesDB, hold_obdobje=1)
 

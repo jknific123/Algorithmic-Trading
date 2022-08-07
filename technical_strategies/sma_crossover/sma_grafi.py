@@ -24,6 +24,30 @@ def SMA_trading_graph(sPeriod, lPeriod, df, company):
     plt.show()
 
 
+def SMA_trading_graph_diplomska(sPeriod, lPeriod, df):
+
+    fig = plt.figure(figsize=(8, 6), dpi=200)
+    ax1 = fig.add_subplot(111, ylabel='Cena')
+
+    # cena
+    df['Close'].plot(ax=ax1, color='black', alpha=0.5)
+
+    # kratki in dolgi SMA
+    df[[f'SMA-{sPeriod}', f'SMA-{lPeriod}']].plot(ax=ax1, linestyle="--")
+
+    # buy/sell signali
+    ax1.plot(df['Buy-Signal'], '^', markersize=6, color='green', label='Buy signal', lw=2)
+    ax1.plot(df['Sell-Signal'], 'v', markersize=6, color='red', label='Sell signal', lw=2)
+    ax1.get_legend().remove()
+    plt.xlabel("Čas")
+    ax1.set_xticks([])
+    ax1.set_yticks([])
+    # legend = plt.legend(loc="upper left", edgecolor="black")
+    # legend.get_frame().set_alpha(None)
+    # legend.get_frame().set_facecolor((0, 0, 1, 0.1))
+    plt.show()
+
+
 def profit_graph(df, mode, company, cash):
     # prikaz grafa sredstev
     # mode = 0 -> prikaz podjetja
