@@ -30,6 +30,33 @@ def MACD_trading_graph(sPeriod, lPeriod, signal_period, df, company):
     plt.show()
 
 
+def MACD_trading_graph_diplomska(signal_period, df, company):
+    # prikaz grafa gibanja cene in kupovanja ter prodajanja delnice
+
+    fig, axs = plt.subplots(2, 1, gridspec_kw={'height_ratios': [3, 1]}, figsize=(8, 6), dpi=200)
+    axs[0].plot(df['Close'], color='black', alpha=0.5)
+    axs[1].plot(df['MACD'], color='blue')
+    axs[1].plot(df[f'Signal-{signal_period}'], color='orange', linestyle="--")
+
+    # buy/sell signali
+    axs[0].plot(df['Buy-Signal'], '^', markersize=6, color='green', label='Buy signal', lw=2)
+    axs[0].plot(df['Sell-Signal'], 'v', markersize=6, color='red', label='Sell signal', lw=2)
+
+    axs[0].set_xticks([])
+    axs[0].set_yticks([])
+    axs[1].set_xticks([])
+    axs[1].set_yticks([])
+
+    axs[0].set(xlabel='Čas', ylabel='Cena')
+    # axs[1].set(xlabel='Čas', ylabel='MACD')
+    axs[1].set_title('MACD indikator')
+
+
+    # plt.ylabel("Cena")
+    # plt.xlabel("Čas")
+    plt.show()
+
+
 def profit_graph(df, mode, company, cash):
     # prikaz grafa sredstev
     # mode = 0 -> prikaz podjetja

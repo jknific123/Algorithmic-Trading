@@ -4,6 +4,7 @@ from dow_index_data import dow_jones_index_data_csv as dowIndexData
 from stock_ohlc_data import get_stock_data as getStocks
 from technical_strategies.macd.macd import macd
 from technical_strategies.macd.macd_backtester import zacetniDf, backtest
+from technical_strategies.macd.macd_grafi import MACD_trading_graph_diplomska, MACD_trading_graph
 
 
 # probal primerjat moje backteste s trejdanjem na DOW indexu...
@@ -71,6 +72,15 @@ def testirajNaPortfoliuEnoKombinacijo(start_date, end_date, short_sma, long_sma,
     print('Total profit: ', tmp['totals']['Total'].iat[-1])
 
 
+def trejdajNaPodjetju(ticker, sPeriod, lPeriod, signal_period, stockPricesDBPodjetje, hold_obdobje):
+    test_data = stockPricesDBPodjetje.getCompanyStockDataInRange(date_from="2005-02-07", date_to="2006-09-21", companyTicker=ticker)
+
+    test_data = test_data[['Close']].copy()
+    test_data = zacetniDf(test_data)  # dodamo stolpce
+    return_df = macd(sPeriod, lPeriod, signal_period, test_data, ticker, 0, 0, True, hold_obdobje, True)
+
+    # MACD_trading_graph(sPeriod, lPeriod, signal_period, return_df, ticker)
+    MACD_trading_graph_diplomska(signal_period, return_df, ticker)
 """
  Od tukaj naprej se izvaja testiranje MACD strategije:
 """
@@ -89,6 +99,8 @@ begin_time = datetime.datetime.now()
 dowJonesIndexData = dowIndexData.dowJonesIndexData
 stockPricesDB = getStocks.StockOHLCData()
 print('MACD strategy po klicu inicializacije objekta')
+
+trejdajNaPodjetju('^DJI', sPeriod=12, lPeriod=26, signal_period=9, stockPricesDBPodjetje=stockPricesDB, hold_obdobje=1)
 
 # testirajNaEnemPodjetju(hold_obdobje=holdObdobje)
 # testirajNaPortfoliu(dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
