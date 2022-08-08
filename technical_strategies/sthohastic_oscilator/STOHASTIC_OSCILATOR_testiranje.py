@@ -6,7 +6,7 @@ from dow_index_data import dow_jones_index_data_csv as dowIndexData
 from stock_ohlc_data import get_stock_data as getStocks
 from technical_strategies.sthohastic_oscilator.stohastic_oscilator import stohastic_oscilator
 from technical_strategies.sthohastic_oscilator.stohastic_oscilator_backtester import backtest
-from technical_strategies.sthohastic_oscilator.stohastic_oscilator_grafi import profit_graph, stohastic_trading_graph, stohastic_indicator_graf
+from technical_strategies.sthohastic_oscilator.stohastic_oscilator_grafi import profit_graph, stohastic_trading_graph, stohastic_indicator_graf, Stohastic_trading_graph_diplomska
 
 
 def zacetniDf(data):
@@ -94,6 +94,16 @@ def trejdajSamoEnoPodjetje(high_low_period, d_sma_period, stockPricesDBIndex, ho
     profit_graph(return_df, 0, company_ticker, return_df["Total"].iloc[-1])
 
 
+def trejdajNaPodjetju(ticker, high_low_period, d_sma_period, stockPricesDBPodjetje, hold_obdobje):
+    test_data = stockPricesDBPodjetje.getCompanyStockDataInRange(date_from="2005-04-01", date_to="2006-05-21", companyTicker=ticker)
+
+    test_data = test_data[['Close', 'High', 'Low']].copy()
+    test_data = zacetniDf(test_data)  # dodamo stolpce
+    return_df = stohastic_oscilator(high_low_period, d_sma_period, test_data, ticker, 0, 0, True, hold_obdobje, True)
+
+    Stohastic_trading_graph_diplomska(return_df)
+
+
 """
  Od tukaj naprej se izvaja testiranje Stohastic oscilator strategije:
 """
@@ -107,14 +117,16 @@ dowJonesIndexData = dowIndexData.dowJonesIndexData
 stockPricesDB = getStocks.StockOHLCData()
 print('stohastic oscilator strategy po klicu inicializacije objekta')
 
+trejdajNaPodjetju('^DJI', high_low_period=14, d_sma_period=3, stockPricesDBPodjetje=stockPricesDB, hold_obdobje=1)
+
 # trejdajSamoEnoPodjetje(high_low_period=14, d_sma_period=3, stockPricesDBIndex=stockPricesDB, hold_obdobje=1)
 
 # testirajNaEnemPodjetju(hold_obdobje=holdObdobje)
 # testirajNaPortfoliu(dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
 
 # ucna mnozica
-testirajNaPortfoliuEnoKombinacijo(start_date="2005-11-21", end_date="2017-02-02", sma=14, d_sma=3, dowTickers=dowJonesIndexData,
-                                  stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
+# testirajNaPortfoliuEnoKombinacijo(start_date="2005-11-21", end_date="2017-02-02", sma=14, d_sma=3, dowTickers=dowJonesIndexData,
+#                                   stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
 #
 # # testna mnozica
 # testirajNaPortfoliuEnoKombinacijo(start_date="2017-02-02", end_date="2021-11-21", sma=5, d_sma=9, dowTickers=dowJonesIndexData,

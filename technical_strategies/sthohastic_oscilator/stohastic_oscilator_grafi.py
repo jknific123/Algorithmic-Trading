@@ -34,6 +34,34 @@ def stohastic_indicator_graf(high_low_period, d_sma_period, df, company):
     plt.show()
 
 
+def Stohastic_trading_graph_diplomska(df):
+    # prikaz grafa gibanja cene in kupovanja ter prodajanja delnice
+
+    fig, axs = plt.subplots(2, 1, gridspec_kw={'height_ratios': [3, 1]}, figsize=(8, 6), dpi=200)
+    axs[0].plot(df['Close'], color='black', alpha=0.5)
+    axs[1].plot(df['%K'], color='blue')
+    axs[1].plot(df['%D'], color='orange')
+    axs[1].axhline(20, linestyle="--", color='r')
+    axs[1].axhline(80, linestyle="--", color='r')
+
+    # buy/sell signali
+    axs[0].plot(df['Buy-Signal'], '^', markersize=6, color='green', label='Buy signal', lw=2)
+    axs[0].plot(df['Sell-Signal'], 'v', markersize=6, color='red', label='Sell signal', lw=2)
+
+    axs[0].set_xticks([])
+    axs[0].set_yticks([])
+    axs[1].set_xticks([])
+    axs[1].set_yticks([])
+
+    axs[0].set(xlabel='Čas', ylabel='Cena')
+    # axs[1].set(xlabel='Čas', ylabel='MACD')
+    axs[1].set_title('Stohastični oscilator')
+
+    # plt.ylabel("Cena")
+    # plt.xlabel("Čas")
+    plt.show()
+
+
 def profit_graph(df, mode, company, cash):
     # prikaz grafa sredstev
     # mode = 0 -> prikaz podjetja
