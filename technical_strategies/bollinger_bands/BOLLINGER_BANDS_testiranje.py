@@ -5,7 +5,7 @@ from dow_index_data import dow_jones_index_data_csv as dowIndexData
 from stock_ohlc_data import get_stock_data as getStocks
 from technical_strategies.bollinger_bands.bollinger_bands_backtester import backtest
 from technical_strategies.bollinger_bands.bollinger_bands import bollingerBands
-from technical_strategies.bollinger_bands.bollinger_bands_grafi import bollinger_trading_graph, profit_graph
+from technical_strategies.bollinger_bands.bollinger_bands_grafi import bollinger_trading_graph, bollinger_trading_graph_diplomska, profit_graph
 
 
 def zacetniDf(data):
@@ -91,6 +91,16 @@ def trejdajSamoEnoPodjetje(sma_period, bands_multiplayer, stockPricesDBIndex, ho
     profit_graph(return_df, 0, company_ticker, return_df["Total"].iloc[-1])
 
 
+def trejdajNaPodjetju(ticker, sma_period, bands_multiplayer, stockPricesDBPodjetje, hold_obdobje):
+    test_data = stockPricesDBPodjetje.getCompanyStockDataInRange(date_from="2005-03-01", date_to="2006-06-07", companyTicker=ticker)
+
+    test_data = test_data[['Close']].copy()
+    test_data = zacetniDf(test_data)  # dodamo stolpce
+    return_df = bollingerBands(sma_period, bands_multiplayer, test_data, ticker, 0, 0, True, hold_obdobje, True)
+
+    bollinger_trading_graph_diplomska(return_df, sma_period)
+
+
 """
  Od tukaj naprej se izvaja testiranje Bollinger bands strategije:
 """
@@ -109,6 +119,8 @@ begin_time = datetime.datetime.now()
 dowJonesIndexData = dowIndexData.dowJonesIndexData
 stockPricesDB = getStocks.StockOHLCData()
 print('sma strategy po klicu inicializacije objekta')
+
+trejdajNaPodjetju('^DJI', sma_period=20, bands_multiplayer=2, stockPricesDBPodjetje=stockPricesDB, hold_obdobje=1)
 
 # trejdajSamoEnoPodjetje(sma_period=20, bands_multiplayer=2, stockPricesDBIndex=stockPricesDB, hold_obdobje=1)
 

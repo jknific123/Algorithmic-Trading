@@ -26,6 +26,31 @@ def bollinger_trading_graph(sma_period, bands_multiplayer, df, company):
     plt.show()
 
 
+def bollinger_trading_graph_diplomska(df, sma_period):
+    # prikaz grafa gibanja cene in kupovanja ter prodajanja delnice
+
+    fig = plt.figure(figsize=(8, 6), dpi=200)
+    ax1 = fig.add_subplot(111, ylabel='Cena')
+
+    # cena
+    df['Close'].plot(ax=ax1, color='black', label="Cena", alpha=0.5)
+    #df[f'SMA-{sma_period}'].plot(ax=ax1 ,color='orange', linestyle="--")
+
+    # kratki in dolgi SMA
+    df['Upper band'].plot(ax=ax1, label="Zgornji pas", color="blue", linestyle="--")
+    df[f'SMA-{sma_period}'].plot(ax=ax1, label="SMA", color="orange")
+    df['Lower band'].plot(ax=ax1, label="Spodnji pas", color="purple", linestyle="--")
+
+    # buy/sell signali
+    ax1.plot(df['Buy-Signal'], '^', markersize=6, color='green', label='Buy signal', lw=2)
+    ax1.plot(df['Sell-Signal'], 'v', markersize=6, color='red', label='Sell signal', lw=2)
+
+    plt.xlabel("Čas")
+    ax1.set_xticks([])
+    ax1.set_yticks([])
+    plt.show()
+
+
 def profit_graph(df, mode, company, cash):
     # prikaz grafa sredstev
     # mode = 0 -> prikaz podjetja
