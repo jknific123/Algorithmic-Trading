@@ -145,6 +145,7 @@ def mixed_tehnical_strategy(short_period_macd, long_period_macd, signal_period_m
 
                 # samo na zacetku gledamo ostali cash
                 if df['Cash'].to_numpy()[x] == 1000.00000:
+                    df['Vlozeni Cash'].to_numpy()[x] = buyPrice
                     df['Ostali Cash'].to_numpy()[x] = df['Cash'].to_numpy()[x] - buyPrice
                     df['Cash'].to_numpy()[x] = 0
                 else:
