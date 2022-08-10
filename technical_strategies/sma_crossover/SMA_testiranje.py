@@ -209,7 +209,7 @@ dowJonesIndexData = dowIndexData.dowJonesIndexData
 stockPricesDB = getStocks.StockOHLCData()
 print('sma strategy po klicu inicializacije objekta')
 
-trejdajNaPodjetju('^DJI', short_sma=50, long_sma=200, stockPricesDBPodjetje=stockPricesDB, hold_obdobje=1)
+# trejdajNaPodjetju('^DJI', short_sma=50, long_sma=200, stockPricesDBPodjetje=stockPricesDB, hold_obdobje=1)
 
 # trejdajNaCelotnemIndexu(short_sma=70, long_sma=175, stockPricesDBIndex=stockPricesDB, hold_obdobje=1)
 
@@ -224,8 +224,16 @@ trejdajNaPodjetju('^DJI', short_sma=50, long_sma=200, stockPricesDBPodjetje=stoc
 # testirajNaPortfoliuEnoKombinacijo(start_date="2005-11-21", end_date="2017-02-02", short_sma=85, long_sma=200, dowTickers=dowJonesIndexData,
 #                                   stock_prices_db=stockPricesDB, hold_obdobje_kombinacija_portfolio=1)
 
-# testna mnozica
+# testna mnozica 30%
 # testirajNaPortfoliuEnoKombinacijo(start_date="2017-02-02", end_date="2021-11-21", short_sma=85, long_sma=160, dowTickers=dowJonesIndexData,
 #                                   stock_prices_db=stockPricesDB, hold_obdobje_kombinacija_portfolio=1)
+
+# testna mnozica 20%
+# testirajNaPortfoliuEnoKombinacijo(start_date="2018-09-09", end_date="2021-11-21", short_sma=85, long_sma=160, dowTickers=dowJonesIndexData,
+#                                   stock_prices_db=stockPricesDB, hold_obdobje_kombinacija_portfolio=1)
+
+# testna mnozica 10%
+# testirajNaPortfoliuEnoKombinacijo(start_date="2020-04-16", end_date="2021-11-21", short_sma=100, long_sma=200, dowTickers=dowJonesIndexData,
+#                                   stock_prices_db=stockPricesDB, hold_obdobje_kombinacija_portfolio=365)
 
 print('KONEC!!! ', datetime.datetime.now() - begin_time)

@@ -24,6 +24,7 @@ def zacetniDf(data):
     data['Sell-Signal'] = np.nan
     data["Buy-date"] = ""
     data["Sell-date"] = ""
+    data['Vlozeni Cash'] = 0.0
     data['Ostali Cash'] = 0.0
 
     return data
@@ -221,28 +222,40 @@ def backtest(start, end, sma_period_short, sma_period_long, dowTickers, stockPri
                 portfolio[ostaliTicker] = new_ostaliTickerDataframe
 
     ostali_cash = {}
+    vlozeni_cash = {}
     for x in portfolio:
         ostanek = 0
+        vlozeno = 0
         if len(portfolio[x].loc[portfolio[x]['Ostali Cash'] != 0]['Ostali Cash']) != 0:
             ostanek = portfolio[x].loc[portfolio[x]['Ostali Cash'] != 0]['Ostali Cash'][0]
+        if len(portfolio[x].loc[portfolio[x]['Vlozeni Cash'] != 0]['Vlozeni Cash']) != 0:
+            vlozeno = portfolio[x].loc[portfolio[x]['Vlozeni Cash'] != 0]['Vlozeni Cash'][0]
         ostali_cash[x] = ostanek
+        vlozeni_cash[x] = vlozeno
 
     celotni_ostali_cash = 0
     for x in ostali_cash:
         celotni_ostali_cash += ostali_cash[x]
 
-    print('Celotni ostali cash: ', celotni_ostali_cash)
+    celotni_vlozeni_cash = 0
+    for x in vlozeni_cash:
+        celotni_vlozeni_cash += vlozeni_cash[x]
 
-    totals = prikaziPodatkePortfolia(portfolio=portfolio, startIzpis=start, endIzpis=end, ostali_cash=celotni_ostali_cash)
+    print('Celotni ostali cash: ', celotni_ostali_cash)
+    print('Celotni vlozeni cash: ', celotni_vlozeni_cash)
+
+    totals = prikaziPodatkePortfolia(portfolio=portfolio, startIzpis=start, endIzpis=end, ostali_cash=celotni_ostali_cash, vlozeni_cash=celotni_vlozeni_cash)
 
     return_dict = {'totals': totals, 'zacetna investicija': (len(portfolio) * util.getMoney('')) - celotni_ostali_cash}
     return return_dict
 
 
-def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis, ostali_cash):
+def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis, ostali_cash, vlozeni_cash):
     # gremo cez cel portfolio in sestejemo Totals ter potem plotamo graf
 
     allFunds = pd.DataFrame
+    allFundsProper = portfolio[list(portfolio.keys())[0]][['Total']].copy()  # skopiramo dataframe da ga lahko nastavimo potem na 0.0
+    allFundsProper['Total'] = 0.0
     allShares = {}
     count = 0
     # print("Pred totals: ", portfolio.keys())
@@ -257,7 +270,10 @@ def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis, ostali_cash):
         if count == 0:
             allFunds = tickerTotals[['Total']].copy()
         else:
-            allFunds['Total'] = allFunds['Total'].add(tickerTotals['Total'])  # , fill_value=1000
+            allFunds['Total'] = allFunds['Total'].add(tickerTotals['Total'])
+
+        if tickerTotals['Total'].to_numpy()[-1] != 1000.00000:
+            allFundsProper['Total'] = allFundsProper['Total'].add(tickerTotals['Total'])
 
         count += 1
 
@@ -276,12 +292,21 @@ def prikaziPodatkePortfolia(portfolio, startIzpis, endIzpis, ostali_cash):
     print("Skupna sredstva portfolia: ", round(endFunds, 4), "$")
     print("Profit: ", round(endFunds - startFunds, 4), "$")
     print("Kumulativni donos v procentih: ", round((endFunds - startFunds) / startFunds, 4) * 100, "%")
-    print("Povprecna letna obrestna mera: ", povprecna_letna_obrestna_mera)
+    print("Povprecna letna obrestna mera: ", povprecna_letna_obrestna_mera, '%')
+    print()
+    print('Končna vrednost:', round(endFunds, 2), '$,', 'povp. obr. mera:', povprecna_letna_obrestna_mera, '%, ', 'zacetna investicija: ', round(startFunds, 2), '$')
+    print()
+    print('Ostala sredstva zaradi nakupa nominalnih delnic: ', round(ostali_cash, 2), '$')
+    print('Dejanski začetni vložek: ', round(vlozeni_cash, 2), '$')
+    print("Skupna končna sredstva portfelja: ", round(allFundsProper['Total'].to_numpy()[-1], 2), "$")
+    print("Povprecna letna obrestna mera glede na začetni vložek: ", util.povprecnaLetnaObrestnaMera(vlozeni_cash, allFundsProper['Total'].to_numpy()[-1], (pretekli_cas.days / 365)), '%')
 
+    # dejanski profit graf
+    profit_graph(allFundsProper, 1, 'Portfelj', round(allFundsProper['Total'].to_numpy()[-1], 2))
 
-    print("Delnice, ki jih še imamo v portfoliu:")
-    for key, value in allShares.items():
-        print(key, " : ", value)
+    # print("Delnice, ki jih še imamo v portfoliu:")
+    # for key, value in allShares.items():
+    #     print(key, " : ", value)
 
     return allFunds
 
