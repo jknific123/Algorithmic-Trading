@@ -107,7 +107,7 @@ def testirajNaPortfoliuEnoKombinacijo(start_date, end_date, short_period_macd, l
 #sma_period = 20
 #bands_multiplayer = 2
 
-holdObdobje = 365
+holdObdobje = 1
 
 begin_time = datetime.datetime.now()
 
@@ -121,24 +121,14 @@ print('stohastic oscilator strategy po klicu inicializacije objekta')
 
 
 # ucna mnozica
-# testirajNaPortfoliuEnoKombinacijo(start_date="2005-11-21", end_date="2017-02-02", short_period_macd=12, long_period_macd=26, signal_period_macd=9,
-#                                   high_low_period_stohastic=14, d_sma_period_stohastic=3, sma_period_bollinger=20, bands_multiplayer_bollinger=2,
-#                                   dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
-
-# testna mnozica 30%
-testirajNaPortfoliuEnoKombinacijo(start_date="2017-02-02", end_date="2021-11-21", short_period_macd=1, long_period_macd=1, signal_period_macd=1,
-                                  high_low_period_stohastic=5, d_sma_period_stohastic=3, sma_period_bollinger=30, bands_multiplayer_bollinger=2,
+testirajNaPortfoliuEnoKombinacijo(start_date="2005-11-21", end_date="2017-02-02", short_period_macd=12, long_period_macd=26, signal_period_macd=9,
+                                  high_low_period_stohastic=14, d_sma_period_stohastic=3, sma_period_bollinger=20, bands_multiplayer_bollinger=2,
                                   dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
 
-# testna mnozica 20%
-# testirajNaPortfoliuEnoKombinacijo(start_date="2018-09-09", end_date="2021-11-21", short_period=12, long_period=26, signal_period=9,
+# testna mnozica
+# testirajNaPortfoliuEnoKombinacijo(start_date="2017-02-02", end_date="2021-11-21", short_period=12, long_period=26, signal_period=9,
 #                                   high_low_period=14, d_sma_period=3,
 #                                   sma_period=20, bands_multiplayer=2,
-#                                   dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
-
-# testna mnozica 10%
-# testirajNaPortfoliuEnoKombinacijo(start_date="2020-04-16", end_date="2021-11-21", short_period_macd=1, long_period_macd=1, signal_period_macd=1,
-#                                   high_low_period_stohastic=20, d_sma_period_stohastic=14, sma_period_bollinger=40, bands_multiplayer_bollinger=2.1,
 #                                   dowTickers=dowJonesIndexData, stock_prices_db=stockPricesDB, hold_obdobje=holdObdobje)
 
 print('KONEC!!! ', datetime.datetime.now() - begin_time)
