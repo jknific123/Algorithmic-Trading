@@ -21,6 +21,10 @@ class StockFundamentalData:
                       'Consumer Cyclical': ['GM', 'HD', 'MCD', 'NKE'],
                       'Consumer Defensive': ['KO', 'MDLZ', 'MO', 'PG', 'WMT']}
 
+    fundamental_trading_dates = ['2005-06-30', '2006-06-30', '2007-06-29', '2008-06-30', '2009-06-30', '2010-06-30', '2011-06-30', '2012-06-29',
+                                 '2013-06-28', '2014-06-30', '2015-06-30', '2016-06-30', '2017-06-30', '2018-06-29', '2019-06-28', '2020-06-30', '2021-06-30',
+                                 '2017-02-02', '2018-09-10', '2020-04-16']  # zadnji trije so zacetki testnih mnozic
+
     stock_fundamental_data = {}
     stock_average_fundamental_data = {}
     stock_industries_average_fundamental_data = {}

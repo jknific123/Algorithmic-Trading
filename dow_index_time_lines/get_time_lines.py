@@ -5,7 +5,7 @@ import yfinance as yf
 import datetime as datetime
 from dow_index_data import dow_jones_index_data_csv as dowIndexData
 from stock_ohlc_data import get_stock_data as getStocks
-import generate_time_lines as generateTL
+from dow_index_time_lines import generate_time_lines as generateTL
 pd.options.mode.chained_assignment = None  # default='warn'
 
 

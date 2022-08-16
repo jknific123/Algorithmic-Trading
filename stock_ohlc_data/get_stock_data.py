@@ -43,6 +43,12 @@ class StockOHLCData:
 
         return data
 
+    # Metoda za pridobitev dataframa (cene delnic) za določen datum - datum je index
+    def getCompanyStockDataForDate(self, date, companyTicker):
+        return_dataframe = pd.DataFrame
+        return_dataframe = self.stock_prices_data[companyTicker].loc[date]
+        return return_dataframe
+
     # Metoda za pridobitev dataframa (cene delnic) v določenem obdobju - datum je index
     def getCompanyStockDataInRange(self, date_from, date_to, companyTicker):
         return_dataframe = pd.DataFrame
