@@ -37,9 +37,9 @@ def backtestPortfolio(startDate, portfolio, trading_dates, index_column, stockPr
             print()
             print('Buy podjetja: ', len(buy_podjetja), date)
             # če ni razlike z že kupljenimi potem ne naredi nič
-            spremembe_holdingov = simUtil.preveriSpremembeHoldingov(holdings, ustrezna_podjetja)
+            spremembe_holdingov = simUtil.preveriSpremembeHoldingov(holdings, buy_podjetja)
             # če je kakšen nov potem prodaj vse trenutne in na novo razdeli denar in kupi vse, ki so ustrezni
-            if spremembe_holdingov and date != startDate:
+            if date != startDate and spremembe_holdingov:
                 print('spremembe holdingov')
                 sell_cash = prodajTrenutneHoldinge(holdings, date, stockPricesDB)
                 all_cash += sell_cash
