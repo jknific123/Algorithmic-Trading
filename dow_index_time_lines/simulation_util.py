@@ -37,7 +37,7 @@ def trimUstreznaPodjetja(ustrezna_podjetja, datum):
 def preveriSpremembeHoldingov(holdings, ustrezna_podjetja):
     trenutni_holdings = list(holdings.keys())
     for ustrezni in ustrezna_podjetja:
-        if ustrezni not in trenutni_holdings:
+        if ustrezni[1] not in trenutni_holdings:
             return True
 
     return False

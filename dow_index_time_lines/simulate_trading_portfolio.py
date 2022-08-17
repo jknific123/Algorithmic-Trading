@@ -34,17 +34,20 @@ def backtestPortfolio(startDate, portfolio, trading_dates, index_column, stockPr
             # pridobi 7 -> 13 najbolj ustreznih podjetji za kupit to leto
             buy_podjetja = []
             buy_podjetja = simUtil.trimUstreznaPodjetja(ustrezna_podjetja, date)
+            print()
             print('Buy podjetja: ', len(buy_podjetja), date)
             # če ni razlike z že kupljenimi potem ne naredi nič
             spremembe_holdingov = simUtil.preveriSpremembeHoldingov(holdings, ustrezna_podjetja)
             # če je kakšen nov potem prodaj vse trenutne in na novo razdeli denar in kupi vse, ki so ustrezni
             if spremembe_holdingov and date != startDate:
+                print('spremembe holdingov')
                 sell_cash = prodajTrenutneHoldinge(holdings, date, stockPricesDB)
                 all_cash += sell_cash
                 holdings = {}
 
             # kupi enakomerno vsa buy_podjetja
             holdings, all_cash = kupiBuyLines(holdings, buy_podjetja, all_cash, date)
+            print('Kupljena podjetja: ', list(holdings.keys()))
 
             # ce je prvi nakup odpisemo ostali cash
             if date == startDate:
