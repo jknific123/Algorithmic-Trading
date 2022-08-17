@@ -47,6 +47,8 @@ def sortirajGledeNaPrimernost(portfolio, datum, trgovalna_strategija):
 
     if trgovalna_strategija == 'P/E':
         return sortirajGledeNaPrimernostPE(portfolio, datum)
+    elif trgovalna_strategija == 'P/B':
+        return sortirajGledeNaPrimernostPB(portfolio, datum)
 
 
 # za P/E strategijo
@@ -64,3 +66,20 @@ def sortirajGledeNaPrimernostPE(portfolio, datum):
     sorted_by_pe = sorted(ustrezni, key=lambda tup: tup[3])
 
     return sorted_by_pe
+
+
+# za P/B strategijo
+def sortirajGledeNaPrimernostPB(portfolio, datum):
+    ustrezni = []
+    for linija in portfolio:
+        pb = portfolio[linija][datum]['P/B']
+        avgPB = portfolio[linija][datum]['avgP/B']
+        podjetje = portfolio[linija][datum]['Ticker']
+        close = portfolio[linija][datum]['Close']
+        if 0 < pb < avgPB:
+            # linija,  podjetje, Close, P/B
+            ustrezni.append((linija, podjetje, round(close, 4), pb, avgPB))
+
+    sorted_by_pb = sorted(ustrezni, key=lambda tup: tup[3])
+
+    return sorted_by_pb
