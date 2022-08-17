@@ -37,8 +37,8 @@ def backtestPortfolio(startDate, portfolio, trading_dates, index_column, stockPr
             print('Buy podjetja: ', len(buy_podjetja), date)
             # če ni razlike z že kupljenimi potem ne naredi nič
             spremembe_holdingov = simUtil.preveriSpremembeHoldingov(holdings, ustrezna_podjetja)
-            # če je kakšen nov potem prodaj vse trenutne in na novo razdeli denar in kupi vse ki so ustrezni
-            if spremembe_holdingov:
+            # če je kakšen nov potem prodaj vse trenutne in na novo razdeli denar in kupi vse, ki so ustrezni
+            if spremembe_holdingov and date != startDate:
                 sell_cash = prodajTrenutneHoldinge(holdings, date, stockPricesDB)
                 all_cash += sell_cash
                 holdings = {}
@@ -46,10 +46,15 @@ def backtestPortfolio(startDate, portfolio, trading_dates, index_column, stockPr
             # kupi enakomerno vsa buy_podjetja
             holdings, all_cash = kupiBuyLines(holdings, buy_podjetja, all_cash, date)
 
+            # ce je prvi nakup odpisemo ostali cash
+            if date == startDate:
+                ostali_cash = all_cash
+                all_cash = 0.0
+
         df_totals['Total'].to_numpy()[indx] = izracunajTotalZaDan(holdings, date, all_cash, stockPricesDB)
         indx += 1
 
-    return df_totals
+    return df_totals, ostali_cash
 
 
 def prodajTrenutneHoldinge(holdings, datum, stockPricesDB):

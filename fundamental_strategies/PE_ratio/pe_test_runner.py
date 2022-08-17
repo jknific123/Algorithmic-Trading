@@ -6,12 +6,23 @@ from stock_fundamental_data import get_fundamental_data as getFundamentalIndicat
 from dow_index_time_lines import get_time_lines as time_lines_db
 from dow_index_time_lines.simulate_trading_portfolio import backtestPortfolio
 from fundamental_strategies.PE_ratio.pe_ratio_grafi import profit_graph
+from utility import utils as util
 
 
 def simulateTradingOnPortfolio(start, portfolio, trading_dates, index_col, stock_prices_db, trgovalna_strategija):
-    rez = backtestPortfolio(startDate=start, portfolio=portfolio, trading_dates=trading_dates,
-                            index_column=index_col, stockPricesDB=stock_prices_db, trgovalna_strategija=trgovalna_strategija)
-    profit_graph(rez, 1, 'Portfelj', round(rez['Total'].to_numpy()[-1], 2))
+    totals, ostali_cash = backtestPortfolio(startDate=start, portfolio=portfolio, trading_dates=trading_dates, index_column=index_col, stockPricesDB=stock_prices_db,
+                                            trgovalna_strategija=trgovalna_strategija)
+    profit_graph(totals, 1, 'Portfelj', round(totals['Total'].to_numpy()[-1], 2))
+
+    vlozeni_cash = (util.getMoney('') * 30) - ostali_cash
+    pretekli_cas = datetime.datetime.strptime(totals.index[-1], '%Y-%m-%d') - datetime.datetime.strptime(totals.index[0], '%Y-%m-%d')
+    koncni_znesek = totals['Total'].to_numpy()[-1]
+    print()
+    print('Rezultati P/E strategije: ')
+    print('Ostala sredstva zaradi nakupa nominalnih delnic: ', round(ostali_cash, 2), '$')
+    print('Dejanski začetni vložek: ', round(vlozeni_cash, 2), '$')
+    print("Skupna končna sredstva portfelja: ", round(koncni_znesek, 2), "$")
+    print("Povprecna letna obrestna mera glede na začetni vložek: ", util.povprecnaLetnaObrestnaMera(vlozeni_cash, koncni_znesek, (pretekli_cas.days / 365)), '%')
 
 
 """
