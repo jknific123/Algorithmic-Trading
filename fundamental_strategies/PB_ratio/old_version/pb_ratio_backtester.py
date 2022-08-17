@@ -2,7 +2,7 @@ import pandas as pd
 import datetime as datetime
 import numpy as np
 
-from fundamental_strategies.PB_ratio.pb_ratio import pb_ratio_strategy
+from fundamental_strategies.PB_ratio.old_version.pb_ratio import pb_ratio_strategy
 from fundamental_strategies.PB_ratio.pb_ratio_grafi import profit_graph
 from utility import utils as util
 
