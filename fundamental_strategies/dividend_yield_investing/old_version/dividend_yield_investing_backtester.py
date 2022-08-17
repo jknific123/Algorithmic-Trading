@@ -2,7 +2,7 @@ import pandas as pd
 import datetime as datetime
 import numpy as np
 
-from fundamental_strategies.dividend_yield_investing.dividend_yield_investing import dividend_investing_strategy
+from fundamental_strategies.dividend_yield_investing.old_version.dividend_yield_investing import dividend_investing_strategy
 from fundamental_strategies.dividend_yield_investing.dividend_yield_investing_grafi import profit_graph
 from utility import utils as util
 
