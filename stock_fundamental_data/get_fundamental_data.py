@@ -82,7 +82,7 @@ class StockFundamentalData:
         period_dict = {}
         start_year = datetime.strptime(datum, '%Y-%m-%d').year - razpon_let
         for x in dict_podjetja:
-            if start_year <= datetime.strptime(x, '%Y-%m-%d').year <= datetime.strptime(datum, '%Y-%m-%d').year:
+            if start_year <= datetime.strptime(x, '%Y-%m-%d').year and datetime.strptime(x, '%Y-%m-%d') <= datetime.strptime(datum, '%Y-%m-%d'):
                 period_dict[x] = dict_podjetja[x]
 
         return period_dict
