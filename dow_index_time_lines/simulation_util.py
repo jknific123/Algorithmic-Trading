@@ -35,12 +35,19 @@ def trimUstreznaPodjetja(ustrezna_podjetja, datum):
 
 
 def preveriSpremembeHoldingov(holdings, ustrezna_podjetja):
-    trenutni_holdings = list(holdings.keys())
+    listUstreznih = []
     for ustrezni in ustrezna_podjetja:
-        if ustrezni[1] not in trenutni_holdings:
-            return True
+        listUstreznih.append(ustrezni[1])
 
-    return False
+    # damo oboje v list in ju sortiramo nato pa primerjamo
+    trenutni_holdings = list(holdings.keys())
+    trenutni_holdings.sort()
+    listUstreznih.sort()
+
+    if trenutni_holdings == listUstreznih:
+        return False
+
+    return True
 
 
 def sortirajGledeNaPrimernost(portfolio, datum, trgovalna_strategija):
@@ -49,6 +56,8 @@ def sortirajGledeNaPrimernost(portfolio, datum, trgovalna_strategija):
         return sortirajGledeNaPrimernostPE(portfolio, datum)
     elif trgovalna_strategija == 'P/B':
         return sortirajGledeNaPrimernostPB(portfolio, datum)
+    elif trgovalna_strategija == 'DIVIDEND':
+        return sortirajGledeNaPrimernostDividend(portfolio, datum)
 
 
 # za P/E strategijo
@@ -83,3 +92,20 @@ def sortirajGledeNaPrimernostPB(portfolio, datum):
     sorted_by_pb = sorted(ustrezni, key=lambda tup: tup[3])
 
     return sorted_by_pb
+
+
+# za strategijo Dividendnega donosa
+def sortirajGledeNaPrimernostDividend(portfolio, datum):
+    ustrezni = []
+    for linija in portfolio:
+        dividendYield = portfolio[linija][datum]['dividendYield']
+        dividendPayoutRatio = portfolio[linija][datum]['dividendPayoutRatio']
+        podjetje = portfolio[linija][datum]['Ticker']
+        close = portfolio[linija][datum]['Close']
+        if dividendPayoutRatio:
+            # linija,  podjetje, Close, dividendYield, dividendPayoutRatio
+            ustrezni.append((linija, podjetje, round(close, 4), dividendYield, dividendPayoutRatio))
+
+    sorted_by_dividend_yield = sorted(ustrezni, key=lambda tup: tup[3])
+
+    return sorted_by_dividend_yield
