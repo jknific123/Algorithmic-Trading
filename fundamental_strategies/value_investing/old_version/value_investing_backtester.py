@@ -2,7 +2,7 @@ import pandas as pd
 import datetime as datetime
 import numpy as np
 
-from fundamental_strategies.value_investing.value_investing import value_investing_strategy
+from fundamental_strategies.value_investing.old_version.value_investing import value_investing_strategy
 from fundamental_strategies.value_investing.value_investing_grafi import profit_graph
 from utility import utils as util
 

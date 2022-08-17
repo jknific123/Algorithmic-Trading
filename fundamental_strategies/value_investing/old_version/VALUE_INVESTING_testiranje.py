@@ -2,7 +2,7 @@ import datetime as datetime
 from dow_index_data import dow_jones_index_data_csv as dowIndexData
 from stock_ohlc_data import get_stock_data as getStocks
 from stock_fundamental_data import get_fundamental_data as getFundamentalIndicators
-from fundamental_strategies.value_investing.value_investing_backtester import backtest
+from fundamental_strategies.value_investing.old_version.value_investing_backtester import backtest
 
 
 def testirajNaPortfoliu(start_date, end_date, dowTickers, stock_prices_db, fundamental_indicators):
