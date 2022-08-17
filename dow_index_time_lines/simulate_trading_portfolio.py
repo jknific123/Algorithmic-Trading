@@ -45,9 +45,10 @@ def backtestPortfolio(startDate, portfolio, trading_dates, index_column, stockPr
                 all_cash += sell_cash
                 holdings = {}
 
-            # kupi enakomerno vsa buy_podjetja
-            holdings, all_cash = kupiBuyLines(holdings, buy_podjetja, all_cash, date)
-            print('Kupljena podjetja: ', sorted(list(holdings.keys())))
+            if date == startDate or spremembe_holdingov:
+                # kupi enakomerno vsa buy_podjetja
+                holdings, all_cash = kupiBuyLines(holdings, buy_podjetja, all_cash, date)
+                print('Kupljena podjetja: ', sorted(list(holdings.keys())))
 
             # ce je prvi nakup odpisemo ostali cash
             if date == startDate:
