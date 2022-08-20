@@ -45,7 +45,7 @@ def backtestPortfolio(startDate, portfolio, trading_dates, index_column, stockPr
                 all_cash += sell_cash
                 holdings = {}
 
-            if (date == startDate or spremembe_holdingov) and bool(holdings):
+            if date == startDate or spremembe_holdingov:
                 # kupi enakomerno vsa buy_podjetja
                 holdings, all_cash = kupiBuyLines(holdings, buy_podjetja, all_cash, date)
                 print('Kupljena podjetja: ', sorted(list(holdings.keys())))
