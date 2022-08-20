@@ -79,25 +79,26 @@ def prodajTrenutneHoldinge(holdings, datum, stockPricesDB):
 
 
 def kupiBuyLines(holdings, buy_podjetja, currCash, datum):
-    cash_per_line = currCash / len(buy_podjetja)  # razdelimo tretnutni cash med trenutne buy linije
-    for podatki_podjetja in buy_podjetja:
-        # preverimo ceno ene delnice in ce imamo dovolj denarja, da lahko kupimo delnice
-        linija = podatki_podjetja[0]
-        ticker = podatki_podjetja[1]
-        podjetje_close = podatki_podjetja[2]
-        cena_ene_delnice = podjetje_close + util.percentageFee(util.feePercentage, podjetje_close)
-        stDelnic = math.floor(cash_per_line / cena_ene_delnice)  # stevilo delnic, ki jih lahko kupimo z nasim denarjem
+    if len(buy_podjetja) > 0:
+        cash_per_line = currCash / len(buy_podjetja)  # razdelimo tretnutni cash med trenutne buy linije
+        for podatki_podjetja in buy_podjetja:
+            # preverimo ceno ene delnice in ce imamo dovolj denarja, da lahko kupimo delnice
+            linija = podatki_podjetja[0]
+            ticker = podatki_podjetja[1]
+            podjetje_close = podatki_podjetja[2]
+            cena_ene_delnice = podjetje_close + util.percentageFee(util.feePercentage, podjetje_close)
+            stDelnic = math.floor(cash_per_line / cena_ene_delnice)  # stevilo delnic, ki jih lahko kupimo z nasim denarjem
 
-        if stDelnic > 0:
-            buyPrice = stDelnic * cena_ene_delnice
-            currCash -= buyPrice
-            if currCash < 0:
-                print('NAPAKa currCash < 0')
-            holdings[ticker] = {}
-            holdings[ticker]['linija'] = linija
-            holdings[ticker]['buyPrice'] = buyPrice
-            holdings[ticker]['Buy_date'] = datum
-            holdings[ticker]['Shares'] = stDelnic
+            if stDelnic > 0:
+                buyPrice = stDelnic * cena_ene_delnice
+                currCash -= buyPrice
+                if currCash < 0:
+                    print('NAPAKa currCash < 0')
+                holdings[ticker] = {}
+                holdings[ticker]['linija'] = linija
+                holdings[ticker]['buyPrice'] = buyPrice
+                holdings[ticker]['Buy_date'] = datum
+                holdings[ticker]['Shares'] = stDelnic
 
     return holdings, currCash
 
