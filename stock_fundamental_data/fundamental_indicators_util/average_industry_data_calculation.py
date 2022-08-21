@@ -31,7 +31,7 @@ def izracunajAvgZaIndustrijoVLetu(podjetja_industrije, leto, podjetja_data):
     leto_industrija_avg_data = {}
     leto_industrija_avg_data["avgROE"] = 0
     leto_industrija_avg_data["avgProfitMargin"] = 0
-    leto_industrija_avg_data["avgGoodwill"] = 0
+    # leto_industrija_avg_data["avgGoodwill"] = 0
     leto_industrija_avg_data["avgRevenue"] = 0
     leto_industrija_avg_data["avgP/E"] = 0
     leto_industrija_avg_data["avgP/B"] = 0
@@ -49,7 +49,7 @@ def izracunajAvgZaIndustrijoVLetu(podjetja_industrije, leto, podjetja_data):
         leto_industrija_avg_data["avgP/E"] += podjetje_data["P/E"]
         leto_industrija_avg_data["avgP/B"] += podjetje_data["P/B"]
         leto_industrija_avg_data["avgD/E"] += podjetje_data["D/E"]
-        leto_industrija_avg_data["avgGoodwill"] += podjetje_data["goodwill"]
+        # leto_industrija_avg_data["avgGoodwill"] += podjetje_data["goodwill"]
         leto_industrija_avg_data["avgRevenue"] += podjetje_data["revenue"]
 
     # delimo z st podjetji v industriji za povprecje
@@ -61,7 +61,7 @@ def izracunajAvgZaIndustrijoVLetu(podjetja_industrije, leto, podjetja_data):
     leto_industrija_avg_data["avgP/E"] = round(leto_industrija_avg_data["avgP/E"] / stPodjetjiIndustrije, 2)
     leto_industrija_avg_data["avgP/B"] = round(leto_industrija_avg_data["avgP/B"] / stPodjetjiIndustrije, 2)  # na 2 zaokrozi
     leto_industrija_avg_data["avgD/E"] = round(leto_industrija_avg_data["avgD/E"] / stPodjetjiIndustrije, 2)  # na 2 zaokrozi
-    leto_industrija_avg_data["avgGoodwill"] = round(leto_industrija_avg_data["avgGoodwill"] / stPodjetjiIndustrije, 2)
+    # leto_industrija_avg_data["avgGoodwill"] = round(leto_industrija_avg_data["avgGoodwill"] / stPodjetjiIndustrije, 2)
     leto_industrija_avg_data["avgRevenue"] = round(leto_industrija_avg_data["avgRevenue"] / stPodjetjiIndustrije, 2)  # na 2 zaokrozi
 
     return leto_industrija_avg_data

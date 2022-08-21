@@ -18,7 +18,7 @@ def izracunajAvgZaPodjetjaVLetu(all_podjetja, leto, podjetja_data):
     leto_avg_data = {}
     leto_avg_data["avgROE"] = 0
     leto_avg_data["avgProfitMargin"] = 0
-    leto_avg_data["avgGoodwill"] = 0
+    # leto_avg_data["avgGoodwill"] = 0
     leto_avg_data["avgRevenue"] = 0
 
     # gremo cez podjetja tega leta in zanje pridobimo podatke ter jih pristejemo trenutnim avg vrednostim
@@ -27,13 +27,13 @@ def izracunajAvgZaPodjetjaVLetu(all_podjetja, leto, podjetja_data):
         podjetje_data = pridobiPodatkePodjetjaZaLeto(podjetje, leto, podjetja_data)
         leto_avg_data["avgROE"] += podjetje_data["ROE"]
         leto_avg_data["avgProfitMargin"] += podjetje_data["profitMargin"]
-        leto_avg_data["avgGoodwill"] += podjetje_data["goodwill"]
+        # leto_avg_data["avgGoodwill"] += podjetje_data["goodwill"]
         leto_avg_data["avgRevenue"] += podjetje_data["revenue"]
 
     # delimo z 30 za povprečje
     leto_avg_data["avgROE"] = round(leto_avg_data["avgROE"] / 30, 4)
     leto_avg_data["avgProfitMargin"] = round(leto_avg_data["avgProfitMargin"] / 30, 4)
-    leto_avg_data["avgGoodwill"] = round(leto_avg_data["avgGoodwill"] / 30, 4)
+    # leto_avg_data["avgGoodwill"] = round(leto_avg_data["avgGoodwill"] / 30, 4)
     leto_avg_data["avgRevenue"] = round(leto_avg_data["avgRevenue"] / 30, 4)
 
     return leto_avg_data
