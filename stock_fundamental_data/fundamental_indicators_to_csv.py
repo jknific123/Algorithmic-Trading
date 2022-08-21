@@ -20,12 +20,12 @@ def doAllAPIcallsForCsv(company):
     slovar_podjetja = {}
 
     financial_ratios = requests.get(f'https://financialmodelingprep.com/api/v3/financial-ratios/{company}?limit={years}&apikey={api_key}')
-    balance_sheet = requests.get(f'https://financialmodelingprep.com/api/v3/balance-sheet-statement/{company}?limit={years}&apikey={api_key}')
+    # balance_sheet = requests.get(f'https://financialmodelingprep.com/api/v3/balance-sheet-statement/{company}?limit={years}&apikey={api_key}')
     discounted_cash_flow = requests.get(f'https://financialmodelingprep.com/api/v3/historical-discounted-cash-flow-statement/{company}?limit={years}&apikey={api_key}')
     company_profile = requests.get(f'https://financialmodelingprep.com/api/v3/profile/{company}?limit={years}&apikey={api_key}')
     enterprise_value = requests.get(f'https://financialmodelingprep.com/api/v3/enterprise-values/{company}?limit={years}&apikey={api_key}')
     income_statement = requests.get(f'https://financialmodelingprep.com/api/v3/income-statement/{company}?limit={years}&apikey={api_key}')
-    financial_growth = requests.get(f'https://financialmodelingprep.com/api/v3/financial-growth/{company}?limit={years}&apikey={api_key}')
+    # financial_growth = requests.get(f'https://financialmodelingprep.com/api/v3/financial-growth/{company}?limit={years}&apikey={api_key}')
 
     # financials
     financial_ratios = financial_ratios.json()
@@ -37,12 +37,12 @@ def doAllAPIcallsForCsv(company):
     slovar_podjetja["financial_ratios"] = ratios
 
     # balance sheet
-    balance_sheet = balance_sheet.json()
-    balance_sheet = fUtil.zmanjsajObsegPodatkovCsv(balance_sheet)  # skrajsaj
-    balance_sheet = list(reversed(balance_sheet))
-    balance_sheet = fUtil.obdelaj_podatke_csv(balance_sheet, company, 'balance_sheet')
-    balance_sheet = fUtil.pridobiPomembneBalanceSheet(balance_sheet)
-    slovar_podjetja["balance_sheet"] = balance_sheet
+    # balance_sheet = balance_sheet.json()
+    # balance_sheet = fUtil.zmanjsajObsegPodatkovCsv(balance_sheet)  # skrajsaj
+    # balance_sheet = list(reversed(balance_sheet))
+    # balance_sheet = fUtil.obdelaj_podatke_csv(balance_sheet, company, 'balance_sheet')
+    # balance_sheet = fUtil.pridobiPomembneBalanceSheet(balance_sheet)
+    # slovar_podjetja["balance_sheet"] = balance_sheet
 
     # discounted cash flow
     discounted_cash_flow = discounted_cash_flow.json()
@@ -74,12 +74,12 @@ def doAllAPIcallsForCsv(company):
     slovar_podjetja["income_statement"] = income_statement
 
     # financial growth
-    financial_growth = financial_growth.json()
-    financial_growth = fUtil.zmanjsajObsegPodatkovCsv(financial_growth) # skrajsaj
-    financial_growth = list(reversed(financial_growth))
-    financial_growth = fUtil.obdelaj_podatke_csv(financial_growth, company, 'financial_growth')
-    financial_growth = fUtil.pridobiPomembneFinancialGrowth(financial_growth)
-    slovar_podjetja["financial_growth"] = financial_growth
+    # financial_growth = financial_growth.json()
+    # financial_growth = fUtil.zmanjsajObsegPodatkovCsv(financial_growth) # skrajsaj
+    # financial_growth = list(reversed(financial_growth))
+    # financial_growth = fUtil.obdelaj_podatke_csv(financial_growth, company, 'financial_growth')
+    # financial_growth = fUtil.pridobiPomembneFinancialGrowth(financial_growth)
+    # slovar_podjetja["financial_growth"] = financial_growth
 
     print('koncal z slovar_podjetja: ', company)
 
@@ -90,14 +90,15 @@ def mergeFundamentalDataCsv(data):
     mergedFundamentalDict = fUtil.pridobiDatumeVsehLet(data)
     for x in mergedFundamentalDict:
         mergedFundamentalDict[x].update(data['financial_ratios'][fUtil.pridobiZapisIstegaLeta(x, data['financial_ratios'])])
-        mergedFundamentalDict[x].update(data['balance_sheet'][fUtil.pridobiZapisIstegaLeta(x, data['balance_sheet'])])
+        # mergedFundamentalDict[x].update(data['balance_sheet'][fUtil.pridobiZapisIstegaLeta(x, data['balance_sheet'])])
         mergedFundamentalDict[x].update(data['discounted_cash_flow'][fUtil.pridobiZapisIstegaLeta(x, data['discounted_cash_flow'])])
         mergedFundamentalDict[x].update(data['enterprise_value'][fUtil.pridobiZapisIstegaLeta(x, data['enterprise_value'])])
         mergedFundamentalDict[x].update(data['income_statement'][fUtil.pridobiZapisIstegaLeta(x, data['income_statement'])])
-        mergedFundamentalDict[x].update(data['financial_growth'][fUtil.pridobiZapisIstegaLeta(x, data['financial_growth'])])
-        mergedFundamentalDict[x]['dividendPerShare'] = round(mergedFundamentalDict[x]['dividendYield'] * mergedFundamentalDict[x]['price'], 2)
-        mergedFundamentalDict[x]['dividendPaid'] = round(mergedFundamentalDict[x]['dividendYield'] *
-                                                         mergedFundamentalDict[x]['price'] * mergedFundamentalDict[x]['numberOfShares'], 2)
+        # mergedFundamentalDict[x].update(data['financial_growth'][fUtil.pridobiZapisIstegaLeta(x, data['financial_growth'])])
+        # mergedFundamentalDict[x]['dividendPerShare'] = round(mergedFundamentalDict[x]['dividendYield'] * mergedFundamentalDict[x]['price'], 2)
+        # mergedFundamentalDict[x]['dividendPaid'] = round(mergedFundamentalDict[x]['dividendYield'] *
+        #                                                  mergedFundamentalDict[x]['price'] * mergedFundamentalDict[x]['numberOfShares'], 2)
+
         if mergedFundamentalDict[x]['numberOfShares'] != 0:
             mergedFundamentalDict[x]['freeCashFlow'] = round(mergedFundamentalDict[x]['freeCashFlowPerShare'] * mergedFundamentalDict[x]['numberOfShares'], 3)
         else:

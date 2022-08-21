@@ -354,11 +354,11 @@ def get_financials_csv(financial_ratios_vrednosti, x):
     if x["investmentValuationRatios"]["priceToBookRatio"] is not None:
         financial_ratios_vrednosti[x["date"]]["P/B"] = round(float(x["investmentValuationRatios"]["priceToBookRatio"]), 3)
 
-    if x["investmentValuationRatios"]["priceEarningsToGrowthRatio"] is not None:
-        if x["investmentValuationRatios"]["priceEarningsToGrowthRatio"] == "":
-            financial_ratios_vrednosti[x["date"]]["PEG"] = 0
-        else:
-            financial_ratios_vrednosti[x["date"]]["PEG"] = round(float(x["investmentValuationRatios"]["priceEarningsToGrowthRatio"]), 3)
+    # if x["investmentValuationRatios"]["priceEarningsToGrowthRatio"] is not None:
+    #     if x["investmentValuationRatios"]["priceEarningsToGrowthRatio"] == "":
+    #         financial_ratios_vrednosti[x["date"]]["PEG"] = 0
+    #     else:
+    #         financial_ratios_vrednosti[x["date"]]["PEG"] = round(float(x["investmentValuationRatios"]["priceEarningsToGrowthRatio"]), 3)
 
     if x["debtRatios"]["debtEquityRatio"] is not None:
 
@@ -374,12 +374,12 @@ def get_financials_csv(financial_ratios_vrednosti, x):
         else:
             financial_ratios_vrednosti[x["date"]]["ROE"] = round(float(x["profitabilityIndicatorRatios"]["returnOnEquity"]), 3)
 
-    if x["profitabilityIndicatorRatios"]["returnOnAssets"] is not None:
-
-        if x["profitabilityIndicatorRatios"]["returnOnAssets"] == "":
-            financial_ratios_vrednosti[x["date"]]["ROA"] = 0
-        else:
-            financial_ratios_vrednosti[x["date"]]["ROA"] = round(float(x["profitabilityIndicatorRatios"]["returnOnAssets"]), 3)
+    # if x["profitabilityIndicatorRatios"]["returnOnAssets"] is not None:
+    #
+    #     if x["profitabilityIndicatorRatios"]["returnOnAssets"] == "":
+    #         financial_ratios_vrednosti[x["date"]]["ROA"] = 0
+    #     else:
+    #         financial_ratios_vrednosti[x["date"]]["ROA"] = round(float(x["profitabilityIndicatorRatios"]["returnOnAssets"]), 3)
 
     # if x["profitabilityIndicatorRatios"]["grossProfitMargin"] is not None:
     #
@@ -409,19 +409,19 @@ def get_financials_csv(financial_ratios_vrednosti, x):
         else:
             financial_ratios_vrednosti[x["date"]]["freeCashFlowPerShare"] = round(float(x["cashFlowIndicatorRatios"]["freeCashFlowPerShare"]), 3)
 
-    if x["cashFlowIndicatorRatios"]["operatingCashFlowSalesRatio"] is not None:
+    # if x["cashFlowIndicatorRatios"]["operatingCashFlowSalesRatio"] is not None:
+    #
+    #     if x["cashFlowIndicatorRatios"]["operatingCashFlowSalesRatio"] == "":
+    #         financial_ratios_vrednosti[x["date"]]["freeCashFlowMargin"] = 0
+    #     else:
+    #         financial_ratios_vrednosti[x["date"]]["freeCashFlowMargin"] = round(float(x["cashFlowIndicatorRatios"]["operatingCashFlowSalesRatio"]), 3)
 
-        if x["cashFlowIndicatorRatios"]["operatingCashFlowSalesRatio"] == "":
-            financial_ratios_vrednosti[x["date"]]["freeCashFlowMargin"] = 0
-        else:
-            financial_ratios_vrednosti[x["date"]]["freeCashFlowMargin"] = round(float(x["cashFlowIndicatorRatios"]["operatingCashFlowSalesRatio"]), 3)
-
-    if x["liquidityMeasurementRatios"]["quickRatio"] is not None:
-
-        if x["liquidityMeasurementRatios"]["quickRatio"] == "":
-            financial_ratios_vrednosti[x["date"]]["quickRatio"] = 0
-        else:
-            financial_ratios_vrednosti[x["date"]]["quickRatio"] = round(float(x["liquidityMeasurementRatios"]["quickRatio"]), 3)
+    # if x["liquidityMeasurementRatios"]["quickRatio"] is not None:
+    #
+    #     if x["liquidityMeasurementRatios"]["quickRatio"] == "":
+    #         financial_ratios_vrednosti[x["date"]]["quickRatio"] = 0
+    #     else:
+    #         financial_ratios_vrednosti[x["date"]]["quickRatio"] = round(float(x["liquidityMeasurementRatios"]["quickRatio"]), 3)
 
     return financial_ratios_vrednosti
 
@@ -453,7 +453,7 @@ def get_company_profile_csv(company_profile_values, x):
 
 def get_enterprise_value_csv(enterprise_value_vrednosti, x):
     enterprise_value_vrednosti[x["date"]] = {}
-    enterprise_value_vrednosti[x["date"]]["stockPrice"] = round(float(x["stockPrice"]), 3)
+    # enterprise_value_vrednosti[x["date"]]["stockPrice"] = round(float(x["stockPrice"]), 3)
     enterprise_value_vrednosti[x["date"]]["numberOfShares"] = round(float(x["numberOfShares"]), 3)
     enterprise_value_vrednosti[x["date"]]["marketCapitalization"] = round(float(x["marketCapitalization"]), 3)
     return enterprise_value_vrednosti
@@ -468,11 +468,11 @@ def get_income_statement_csv(income_statement_vrednosti, x):
 
 def get_financial_growth(financial_growth_vrednosti, x):
     financial_growth_vrednosti[x["date"]] = {}
-    financial_growth_vrednosti[x["date"]]["revenueGrowth"] = round(float(x["revenueGrowth"]), 3)
-    financial_growth_vrednosti[x["date"]]["netIncomeGrowth"] = round(float(x["netIncomeGrowth"]), 3)
-    financial_growth_vrednosti[x["date"]]["freeCashFlowGrowth"] = round(float(x["freeCashFlowGrowth"]), 3)
+    # financial_growth_vrednosti[x["date"]]["revenueGrowth"] = round(float(x["revenueGrowth"]), 3)
+    # financial_growth_vrednosti[x["date"]]["netIncomeGrowth"] = round(float(x["netIncomeGrowth"]), 3)
+    # financial_growth_vrednosti[x["date"]]["freeCashFlowGrowth"] = round(float(x["freeCashFlowGrowth"]), 3)
     financial_growth_vrednosti[x["date"]]["dividendsperShareGrowth"] = round(float(x["dividendsperShareGrowth"]), 3)
-    financial_growth_vrednosti[x["date"]]["fiveYDividendperShareGrowth"] = round(float(x["fiveYDividendperShareGrowthPerShare"]), 3)
+    # financial_growth_vrednosti[x["date"]]["fiveYDividendperShareGrowth"] = round(float(x["fiveYDividendperShareGrowthPerShare"]), 3)
 
     return financial_growth_vrednosti
 
