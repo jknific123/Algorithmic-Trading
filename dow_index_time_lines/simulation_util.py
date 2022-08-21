@@ -26,10 +26,10 @@ def pridobiIndexStartDate(startDate, vsi_datumi):
 
 
 def trimUstreznaPodjetja(ustrezna_podjetja, datum):
-    if len(ustrezna_podjetja) < 7:
-        print('PROBLEM, letos je manj kot 7 podjetji ustreznih: ', datum)
-    if len(ustrezna_podjetja) > 13:
-        return ustrezna_podjetja[0:13]
+    if len(ustrezna_podjetja) < 10:
+        print('PROBLEM, letos je manj kot 10 podjetji ustreznih: ', datum)
+    if len(ustrezna_podjetja) > 10:
+        return ustrezna_podjetja[0:10]
     else:
         return ustrezna_podjetja
 
@@ -58,6 +58,8 @@ def sortirajGledeNaPrimernost(portfolio, datum, trgovalna_strategija):
         return sortirajGledeNaPrimernostPB(portfolio, datum)
     elif trgovalna_strategija == 'DIVIDEND':
         return sortirajGledeNaPrimernostDividend(portfolio, datum)
+    elif trgovalna_strategija == 'VALUE':
+        return sortirajGledeNaPrimernostValue(portfolio, datum)
 
 
 # za P/E strategijo
@@ -119,3 +121,100 @@ def sortirajGledeNaPrimernostDividend(portfolio, datum):
     sorted_by_dividend_yield = sorted(ustrezni, key=lambda tup: tup[3])
 
     return sorted_by_dividend_yield
+
+
+# za strategijo Value investing
+def sortirajGledeNaPrimernostValue(portfolio, datum):
+    ustrezni = []
+    for linija in portfolio:
+        roe = portfolio[linija][datum]['ROE']
+        profitMargin = portfolio[linija][datum]['ProfitMargin']
+        de = portfolio[linija][datum]['D/E']
+        avgDE = portfolio[linija][datum]['avgD/E']
+        pb = portfolio[linija][datum]['P/B']
+        avgPB = portfolio[linija][datum]['avgP/B']
+        fcfMargin = portfolio[linija][datum]['freeCashFlowMargin']
+        dcf = portfolio[linija][datum]['DCF']
+        price = portfolio[linija][datum]['price']
+
+        podjetje = portfolio[linija][datum]['Ticker']
+        close = portfolio[linija][datum]['Close']
+        # if roe and profitMargin and preveriDE(de, avgDE) and preveriPB(pb, avgPB) and preveriFcfMargin(fcfMargin) and preveriDCF(dcf, price):
+        # linija,  podjetje, Close, ...
+        ocenaPodjetja, napake = pridobiValueOceno(roe, profitMargin, de, avgDE, pb, avgPB, fcfMargin, dcf, price)
+        # print('Podjetje: ', podjetje, 'ocena: ', ocenaPodjetja)
+        ustrezni.append((linija, podjetje, round(close, 4), ocenaPodjetja, napake))
+
+    sorted_by_value_ocena = sorted(ustrezni, key=lambda tup: tup[3], reverse=True)
+
+    return sorted_by_value_ocena
+
+
+def pridobiValueOceno(roe, profitMargin, de, avgDE, pb, avgPB, fcfMargin, dcf, price):
+    ocena = 0
+    napake = []
+    if roe:
+        ocena += 1
+    else:
+        # print('neustrezen ROE')
+        napake.append('ROE')
+
+    if profitMargin:
+        ocena += 1
+    else:
+        # print('neustrezen PM')
+        napake.append('PM')
+
+    if preveriDE(de, avgDE):
+        ocena += 1
+    else:
+        # print('neustrezen de')
+        napake.append('de')
+
+    if preveriPB(pb, avgPB):
+        ocena += 1
+    else:
+        # print('neustrezen pb')
+        napake.append('pb')
+
+    if preveriFcfMargin(fcfMargin):
+        ocena += 1
+    else:
+        # print('neustrezen fcfMargin')
+        napake.append('fcfMargin')
+
+    if preveriDCF(dcf, price):
+        ocena += 1
+    else:
+        # print('neustrezen dcf')
+        napake.append('dcf')
+
+    return ocena, napake
+
+
+def preveriDE(de, avgDe):
+    if 0 < de <= avgDe:
+        return True
+
+    return False
+
+
+def preveriPB(pb, avgPb):
+    if 0 < pb <= avgPb:
+        return True
+
+    return False
+
+
+def preveriFcfMargin(fcfMargin):
+    if fcfMargin >= 0.1:
+        return True
+
+    return False
+
+
+def preveriDCF(dcf, price):
+    if dcf > price:
+        return True
+
+    return False

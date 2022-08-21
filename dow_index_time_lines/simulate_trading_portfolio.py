@@ -31,7 +31,7 @@ def backtestPortfolio(startDate, portfolio, trading_dates, index_column, stockPr
             # preglej in sortiraj po primernosti letošnja podjetja glede na indikatorje
             ustrezna_podjetja = []
             ustrezna_podjetja = simUtil.sortirajGledeNaPrimernost(portfolio, date, trgovalna_strategija)
-            # pridobi 7 -> 13 najbolj ustreznih podjetji za kupit to leto
+            # pridobi 10 najbolj ustreznih podjetji za kupit to leto
             buy_podjetja = []
             buy_podjetja = simUtil.trimUstreznaPodjetja(ustrezna_podjetja, date)
             print()
@@ -88,6 +88,7 @@ def kupiBuyLines(holdings, buy_podjetja, currCash, datum):
             podjetje_close = podatki_podjetja[2]
             cena_ene_delnice = podjetje_close + util.percentageFee(util.feePercentage, podjetje_close)
             stDelnic = math.floor(cash_per_line / cena_ene_delnice)  # stevilo delnic, ki jih lahko kupimo z nasim denarjem
+            # print('Podjetje: ', ticker, 'ocena: ', podatki_podjetja[3], 'napake: ', podatki_podjetja[4])
 
             if stDelnic > 0:
                 buyPrice = stDelnic * cena_ene_delnice
