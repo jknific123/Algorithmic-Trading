@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from utility import utils as util
 from dow_index_data import dow_jones_companies_api as dow
 import yfinance as yf
-from stock_fundamental_data import fundamental_indicators as fundamentals
+from Arhiv import fundamental_indicators as fundamentals
 
 api_key = "950c6e208107d01d9616681a4cf99685"
 years = 30
