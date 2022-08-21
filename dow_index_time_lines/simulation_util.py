@@ -63,6 +63,7 @@ def sortirajGledeNaPrimernost(portfolio, datum, trgovalna_strategija):
 # za P/E strategijo
 def sortirajGledeNaPrimernostPE(portfolio, datum):
     ustrezni = []
+    # neustrezni = []
     for linija in portfolio:
         pe = portfolio[linija][datum]['P/E']
         avgPE = portfolio[linija][datum]['avgP/E']
@@ -71,8 +72,17 @@ def sortirajGledeNaPrimernostPE(portfolio, datum):
         if 0 < pe < avgPE:
             # linija,  podjetje, Close, P/E
             ustrezni.append((linija, podjetje, round(close, 4), pe, avgPE))
+    #     elif 0 < pe:
+    #         neustrezni.append((linija, podjetje, round(close, 4), pe, avgPE))
+    #
+    # sorted_by_pe_neustrezni = sorted(neustrezni, key=lambda tup: tup[3])
 
     sorted_by_pe = sorted(ustrezni, key=lambda tup: tup[3])
+
+    # if len(sorted_by_pe) < 10:
+    #     concat_list = sorted_by_pe + sorted_by_pe_neustrezni
+    #     # sorted_by_pe.extend(sorted_by_pe_neustrezni)
+    #     sorted_by_pe = concat_list
 
     return sorted_by_pe
 
