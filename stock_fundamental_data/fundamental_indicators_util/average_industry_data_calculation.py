@@ -67,6 +67,69 @@ def izracunajAvgZaIndustrijoVLetu(podjetja_industrije, leto, podjetja_data):
     return leto_industrija_avg_data
 
 
+def izracunajAvgPEZaIndustrijoVLetu(podjetja_industrije, leto, podjetja_data):
+    # kreiramo slovar za leto in podslovarje za avg vrednosti
+    leto_industrija_avg_data = {}
+    leto_industrija_avg_data["avgP/E"] = 0
+    stOkPodjetjiIndustrije = 0
+
+    for podjetje in podjetja_industrije:
+        print('podjetje: ', podjetje)
+        podjetje_data = pridobiPodatkePodjetjaIndustryZaLeto(podjetje, leto, podjetja_data)
+        # vzamemo samo pozitivne vrednosti
+        if podjetje_data["P/E"] > 0:
+            leto_industrija_avg_data["avgP/E"] += podjetje_data["P/E"]
+            stOkPodjetjiIndustrije += 1
+
+    # se povprecimo
+    print('stOkPodjetjiIndustrije: ', stOkPodjetjiIndustrije)
+    leto_industrija_avg_data["avgP/E"] = round(leto_industrija_avg_data["avgP/E"] / stOkPodjetjiIndustrije, 2)
+
+    return leto_industrija_avg_data
+
+
+def izracunajAvgPBZaIndustrijoVLetu(podjetja_industrije, leto, podjetja_data):
+    # kreiramo slovar za leto in podslovarje za avg vrednosti
+    leto_industrija_avg_data = {}
+    leto_industrija_avg_data["avgP/B"] = 0
+    stOkPodjetjiIndustrije = 0
+
+    for podjetje in podjetja_industrije:
+        print('podjetje: ', podjetje)
+        podjetje_data = pridobiPodatkePodjetjaIndustryZaLeto(podjetje, leto, podjetja_data)
+        # vzamemo samo pozitivne vrednosti
+        if podjetje_data["P/B"] > 0:
+            leto_industrija_avg_data["avgP/B"] += podjetje_data["P/B"]
+            stOkPodjetjiIndustrije += 1
+
+    # se povprecimo
+    print('stOkPodjetjiIndustrije: ', stOkPodjetjiIndustrije)
+    leto_industrija_avg_data["avgP/B"] = round(leto_industrija_avg_data["avgP/B"] / stOkPodjetjiIndustrije, 2)
+
+    return leto_industrija_avg_data
+
+
+def izracunajAvgDEZaIndustrijoVLetu(podjetja_industrije, leto, podjetja_data):
+    # kreiramo slovar za leto in podslovarje za avg vrednosti
+    leto_industrija_avg_data = {}
+    leto_industrija_avg_data["avgD/E"] = 0
+    stOkPodjetjiIndustrije = 0
+
+    for podjetje in podjetja_industrije:
+        print('podjetje: ', podjetje)
+        podjetje_data = pridobiPodatkePodjetjaIndustryZaLeto(podjetje, leto, podjetja_data)
+        # vzamemo samo pozitivne vrednosti
+        if podjetje_data["D/E"] > 0:
+            leto_industrija_avg_data["avgD/E"] += podjetje_data["D/E"]
+            stOkPodjetjiIndustrije += 1
+
+    # se povprecimo
+    print('stOkPodjetjiIndustrije: ', stOkPodjetjiIndustrije)
+    leto_industrija_avg_data["avgD/E"] = round(leto_industrija_avg_data["avgD/E"] / stOkPodjetjiIndustrije, 2)
+
+    return leto_industrija_avg_data
+
+
 def getAllFundamentalIndustryAvgData(podjetja_data):
     allIndustryAvgData = {}
     # leta_podjetja = fUtil.getObdobjaInPodjetja()
@@ -78,6 +141,9 @@ def getAllFundamentalIndustryAvgData(podjetja_data):
             print('leto industrija avg: ', leto)
             allIndustryAvgData[industrija][leto] = {}
             allIndustryAvgData[industrija][leto] = izracunajAvgZaIndustrijoVLetu(podjetja_industrije, leto, podjetja_data)
+            # allIndustryAvgData[industrija][leto].update(izracunajAvgPEZaIndustrijoVLetu(podjetja_industrije, leto, podjetja_data))
+            # allIndustryAvgData[industrija][leto].update(izracunajAvgPBZaIndustrijoVLetu(podjetja_industrije, leto, podjetja_data))
+            # allIndustryAvgData[industrija][leto].update(izracunajAvgDEZaIndustrijoVLetu(podjetja_industrije, leto, podjetja_data))
 
     return allIndustryAvgData
 
