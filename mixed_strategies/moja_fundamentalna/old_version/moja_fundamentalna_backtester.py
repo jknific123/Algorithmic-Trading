@@ -2,7 +2,7 @@ import pandas as pd
 import datetime as datetime
 import numpy as np
 
-from mixed_strategies.moja_fundamentalna.moja_fundamentalna import mixed_fundamentals_strategy
+from mixed_strategies.moja_fundamentalna.old_version.moja_fundamentalna import mixed_fundamentals_strategy
 from mixed_strategies.moja_fundamentalna.moja_fundamentalna_grafi import profit_graph
 from utility import utils as util
 
