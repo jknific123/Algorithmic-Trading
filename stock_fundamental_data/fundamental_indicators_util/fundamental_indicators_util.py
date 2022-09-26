@@ -447,6 +447,7 @@ def get_dfc_csv(discounted_cash_flow_vrednosti, x):
 
 def get_company_profile_csv(company_profile_values, x):
     company_profile_values["ipoDate"] = x["ipoDate"]
+    company_profile_values["industry"] = x["industry"]
     company_profile_values["sector"] = x["sector"]
     return company_profile_values
 

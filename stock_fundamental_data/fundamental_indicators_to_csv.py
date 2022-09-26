@@ -115,6 +115,7 @@ def mergeFundamentalDataCsv(data):
         else:
             mergedFundamentalDict[x]["company_age"] = 0
         mergedFundamentalDict[x]["sector"] = data['company_profile']["sector"]
+        mergedFundamentalDict[x]["industry"] = data['company_profile']["industry"]
 
     # mergedFundamentalDict = dividendUtil.izracunajSePodatkeZaDividende(mergedFundamentalDict)
     return_data = {}

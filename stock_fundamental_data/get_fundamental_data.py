@@ -21,9 +21,43 @@ class StockFundamentalData:
                       'Consumer Cyclical': ['GM', 'HD', 'MCD', 'NKE'],
                       'Consumer Defensive': ['KO', 'MDLZ', 'MO', 'PG', 'WMT']}
 
-    fundamental_trading_dates = ['2005-06-30', '2006-06-30', '2007-06-29', '2008-06-30', '2009-06-30', '2010-06-30', '2011-06-30', '2012-06-29',
-                                 '2013-06-28', '2014-06-30', '2015-06-30', '2016-06-30', '2017-06-30', '2018-06-29', '2019-06-28', '2020-06-30', '2021-06-30',
-                                 '2017-02-02', '2018-09-10', '2020-04-16']  # zadnji trije so zacetki testnih mnozic
+    industrije = {'Consumer Electronics': ['AAPL'],
+                  'Insurance—Diversified': ['AIG'],
+                  'Drug Manufacturers—General': ['AMGN', 'JNJ', 'MRK', 'PFE'],
+                  'Credit Services': ['AXP', 'V'],
+                  'Aerospace & Defense': ['BA', 'RTX'],
+                  'Banks—Diversified': ['BAC', 'C', 'JPM'],
+                  'Farm & Heavy Construction Machinery': ['CAT'],
+                  'Software—Application': ['CRM'],
+                  'Communication Equipment': ['CSCO'],
+                  'Oil & Gas Integrated': ['CVX', 'XOM'],
+                  'Specialty Chemicals': ['DD'],
+                  'Chemicals': ['DOW'],
+                  'Entertainment': ['DIS'],
+                  'Specialty Industrial Machinery': ['GE', 'AA'],
+                  'Auto Manufacturers': ['GM'],
+                  'Capital Markets': ['GS'],
+                  'Home Improvement Retail': ['HD'],
+                  'Conglomerates': ['HON', 'MMM'],
+                  'Computer Hardware': ['HPQ'],
+                  'Information Technology Services': ['IBM'],
+                  'Semiconductors': ['INTC'],
+                  'Beverages—Non-Alcoholic': ['KO'],
+                  'Restaurants': ['MCD'],
+                  'Confectioners': ['MDLZ'],
+                  'Tobacco': ['MO'],
+                  'Software—Infrastructure': ['MSFT'],
+                  'Footwear & Accessories': ['NKE'],
+                  'Household & Personal Products': ['PG'],
+                  'Telecom Services': ['T', 'VZ'],
+                  'Insurance—Property & Casualty': ['TRV'],
+                  'Healthcare Plans': ['UNH'],
+                  'Pharmaceutical Retailers': ['WBA'],
+                  'Discount Stores': ['WMT']}
+
+    fundamental_trading_dates = ['2005-06-30', '2006-06-30', '2007-06-29', '2008-06-30', '2009-06-30', '2010-06-30', '2011-06-30', '2012-06-29', '2013-06-28', '2014-06-30',
+                                 '2015-06-30', '2016-06-30', '2017-06-30', '2018-06-29', '2019-06-28', '2020-06-30', '2021-06-30', '2017-02-02', '2018-09-10',
+                                 '2020-04-16']  # zadnji trije so zacetki testnih mnozic
 
     stock_fundamental_data = {}
     stock_average_fundamental_data = {}
@@ -43,7 +77,8 @@ class StockFundamentalData:
             for zapis in company_data:
                 if datetime.strptime(zapis, '%Y-%m-%d').year >= 2004:
                     if self.stock_fundamental_data[company][zapis]['dcf'] < self.stock_fundamental_data[company][zapis]['price']:
-                        print('Nasel ok DCF za podjetje: ', company, 'zapis: ', zapis, 'DCF: ', self.stock_fundamental_data[company][zapis]['dcf'], 'price: ', self.stock_fundamental_data[company][zapis]['price'])
+                        print('Nasel ok DCF za podjetje: ', company, 'zapis: ', zapis, 'DCF: ', self.stock_fundamental_data[company][zapis]['dcf'], 'price: ',
+                              self.stock_fundamental_data[company][zapis]['price'])
 
     def dobiVseIndustrije(self):
         slovar_industrij = {}
@@ -54,6 +89,18 @@ class StockFundamentalData:
                 slovar_industrij[industrija] = 1
                 if company not in self.vse_industrije[industrija]:
                     self.vse_industrije[industrija].append(company)
+
+        return slovar_industrij
+
+    def getIndustrije(self):
+        slovar_industrij = {}
+        for company in self.stock_fundamental_data:
+            company_data = self.stock_fundamental_data[company]
+            for zapis in company_data:
+                industrija = company_data[zapis]['industry']
+                slovar_industrij[industrija] = 1
+                if company not in self.industrije[industrija]:
+                    self.industrije[industrija].append(company)
 
         return slovar_industrij
 
