@@ -50,10 +50,10 @@ def backtestPortfolio(startDate, portfolio, trading_dates, index_column, stockPr
                 holdings, all_cash = kupiBuyLines(holdings, buy_podjetja, all_cash, date)
                 print('Kupljena podjetja: ', sorted(list(holdings.keys())))
 
-            # ce je prvi nakup odpisemo ostali cash
-            if date == startDate:
-                ostali_cash = all_cash
-                all_cash = 0.0
+                # ce je prvi nakup odpisemo ostali cash
+                if date == startDate and len(list(holdings.keys())) > 0:
+                    ostali_cash = all_cash
+                    all_cash = 0.0
 
         df_totals['Total'].to_numpy()[indx] = izracunajTotalZaDan(holdings, date, all_cash, stockPricesDB)
         indx += 1

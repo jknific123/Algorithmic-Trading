@@ -60,6 +60,8 @@ def sortirajGledeNaPrimernost(portfolio, datum, trgovalna_strategija):
         return sortirajGledeNaPrimernostDividend(portfolio, datum)
     elif trgovalna_strategija == 'VALUE':
         return sortirajGledeNaPrimernostValue(portfolio, datum)
+    elif trgovalna_strategija == 'MF':
+        return sortirajGledeNaPrimernostMojaFundamentalna(portfolio, datum)
 
 
 # za P/E strategijo
@@ -192,6 +194,13 @@ def pridobiValueOceno(roe, profitMargin, de, avgDE, pb, avgPB, fcfMargin, dcf, p
     return ocena, napake
 
 
+def preveriPE(pe, avgPe):
+    if 0 < pe <= avgPe:
+        return True
+
+    return False
+
+
 def preveriDE(de, avgDe):
     if 0 < de <= avgDe:
         return True
@@ -218,3 +227,28 @@ def preveriDCF(dcf, price):
         return True
 
     return False
+
+
+# za strategijo Moja fundamentalna
+def sortirajGledeNaPrimernostMojaFundamentalna(portfolio, datum):
+    ustrezni = []
+    for linija in portfolio:
+        roe = portfolio[linija][datum]['ROE']
+        pe = portfolio[linija][datum]['P/E']
+        avgPE = portfolio[linija][datum]['avgP/E']
+        de = portfolio[linija][datum]['D/E']
+        avgDE = portfolio[linija][datum]['avgD/E']
+        pb = portfolio[linija][datum]['P/B']
+        avgPB = portfolio[linija][datum]['avgP/B']
+
+        podjetje = portfolio[linija][datum]['Ticker']
+        close = portfolio[linija][datum]['Close']
+        # if roe and preveriPE(pe, avgPE) and preveriDE(de, avgDE) and preveriPB(pb, avgPB):
+        if preveriPE(pe, avgPE) and preveriDE(de, avgDE) and preveriPB(pb, avgPB):
+            # linija,  podjetje, Close, ...
+            # print('Podjetje: ', podjetje, 'ocena: ', ocenaPodjetja)
+            ustrezni.append((linija, podjetje, round(close, 4), 0, 0))
+
+    # sorted_by_mf_ocena = sorted(ustrezni, key=lambda tup: tup[3], reverse=True)
+
+    return ustrezni
